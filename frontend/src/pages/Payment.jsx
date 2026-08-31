@@ -103,7 +103,7 @@ function Payment() {
   const verifyPayment = async (paymentResponse) => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/payment/verify",
+        "https://disha-the-academy.onrender.com/api/payment/verify",
         {
           method: "POST",
 
@@ -175,7 +175,7 @@ function Payment() {
 
       // Create order
       const response = await fetch(
-        "http://localhost:5000/api/payment/create-order",
+        "https://disha-the-academy.onrender.com/api/payment/create-order",
         {
           method: "POST",
 
