@@ -71,7 +71,10 @@ export default function TestAttempt() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers }),
+          body: JSON.stringify({
+            answers,
+            userId: JSON.parse(localStorage.getItem("dishaUser") || "null")?.id,
+          }),
         }
       );
       const data = await res.json();

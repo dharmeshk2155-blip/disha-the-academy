@@ -633,33 +633,35 @@ body {
 
 }
 /* =========================
-   LOGIN PAGE
+   LOGIN / REGISTER PAGE
 ========================= */
 
 .login-page {
-  min-height: calc(100vh - 80px);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f5f7fc;
+  background: radial-gradient(circle at top left, #e9f0ff 0%, transparent 40%),
+    linear-gradient(135deg, #f5f7fc 0%, #eef2fb 100%);
   padding: 40px 20px;
 }
 
 .login-card {
   width: 100%;
-  max-width: 430px;
+  max-width: 460px;
   background: #ffffff;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 35px rgba(8, 31, 78, 0.12);
+  padding: 44px 40px 36px;
+  border-radius: 28px;
+  box-shadow: 0 25px 70px rgba(8, 31, 78, 0.18);
   text-align: center;
+  position: relative;
 }
 
 .login-logo {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #0b1f4d;
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 .login-logo span {
@@ -668,48 +670,53 @@ body {
 
 .login-card h1 {
   color: #0b1f4d;
-  font-size: 30px;
+  font-size: 26px;
   margin-bottom: 8px;
 }
 
 .login-subtitle {
   color: #64748b;
-  font-size: 15px;
-  margin-bottom: 30px;
+  font-size: 14px;
+  margin-bottom: 26px;
+  line-height: 1.5;
 }
 
 .input-group {
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .input-group label {
   display: block;
   color: #0b1f4d;
   font-weight: 600;
-  margin-bottom: 8px;
+  font-size: 13px;
+  margin-bottom: 7px;
 }
 
 .input-group input {
   width: 100%;
   box-sizing: border-box;
-  padding: 13px 14px;
-  border: 1px solid #d6dce8;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   font-size: 15px;
   outline: none;
+  background: #f8faff;
+  transition: 0.2s ease;
 }
 
 .input-group input:focus {
   border-color: #0b1f4d;
-  box-shadow: 0 0 0 3px rgba(11, 31, 77, 0.08);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(11, 31, 77, 0.08);
 }
 
 .login-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   font-size: 14px;
 }
 
@@ -734,11 +741,11 @@ body {
 
 .login-button {
   width: 100%;
-  padding: 14px;
+  padding: 15px;
   background: #0b1f4d;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -749,8 +756,62 @@ body {
   background: #142d67;
 }
 
+/* Divider - matches "OR" style */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 22px 0;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* Google pill button */
+.google-login-wrapper {
+  margin-bottom: 6px;
+}
+
+.google-login-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.google-login-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+}
+
+.google-login-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .register-text {
-  margin-top: 25px;
+  margin-top: 22px;
   color: #64748b;
   font-size: 14px;
 }
