@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getExamGroup, getSubExam } from "../data/examTaxonomy";
 import "./MockTests.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -10,8 +11,9 @@ function formatDuration(seconds) {
 }
 
 export default function MockTests() {
-  const { category } = useParams();
-  const decodedCategory = decodeURIComponent(category);
+  const { topSlug, subSlug } = useParams();
+  const group = getExamGroup(topSlug);
+  const subExam = getSubExam(topSlug, subSlug);
 
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,9 @@ export default function MockTests() {
         return res.json();
       })
       .then((data) => {
-        const filtered = data.filter((t) => t.category === decodedCategory);
+        const filtered = data.filter(
+          (t) => t.topCategory === topSlug && t.subExam === subSlug
+        );
         setTests(filtered);
         setLoading(false);
       })
@@ -33,7 +37,10 @@ export default function MockTests() {
         setError(err.message);
         setLoading(false);
       });
-  }, [decodedCategory]);
+  }, [topSlug, subSlug]);
+
+  const pageTitle = subExam ? subExam.name : subSlug;
+  const backLabel = group ? `← Back to ${group.title}` : "← Back";
 
   if (loading) {
     return <div className="mt-status">Loading mock tests...</div>;
@@ -45,17 +52,22 @@ export default function MockTests() {
 
   return (
     <div className="mt-page">
-      <button className="mt-back-btn" onClick={() => navigate("/take-mock-test")}>
-        ← Back to Exams
+      <button
+        className="mt-back-btn"
+        onClick={() => navigate(`/take-mock-test/${topSlug}`)}
+      >
+        {backLabel}
       </button>
 
       <div className="mt-header">
-        <h1>{decodedCategory}</h1>
+        <h1>{pageTitle}</h1>
         <p>Choose a test below and start practicing.</p>
       </div>
 
       {tests.length === 0 && (
-        <div className="mt-status">No mock tests available in this category yet.</div>
+        <div className="mt-status">
+          No mock tests available for {pageTitle} yet. Check back soon!
+        </div>
       )}
 
       <div className="mt-grid">

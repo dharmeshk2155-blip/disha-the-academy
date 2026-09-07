@@ -10,7 +10,8 @@ import NoteDetails from "./pages/NoteDetails";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import OrderSuccess from "./pages/OrderSuccess";
-import ExamCategories from "./pages/ExamCategories";
+import ExamGroups from "./pages/ExamGroups";
+import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
@@ -53,19 +54,29 @@ function App() {
           {/* ORDER SUCCESS */}
           <Route path="/order-success/:id" element={<OrderSuccess />} />
 
-          {/* TAKE A MOCK TEST - step 1: exam categories (LOGIN REQUIRED) */}
+          {/* TAKE A MOCK TEST - level 1: exam groups (SSC, Banking, Railway...) */}
           <Route
             path="/take-mock-test"
             element={
               <ProtectedRoute>
-                <ExamCategories />
+                <ExamGroups />
               </ProtectedRoute>
             }
           />
 
-          {/* TAKE A MOCK TEST - step 2: tests inside a category (LOGIN REQUIRED) */}
+          {/* TAKE A MOCK TEST - level 2: sub-exams within a group (CGL, CHSL...) */}
           <Route
-            path="/take-mock-test/:category"
+            path="/take-mock-test/:topSlug"
+            element={
+              <ProtectedRoute>
+                <SubExams />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* TAKE A MOCK TEST - level 3: actual mock tests for that sub-exam */}
+          <Route
+            path="/take-mock-test/:topSlug/:subSlug"
             element={
               <ProtectedRoute>
                 <MockTests />
