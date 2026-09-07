@@ -1386,18 +1386,23 @@ body {
   margin: 0 auto;
 
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .exam-card {
   background: white;
-  padding: 30px 20px;
+  padding: 22px 26px;
 
   border-radius: 14px;
   border: 1px solid #e5e7eb;
 
   box-shadow: 0 8px 25px rgba(11, 31, 75, 0.08);
+
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
 
   transition: 0.3s ease;
 }
@@ -1409,38 +1414,44 @@ body {
 }
 
 .exam-icon {
-  font-size: 36px;
-  margin-bottom: 14px;
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.exam-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .exam-card h3 {
-  font-size: 18px;
+  font-size: 17px;
   color: #0b1f4b;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .exam-card p {
   color: #64748b;
   font-size: 13px;
-  margin-bottom: 20px;
-  line-height: 1.5;
-  min-height: 40px;
+  margin-bottom: 0;
+  line-height: 1.4;
 }
 
 .exam-btn {
-  width: 100%;
+  flex-shrink: 0;
+  width: auto;
   background: #0b1f4b;
   color: white;
 
   border: none;
   border-radius: 7px;
 
-  padding: 10px 0;
+  padding: 10px 20px;
 
   font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
+  white-space: nowrap;
 
   transition: 0.2s ease;
 }
@@ -1448,12 +1459,6 @@ body {
 .exam-btn:hover {
   background: #d99a00;
   color: #0b1f4b;
-}
-
-@media (max-width: 1000px) {
-  .exams-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 600px) {

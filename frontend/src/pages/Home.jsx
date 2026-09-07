@@ -1,16 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Hero from "../components/Hero";
-
-const EXAM_CATEGORIES = [
-  { icon: "📝", title: "SSC Exams", subtitle: "CGL, CHSL, GD, MTS, CPO" },
-  { icon: "🏦", title: "Banking Exams", subtitle: "IBPS PO/Clerk, SBI PO/Clerk, RBI" },
-  { icon: "🚆", title: "Railway Exams", subtitle: "RRB NTPC, Group D, ALP, Technician" },
-  { icon: "🎓", title: "Teaching Exams", subtitle: "CTET, TET, UGC NET" },
-  { icon: "🏛️", title: "Civil Services", subtitle: "UPSC, State PSC" },
-  { icon: "🪖", title: "Defence Exams", subtitle: "NDA, CDS, AFCAT, Agniveer" },
-  { icon: "👮", title: "Police Exams", subtitle: "State Police, SSC GD, SI" },
-  { icon: "⚙️", title: "Engineering Exams", subtitle: "JEE, GATE, JE/AE Recruitment" },
-];
+import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 
 function Home() {
   const navigate = useNavigate();
@@ -33,14 +23,16 @@ function Home() {
 
         <div className="exams-container">
 
-          {EXAM_CATEGORIES.map((exam) => (
-            <div key={exam.title} className="exam-card">
-              <div className="exam-icon">{exam.icon}</div>
-              <h3>{exam.title}</h3>
-              <p>{exam.subtitle}</p>
+          {EXAM_TAXONOMY.map((group) => (
+            <div key={group.slug} className="exam-card">
+              <div className="exam-icon">{group.icon}</div>
+              <div className="exam-info">
+                <h3>{group.title}</h3>
+                <p>{group.subExams.map((s) => s.name).join(", ")}</p>
+              </div>
               <button
                 className="exam-btn"
-                onClick={() => navigate("/take-mock-test")}
+                onClick={() => navigate(`/take-mock-test/${group.slug}`)}
               >
                 Explore Tests
               </button>
