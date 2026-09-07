@@ -1,11 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const testsRouter = require("./routes/tests");
 
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
+
+const { sql, connectDB } = require("./db");
 
 const app = express();
 
@@ -15,9 +19,78 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/tests", testsRouter);
 
-// PDF folder
+// ======================================================
+// FILE PATHS
+// ======================================================
+
 const pdfFolder = path.join(__dirname, "pdfs");
+
+// ======================================================
+// PASSWORD HASHING
+// ======================================================
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+
+  const hash = crypto
+    .scryptSync(password, salt, 64)
+    .toString("hex");
+
+  return `${salt}:${hash}`;
+}
+
+// ======================================================
+// PASSWORD VERIFICATION
+// ======================================================
+
+function verifyPassword(password, storedPassword) {
+  try {
+    const parts = storedPassword.split(":");
+
+    if (parts.length !== 2) {
+      return false;
+    }
+
+    const salt = parts[0];
+    const storedHash = parts[1];
+
+    const hash = crypto
+      .scryptSync(password, salt, 64)
+      .toString("hex");
+
+    const storedHashBuffer = Buffer.from(
+      storedHash,
+      "hex"
+    );
+
+    const hashBuffer = Buffer.from(
+      hash,
+      "hex"
+    );
+
+    if (
+      storedHashBuffer.length !==
+      hashBuffer.length
+    ) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(
+      hashBuffer,
+      storedHashBuffer
+    );
+
+  } catch (error) {
+    console.error(
+      "Password verification error:",
+      error
+    );
+
+    return false;
+  }
+}
 
 // ======================================================
 // RAZORPAY
@@ -29,18 +102,11 @@ const razorpay = new Razorpay({
 });
 
 // ======================================================
-// ORDERS
-// ======================================================
-
-// Temporary order storage
-// Note: Server restart hone par ye data reset ho jayega.
-const orders = new Map();
-
-// ======================================================
-// NOTES + PDF MAPPING
+// NOTES
 // ======================================================
 
 const notes = [
+
   {
     id: 1,
     title: "HP General Knowledge",
@@ -112,25 +178,30 @@ const notes = [
     price: 49,
     pdf: "Hindi_TESTBOOK NEWS BULLETIN_08 Jul testbook_pass.pdf",
   },
+
 ];
 
 // ======================================================
-// HOME ROUTE
+// HOME
 // ======================================================
 
 app.get("/", (req, res) => {
-  res.send("Disha The Academy Backend is Running!");
+  res.send(
+    "Disha The Academy Backend is Running!"
+  );
 });
 
 // ======================================================
-// TEST ROUTE
+// TEST
 // ======================================================
 
 app.get("/api/test", (req, res) => {
+
   res.json({
     success: true,
     message: "Frontend and Backend are connected!",
   });
+
 });
 
 // ======================================================
@@ -138,14 +209,17 @@ app.get("/api/test", (req, res) => {
 // ======================================================
 
 app.get("/api/notes", (req, res) => {
+
   res.json(notes);
+
 });
 
 // ======================================================
-// GET SINGLE NOTE
+// SINGLE NOTE
 // ======================================================
 
 app.get("/api/notes/:id", (req, res) => {
+
   const noteId = Number(req.params.id);
 
   const note = notes.find(
@@ -153,15 +227,441 @@ app.get("/api/notes/:id", (req, res) => {
   );
 
   if (!note) {
+
     return res.status(404).json({
       success: false,
       error: "Note not found",
     });
+
   }
 
   res.json(note);
+
 });
 
+// ======================================================
+// USER REGISTRATION
+// ======================================================
+
+app.post("/api/register", async (req, res) => {
+
+  try {
+
+    const {
+      name,
+      fullName,
+      email,
+      mobile,
+      password,
+      confirmPassword,
+    } = req.body;
+
+    const finalName = name || fullName;
+
+    // -----------------------------
+    // CHECK FIELDS
+    // -----------------------------
+
+    if (
+      !finalName ||
+      !email ||
+      !mobile ||
+      !password
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+
+    }
+
+    // -----------------------------
+    // PASSWORD CONFIRM
+    // -----------------------------
+
+    if (
+      confirmPassword !== undefined &&
+      password !== confirmPassword
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    // -----------------------------
+    // CONNECT DATABASE
+    // -----------------------------
+
+    const pool = await connectDB();
+
+    // -----------------------------
+    // CHECK EMAIL
+    // -----------------------------
+
+    const existingUser = await pool
+      .request()
+      .input(
+        "Email",
+        sql.NVarChar(150),
+        normalizedEmail
+      )
+      .query(`
+        SELECT Id
+        FROM dbo.Users
+        WHERE Email = @Email
+      `);
+
+    if (
+      existingUser.recordset.length > 0
+    ) {
+
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered",
+      });
+
+    }
+
+    // -----------------------------
+    // HASH PASSWORD
+    // -----------------------------
+
+    const passwordHash =
+      hashPassword(password);
+
+    // -----------------------------
+    // INSERT USER
+    // -----------------------------
+
+    const result = await pool
+      .request()
+      .input(
+        "Name",
+        sql.NVarChar(100),
+        finalName.trim()
+      )
+      .input(
+        "Email",
+        sql.NVarChar(150),
+        normalizedEmail
+      )
+      .input(
+        "Mobile",
+        sql.NVarChar(20),
+        mobile.trim()
+      )
+      .input(
+        "PasswordHash",
+        sql.NVarChar(255),
+        passwordHash
+      )
+      .query(`
+        INSERT INTO dbo.Users
+        (
+          Name,
+          Email,
+          Mobile,
+          PasswordHash
+        )
+
+        OUTPUT
+          INSERTED.Id,
+          INSERTED.Name,
+          INSERTED.Email,
+          INSERTED.Mobile,
+          INSERTED.CreatedAt
+
+        VALUES
+        (
+          @Name,
+          @Email,
+          @Mobile,
+          @PasswordHash
+        )
+      `);
+
+    const user =
+      result.recordset[0];
+
+    console.log("");
+    console.log(
+      "================================="
+    );
+    console.log(
+      "NEW USER REGISTERED"
+    );
+    console.log(
+      "User ID:",
+      user.Id
+    );
+    console.log(
+      "Name:",
+      user.Name
+    );
+    console.log(
+      "Email:",
+      user.Email
+    );
+    console.log(
+      "================================="
+    );
+    console.log("");
+
+    return res.status(201).json({
+
+      success: true,
+
+      message:
+        "Account created successfully",
+
+      user: {
+        id: user.Id,
+        fullName: user.Name,
+        email: user.Email,
+        mobile: user.Mobile,
+      },
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Registration error:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Registration failed",
+
+    });
+
+  }
+
+});
+
+// ======================================================
+// USER LOGIN
+// ======================================================
+
+app.post("/api/login", async (req, res) => {
+
+  try {
+
+    const {
+      email,
+      password,
+    } = req.body;
+
+    // -----------------------------
+    // CHECK REQUIRED FIELDS
+    // -----------------------------
+
+    if (!email || !password) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          "Email and password are required",
+
+      });
+
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    // -----------------------------
+    // CONNECT SQL SERVER
+    // -----------------------------
+
+    const pool =
+      await connectDB();
+
+    // -----------------------------
+    // FIND USER
+    // -----------------------------
+
+    const result = await pool
+      .request()
+      .input(
+        "Email",
+        sql.NVarChar(150),
+        normalizedEmail
+      )
+      .query(`
+        SELECT
+          Id,
+          Name,
+          Email,
+          Mobile,
+          PasswordHash
+        FROM dbo.Users
+        WHERE Email = @Email
+      `);
+
+    // -----------------------------
+    // USER NOT FOUND
+    // -----------------------------
+
+    if (
+      result.recordset.length === 0
+    ) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        message:
+          "Invalid email or password",
+
+      });
+
+    }
+
+    const user =
+      result.recordset[0];
+
+    // -----------------------------
+    // VERIFY PASSWORD
+    // -----------------------------
+
+    const passwordCorrect =
+      verifyPassword(
+        password,
+        user.PasswordHash
+      );
+
+    if (!passwordCorrect) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        message:
+          "Invalid email or password",
+
+      });
+
+    }
+
+    // ==================================================
+    // CREATE JWT TOKEN
+    // ==================================================
+
+    const token = jwt.sign(
+
+      {
+        userId: user.Id,
+        email: user.Email,
+      },
+
+      process.env.JWT_SECRET,
+
+      {
+        expiresIn: "7d",
+      }
+
+    );
+
+    // -----------------------------
+    // LOGIN SUCCESS LOG
+    // -----------------------------
+
+    console.log("");
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "USER LOGIN SUCCESSFUL"
+    );
+
+    console.log(
+      "USER ID:",
+      user.Id
+    );
+
+    console.log(
+      "EMAIL:",
+      user.Email
+    );
+
+    console.log(
+      "JWT TOKEN CREATED"
+    );
+
+    console.log(
+      "================================="
+    );
+
+    console.log("");
+
+    // ==================================================
+    // LOGIN RESPONSE
+    // ==================================================
+
+    return res.json({
+
+      success: true,
+
+      message:
+        "Login successful",
+
+      token:
+
+        token,
+
+      user: {
+
+        id:
+          user.Id,
+
+        fullName:
+          user.Name,
+
+        email:
+          user.Email,
+
+        mobile:
+          user.Mobile,
+
+      },
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Login failed",
+
+    });
+
+  }
+
+});
 // ======================================================
 // CREATE RAZORPAY ORDER
 // ======================================================
@@ -169,74 +669,235 @@ app.get("/api/notes/:id", (req, res) => {
 app.post(
   "/api/payment/create-order",
   async (req, res) => {
+
     try {
-      const { noteId } = req.body;
 
-      // Check note ID
-      if (!noteId) {
-        return res.status(400).json({
-          success: false,
-          error: "Note ID is required",
-        });
-      }
+      const {
+        noteId,
+        userId,
+      } = req.body;
 
-      // Find note
-      const note = notes.find(
-        (item) =>
-          item.id === Number(noteId)
-      );
-
-      if (!note) {
-        return res.status(404).json({
-          success: false,
-          error: "Note not found",
-        });
-      }
-
-      // IMPORTANT:
-      // Price backend se liya ja raha hai.
-      // Frontend ke amount par trust nahi kiya ja raha.
-      const amount = Number(note.price);
-
-      // Create Razorpay order
-      const razorpayOrder =
-        await razorpay.orders.create({
-          amount: amount * 100,
-          currency: "INR",
-          receipt: `receipt_${Date.now()}`,
-        });
-
-      // Save order information
-      orders.set(
-        razorpayOrder.id,
-        {
-          orderId: razorpayOrder.id,
-          noteId: note.id,
-          title: note.title,
-          price: note.price,
-          pdf: note.pdf,
-          paid: false,
-          paymentId: null,
-          createdAt: new Date().toISOString(),
-        }
-      );
-
+      console.log("");
       console.log(
         "================================="
       );
-
       console.log(
-        "RAZORPAY ORDER CREATED"
+        "CREATE ORDER REQUEST"
       );
-
-      console.log(
-        "Order ID:",
-        razorpayOrder.id
-      );
-
       console.log(
         "Note ID:",
-        note.id
+        noteId
+      );
+      console.log(
+        "User ID:",
+        userId
+      );
+
+      // -----------------------------
+      // CHECK NOTE ID
+      // -----------------------------
+
+      if (!noteId) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          error:
+            "Note ID is required",
+
+        });
+
+      }
+
+      // -----------------------------
+      // CHECK USER ID
+      // -----------------------------
+
+      if (!userId) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          error:
+            "User ID is required",
+
+        });
+
+      }
+
+      // -----------------------------
+      // FIND NOTE
+      // -----------------------------
+
+      const note =
+        notes.find(
+          (item) =>
+            item.id ===
+            Number(noteId)
+        );
+
+      if (!note) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          error:
+            "Note not found",
+
+        });
+
+      }
+
+      // -----------------------------
+      // CHECK USER IN SQL
+      // -----------------------------
+
+      const pool =
+        await connectDB();
+
+      const userResult =
+  await pool
+    .request()
+    .input(
+      "UserId",
+      sql.Int,
+      Number(userId)
+    )
+    .query(`
+      SELECT
+        Id
+      FROM dbo.Users
+      WHERE Id = @UserId
+    `);
+
+      if (
+        userResult.recordset.length === 0
+      ) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          error:
+            "User not found",
+
+        });
+
+      }
+
+      // -----------------------------
+      // PRICE
+      // -----------------------------
+
+      const amount =
+        Number(note.price);
+
+      // -----------------------------
+      // CREATE RAZORPAY ORDER
+      // -----------------------------
+
+      const razorpayOrder =
+        await razorpay.orders.create({
+
+          amount:
+            amount * 100,
+
+          currency:
+            "INR",
+
+          receipt:
+            `receipt_${Date.now()}`,
+
+        });
+// =================================================
+// SAVE ORDER TO SQL SERVER
+// =================================================
+
+await pool
+  .request()
+
+  // ORDER ID
+  .input(
+    "OrderId",
+    sql.NVarChar(100),
+    razorpayOrder.id
+  )
+
+  // USER ID
+  .input(
+    "UserId",
+    sql.Int,
+    Number(userId)
+  )
+
+  // NOTE ID
+  .input(
+    "NoteId",
+    sql.Int,
+    note.id
+  )
+
+  // TITLE
+  .input(
+    "Title",
+    sql.NVarChar(255),
+    note.title
+  )
+
+  // PRICE
+  .input(
+    "Price",
+    sql.Decimal(10, 2),
+    note.price
+  )
+
+  // PDF
+  .input(
+    "Pdf",
+    sql.NVarChar(500),
+    note.pdf
+  )
+
+  // PAID
+  .input(
+    "Paid",
+    sql.Bit,
+    false
+  )
+
+  .query(`
+    INSERT INTO dbo.Orders
+    (
+      OrderId,
+      UserId,
+      NoteId,
+      Title,
+      Price,
+      Pdf,
+      Paid
+    )
+    VALUES
+    (
+      @OrderId,
+      @UserId,
+      @NoteId,
+      @Title,
+      @Price,
+      @Pdf,
+      @Paid
+    )
+  `);
+
+      // -----------------------------
+      // LOG
+      // -----------------------------
+
+      console.log(
+        "Razorpay Order ID:",
+        razorpayOrder.id
       );
 
       console.log(
@@ -245,36 +906,54 @@ app.post(
       );
 
       console.log(
-        "Amount:",
+        "Price:",
         note.price
       );
 
       console.log(
-        "PDF:",
-        note.pdf
+        "User ID:",
+        userId
+      );
+
+      console.log(
+        "ORDER SAVED TO SQL SERVER"
       );
 
       console.log(
         "================================="
       );
+      console.log("");
 
-      res.json({
+      // -----------------------------
+      // RESPONSE
+      // -----------------------------
+
+      return res.json({
+
         success: true,
+
         ...razorpayOrder,
+
       });
 
     } catch (error) {
+
       console.error(
         "Razorpay order error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
+
         success: false,
+
         error:
           "Failed to create payment order",
+
       });
+
     }
+
   }
 );
 
@@ -284,40 +963,108 @@ app.post(
 
 app.post(
   "/api/payment/verify",
-  (req, res) => {
+  async (req, res) => {
+
     try {
+
       const {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
       } = req.body;
 
-      // Check payment details
+      // -----------------------------
+      // CHECK PAYMENT DATA
+      // -----------------------------
+
       if (
         !razorpay_order_id ||
         !razorpay_payment_id ||
         !razorpay_signature
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           error:
             "Payment details are missing",
+
         });
+
       }
 
-      // Find our order
-      const order = orders.get(
-        razorpay_order_id
-      );
+      // -----------------------------
+      // CONNECT SQL
+      // -----------------------------
 
-      if (!order) {
+      const pool =
+        await connectDB();
+
+      // =================================================
+      // FIND ORDER
+      // =================================================
+
+      const orderResult =
+        await pool
+          .request()
+          .input(
+            "OrderId",
+            sql.NVarChar(100),
+            razorpay_order_id
+          )
+          .query(`
+
+            SELECT
+              Id,
+              OrderId,
+              UserId,
+              NoteId,
+              Title,
+              Price,
+              Pdf,
+              Paid,
+              PaymentId,
+              CreatedAt,
+              VerifiedAt
+
+            FROM dbo.Orders
+
+            WHERE OrderId = @OrderId
+
+          `);
+
+      // -----------------------------
+      // ORDER NOT FOUND
+      // -----------------------------
+
+      if (
+        orderResult.recordset.length === 0
+      ) {
+
+        console.error(
+          "ORDER NOT FOUND:",
+          razorpay_order_id
+        );
+
         return res.status(404).json({
+
           success: false,
-          error: "Order not found",
+
+          error:
+            "Order not found",
+
         });
+
       }
 
-      // Create signature
+      const order =
+        orderResult.recordset[0];
+
+      // =================================================
+      // CREATE RAZORPAY SIGNATURE
+      // =================================================
+
       const body =
         razorpay_order_id +
         "|" +
@@ -332,71 +1079,135 @@ app.post(
           .update(body)
           .digest("hex");
 
-      // Compare signatures
-      const isValid =
-        expectedSignature ===
-        razorpay_signature;
+      // -----------------------------
+      // COMPARE SIGNATURE
+      // -----------------------------
+
+      const expectedBuffer =
+        Buffer.from(
+          expectedSignature,
+          "hex"
+        );
+
+      const receivedBuffer =
+        Buffer.from(
+          razorpay_signature,
+          "hex"
+        );
+
+      let isValid = false;
+
+      if (
+        expectedBuffer.length ===
+        receivedBuffer.length
+      ) {
+
+        isValid =
+          crypto.timingSafeEqual(
+            expectedBuffer,
+            receivedBuffer
+          );
+
+      }
+
+      // -----------------------------
+      // INVALID SIGNATURE
+      // -----------------------------
 
       if (!isValid) {
+
         console.error(
           "INVALID PAYMENT SIGNATURE"
         );
 
         return res.status(400).json({
+
           success: false,
+
           error:
             "Invalid payment signature",
+
         });
+
       }
 
-      // Payment successful
-      order.paid = true;
+      // =================================================
+      // UPDATE ORDER
+      // =================================================
 
-      order.paymentId =
-        razorpay_payment_id;
+      await pool
+        .request()
 
-      order.verifiedAt =
-        new Date().toISOString();
+        .input(
+          "OrderId",
+          sql.NVarChar(100),
+          razorpay_order_id
+        )
 
-      orders.set(
-        razorpay_order_id,
-        order
-      );
+        .input(
+          "PaymentId",
+          sql.NVarChar(100),
+          razorpay_payment_id
+        )
 
+        .query(`
+
+          UPDATE dbo.Orders
+
+          SET
+            Paid = 1,
+            PaymentId = @PaymentId,
+            VerifiedAt = GETDATE()
+
+          WHERE OrderId = @OrderId
+
+        `);
+
+      // -----------------------------
+      // LOG
+      // -----------------------------
+
+      console.log("");
       console.log(
         "================================="
       );
-
       console.log(
         "PAYMENT VERIFIED SUCCESSFULLY"
       );
-
       console.log(
         "Order ID:",
         razorpay_order_id
       );
-
       console.log(
         "Payment ID:",
         razorpay_payment_id
       );
-
+      console.log(
+        "User ID:",
+        order.UserId
+      );
       console.log(
         "Note ID:",
-        order.noteId
+        order.NoteId
       );
-
       console.log(
         "PDF:",
-        order.pdf
+        order.Pdf
       );
-
+      console.log(
+        "ORDER UPDATED IN SQL SERVER"
+      );
       console.log(
         "================================="
       );
+      console.log("");
 
-      // Send success response
-      res.json({
+      // -----------------------------
+      // RESPONSE
+      // -----------------------------
+
+      return res.json({
+
         success: true,
 
         message:
@@ -405,101 +1216,167 @@ app.post(
         orderId:
           razorpay_order_id,
 
+        userId:
+          order.UserId,
+
         noteId:
-          order.noteId,
+          order.NoteId,
 
         downloadUrl:
-          `/api/pdf/download/${razorpay_order_id}`,
+          `/api/pdf/download/${encodeURIComponent(
+            razorpay_order_id
+          )}`,
+
       });
 
     } catch (error) {
+
       console.error(
         "Payment verification error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
+
         success: false,
+
         error:
           "Payment verification failed",
+
       });
+
     }
+
   }
 );
 
 // ======================================================
-// DOWNLOAD PDF AFTER PAYMENT
+// DOWNLOAD PDF
 // ======================================================
 
 app.get(
   "/api/pdf/download/:orderId",
-  (req, res) => {
+  async (req, res) => {
+
     try {
-      const {
-        orderId,
-      } = req.params;
 
-      // Find order
-      const order =
-        orders.get(orderId);
+      const orderId =
+        req.params.orderId;
 
-      // Payment check
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          error: "Order not found",
-        });
-      }
-
-      if (!order.paid) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "Payment required before downloading PDF",
-        });
-      }
-
-      // Find note
-      const note = notes.find(
-        (item) =>
-          item.id === order.noteId
-      );
-
-      if (!note) {
-        return res.status(404).json({
-          success: false,
-          error: "Note not found",
-        });
-      }
-
-      // PDF filename
-      const pdfFileName =
-        note.pdf;
-
-      // Full PDF path
-      const pdfPath =
-        path.join(
-          pdfFolder,
-          pdfFileName
-        );
-
+      console.log("");
       console.log(
         "================================="
       );
-
       console.log(
         "PDF DOWNLOAD REQUEST"
       );
-
       console.log(
         "Order ID:",
         orderId
       );
 
+      const pool =
+        await connectDB();
+
+      // -----------------------------
+      // FIND ORDER
+      // -----------------------------
+
+      const result =
+        await pool
+          .request()
+          .input(
+            "OrderId",
+            sql.NVarChar(100),
+            orderId
+          )
+          .query(`
+
+            SELECT
+              Id,
+              OrderId,
+              UserId,
+              NoteId,
+              Title,
+              Price,
+              Pdf,
+              Paid,
+              PaymentId,
+              CreatedAt,
+              VerifiedAt
+
+            FROM dbo.Orders
+
+            WHERE OrderId = @OrderId
+
+          `);
+
+      // -----------------------------
+      // ORDER NOT FOUND
+      // -----------------------------
+
+      if (
+        result.recordset.length === 0
+      ) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          error:
+            "Order not found",
+
+        });
+
+      }
+
+      const order =
+        result.recordset[0];
+
       console.log(
-        "Note:",
-        note.title
+        "Order found:",
+        order.OrderId
       );
+
+      console.log(
+        "User ID:",
+        order.UserId
+      );
+
+      console.log(
+        "Paid:",
+        order.Paid
+      );
+
+      // -----------------------------
+      // PAYMENT CHECK
+      // -----------------------------
+
+      if (!order.Paid) {
+
+        return res.status(403).json({
+
+          success: false,
+
+          error:
+            "Payment required before downloading PDF",
+
+        });
+
+      }
+
+      // -----------------------------
+      // PDF FILE
+      // -----------------------------
+
+      const pdfFileName =
+        order.Pdf;
+
+      const pdfPath =
+        path.join(
+          pdfFolder,
+          pdfFileName
+        );
 
       console.log(
         "PDF:",
@@ -511,60 +1388,81 @@ app.get(
         pdfPath
       );
 
-      console.log(
-        "================================="
-      );
+      // -----------------------------
+      // CHECK FILE
+      // -----------------------------
 
-      // Check file exists
-      if (!fs.existsSync(pdfPath)) {
+      if (
+        !fs.existsSync(pdfPath)
+      ) {
+
         console.error(
           "PDF FILE NOT FOUND:",
           pdfPath
         );
 
         return res.status(404).json({
+
           success: false,
+
           error:
             "PDF file not found on server",
+
         });
+
       }
 
-      // Download PDF
-      res.download(
+      // -----------------------------
+      // DOWNLOAD
+      // -----------------------------
+
+      console.log(
+        "PDF DOWNLOAD STARTED"
+      );
+
+      console.log(
+        "================================="
+      );
+
+      return res.download(
         pdfPath,
         pdfFileName,
         (error) => {
+
           if (error) {
+
             console.error(
               "PDF download error:",
               error
             );
 
-            if (!res.headersSent) {
-              res.status(500).json({
-                success: false,
-                error:
-                  "PDF could not be downloaded",
-              });
-            }
           }
+
         }
       );
 
     } catch (error) {
+
       console.error(
-        "PDF access error:",
+        "PDF download error:",
         error
       );
 
       if (!res.headersSent) {
-        res.status(500).json({
+
+        return res.status(500).json({
+
           success: false,
+
           error:
-            "Unable to access PDF",
+            "Unable to download PDF",
+
         });
+
       }
+
     }
+
   }
 );
 
@@ -574,57 +1472,121 @@ app.get(
 
 app.get(
   "/api/payment/order/:orderId",
-  (req, res) => {
+  async (req, res) => {
+
     try {
-      const {
-        orderId,
-      } = req.params;
 
-      const order =
-        orders.get(orderId);
+      const orderId =
+        req.params.orderId;
 
-      if (!order) {
+      const pool =
+        await connectDB();
+
+      const result =
+        await pool
+          .request()
+          .input(
+            "OrderId",
+            sql.NVarChar(100),
+            orderId
+          )
+          .query(`
+
+            SELECT
+              Id,
+              OrderId,
+              UserId,
+              NoteId,
+              Title,
+              Price,
+              Pdf,
+              Paid,
+              PaymentId,
+              CreatedAt,
+              VerifiedAt
+
+            FROM dbo.Orders
+
+            WHERE OrderId = @OrderId
+
+          `);
+
+      if (
+        result.recordset.length === 0
+      ) {
+
         return res.status(404).json({
+
           success: false,
-          error: "Order not found",
+
+          error:
+            "Order not found",
+
         });
+
       }
 
-      res.json({
+      const order =
+        result.recordset[0];
+
+      return res.json({
+
         success: true,
+
         order: {
+
+          id:
+            order.Id,
+
           orderId:
-            order.orderId,
+            order.OrderId,
+
+          userId:
+            order.UserId,
 
           noteId:
-            order.noteId,
+            order.NoteId,
 
           title:
-            order.title,
+            order.Title,
 
           price:
-            order.price,
+            order.Price,
 
           paid:
-            order.paid,
+            order.Paid,
 
           paymentId:
-            order.paymentId,
+            order.PaymentId,
+
+          createdAt:
+            order.CreatedAt,
+
+          verifiedAt:
+            order.VerifiedAt,
+
         },
+
       });
 
     } catch (error) {
+
       console.error(
         "Order status error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
+
         success: false,
+
         error:
           "Unable to check order status",
+
       });
+
     }
+
   }
 );
 
@@ -634,10 +1596,16 @@ app.get(
 
 app.use(
   (req, res) => {
+
     res.status(404).json({
+
       success: false,
-      error: "Route not found",
+
+      error:
+        "Route not found",
+
     });
+
   }
 );
 
@@ -651,6 +1619,7 @@ const server =
   app.listen(
     PORT,
     () => {
+
       console.log("");
       console.log(
         "================================="
@@ -672,6 +1641,7 @@ const server =
         "================================="
       );
       console.log("");
+
     }
   );
 
@@ -682,7 +1652,12 @@ const server =
 server.on(
   "error",
   (error) => {
-    if (error.code === "EADDRINUSE") {
+
+    if (
+      error.code ===
+      "EADDRINUSE"
+    ) {
+
       console.error("");
       console.error(
         `ERROR: Port ${PORT} is already in use.`
@@ -691,12 +1666,16 @@ server.on(
         "Backend is probably already running."
       );
       console.error("");
+
     } else {
+
       console.error(
         "Server error:",
         error
       );
+
     }
+
   }
 );
 
@@ -707,10 +1686,12 @@ server.on(
 process.on(
   "uncaughtException",
   (error) => {
+
     console.error(
       "Uncaught Exception:",
       error
     );
+
   }
 );
 
@@ -721,9 +1702,11 @@ process.on(
 process.on(
   "unhandledRejection",
   (error) => {
+
     console.error(
       "Unhandled Rejection:",
       error
     );
+
   }
 );

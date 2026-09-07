@@ -66,6 +66,26 @@ function Payment() {
 
   const note = notes[id];
 
+  // ======================================================
+  // GET LOGGED-IN USER
+  // ======================================================
+
+  let user = null;
+
+  try {
+    const savedUser = localStorage.getItem("dishaUser");
+
+    if (savedUser) {
+      user = JSON.parse(savedUser);
+    }
+  } catch (error) {
+    console.error("User data error:", error);
+  }
+
+  // ======================================================
+  // NOTE NOT FOUND
+  // ======================================================
+
   if (!note) {
     return (
       <main className="payment-page">
@@ -79,6 +99,10 @@ function Payment() {
       </main>
     );
   }
+
+  // ======================================================
+  // LOAD RAZORPAY
+  // ======================================================
 
   const loadRazorpay = () => {
     return new Promise((resolve) => {
@@ -100,10 +124,14 @@ function Payment() {
     });
   };
 
+  // ======================================================
+  // VERIFY PAYMENT
+  // ======================================================
+
   const verifyPayment = async (paymentResponse) => {
     try {
       const response = await fetch(
-        "https://disha-the-academy.onrender.com/api/payment/verify",
+        "http://localhost:5000/api/payment/verify",
         {
           method: "POST",
 
@@ -126,22 +154,21 @@ function Payment() {
 
       const data = await response.json();
 
+      console.log("VERIFY RESPONSE:", data);
+
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error ||
-            "Payment verification failed"
+          data.error || "Payment verification failed"
         );
       }
 
       return data;
     } catch (error) {
-      console.error(
-        "Verification error:",
-        error
-      );
+      console.error("Verification error:", error);
 
       alert(
-        "Payment verification failed. Please contact support."
+        error.message ||
+          "Payment verification failed."
       );
 
       setLoading(false);
@@ -150,19 +177,21 @@ function Payment() {
     }
   };
 
+  // ======================================================
+  // HANDLE PAYMENT
+  // ======================================================
+
   const handlePayment = async () => {
     if (!method) {
-      alert(
-        "Please select a payment method"
-      );
+      alert("Please select a payment method");
       return;
     }
 
     try {
       setLoading(true);
 
-      const razorpayLoaded =
-        await loadRazorpay();
+      // Load Razorpay
+      const razorpayLoaded = await loadRazorpay();
 
       if (!razorpayLoaded) {
         alert(
@@ -173,35 +202,47 @@ function Payment() {
         return;
       }
 
-      // Create order
+      console.log("Creating Razorpay order...");
+
+      // ==================================================
+      // CREATE ORDER
+      // ==================================================
+
+console.log("USER ID:", user?.id);
+     console.log("USER ID BEING SENT:", user?.id);
       const response = await fetch(
-        "https://disha-the-academy.onrender.com/api/payment/create-order",
-        {
-          method: "POST",
+  "http://localhost:5000/api/payment/create-order",
+  {
+    method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-       body: JSON.stringify({
+   body: JSON.stringify({
   noteId: Number(id),
+  userId: user?.id,
 }),
-        }
-      );
+  }
+);
 
       const order = await response.json();
 
-      if (!response.ok) {
+      console.log("ORDER RESPONSE:", order);
+
+      if (!response.ok || !order.success) {
         throw new Error(
           order.error ||
-            "Failed to create order"
+            "Failed to create payment order"
         );
       }
 
+      // ==================================================
+      // RAZORPAY OPTIONS
+      // ==================================================
+
       const options = {
-        key:
-          import.meta.env
-            .VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 
         amount: order.amount,
 
@@ -213,56 +254,59 @@ function Payment() {
 
         order_id: order.id,
 
-        handler: async function (
-          paymentResponse
-        ) {
-          console.log(
-            "Razorpay payment response:",
-            paymentResponse
-          );
-
-          const result =
-            await verifyPayment(
-              paymentResponse
-            );
-
-          if (
-            result &&
-            result.success
-          ) {
-            navigate(
-              `/order-success/${id}?orderId=${paymentResponse.razorpay_order_id}`
-            );
-          }
-        },
-
         prefill: {
-          name: "",
-          email: "",
-          contact: "",
+          name: user?.fullName || "",
+          email: user?.email || "",
+          contact: user?.mobile || "",
         },
 
         theme: {
           color: "#2563eb",
         },
 
+        handler: async function (paymentResponse) {
+          console.log(
+            "RAZORPAY PAYMENT RESPONSE:",
+            paymentResponse
+          );
+
+          const result =
+            await verifyPayment(paymentResponse);
+
+          if (result && result.success) {
+            console.log(
+              "PAYMENT VERIFIED:",
+              result
+            );
+
+            navigate(
+              `/order-success/${id}?orderId=${paymentResponse.razorpay_order_id}`
+            );
+          }
+        },
+
         modal: {
           ondismiss: function () {
+            console.log(
+              "Payment popup closed"
+            );
+
             setLoading(false);
           },
         },
       };
 
-      const razorpay =
-        new window.Razorpay(
-          options
-        );
+      // ==================================================
+      // OPEN RAZORPAY
+      // ==================================================
+
+      const razorpay = new window.Razorpay(options);
 
       razorpay.on(
         "payment.failed",
         function (response) {
           console.error(
-            "Payment failed:",
+            "PAYMENT FAILED:",
             response.error
           );
 
@@ -277,19 +321,20 @@ function Payment() {
 
       razorpay.open();
     } catch (error) {
-      console.error(
-        "Payment error:",
-        error
-      );
+      console.error("Payment error:", error);
 
       alert(
         error.message ||
-          "Unable to start payment. Please try again."
+          "Unable to start payment."
       );
 
       setLoading(false);
     }
   };
+
+  // ======================================================
+  // UI
+  // ======================================================
 
   return (
     <main className="payment-page">
@@ -311,6 +356,8 @@ function Payment() {
 
       <div className="payment-container">
 
+        {/* PAYMENT METHODS */}
+
         <div className="payment-card">
 
           <h2>Payment Method</h2>
@@ -322,9 +369,7 @@ function Payment() {
                 ? "selected"
                 : ""
             }`}
-            onClick={() =>
-              setMethod("upi")
-            }
+            onClick={() => setMethod("upi")}
           >
             📱 UPI
           </button>
@@ -336,9 +381,7 @@ function Payment() {
                 ? "selected"
                 : ""
             }`}
-            onClick={() =>
-              setMethod("card")
-            }
+            onClick={() => setMethod("card")}
           >
             💳 Debit / Credit Card
           </button>
@@ -351,15 +394,15 @@ function Payment() {
                 : ""
             }`}
             onClick={() =>
-              setMethod(
-                "netbanking"
-              )
+              setMethod("netbanking")
             }
           >
             🏦 Net Banking
           </button>
 
         </div>
+
+        {/* ORDER SUMMARY */}
 
         <div className="payment-summary">
 
@@ -375,9 +418,7 @@ function Payment() {
 
           <div className="payment-total">
 
-            <span>
-              Total Amount
-            </span>
+            <span>Total Amount</span>
 
             <strong>
               ₹{note.price}
