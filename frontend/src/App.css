@@ -39,92 +39,133 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   background: var(--background);
   color: var(--text-dark);
+  margin-left: 220px; /* push all page content right, past the sidebar */
 }
 
 /* ================================
-   NAVBAR
+   LEFT VERTICAL SIDEBAR (logo + nav links)
 ================================ */
 
 .navbar {
-  width: 100%;
-  min-height: 72px;
-
-  background: var(--navy);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 7%;
-
-  box-shadow: 0 3px 15px rgba(7, 22, 51, 0.2);
-
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 1000;
+  left: 0;
+  width: 220px;
+  height: 100vh;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px;
+  box-sizing: border-box;
+  z-index: 200;
+  overflow-y: auto;
+  box-shadow: 0 3px 15px rgba(7, 22, 51, 0.2);
 }
 
-/* Logo */
+/* Logo (inside sidebar) */
 
-.logo {
+.navbar .logo {
   color: var(--white);
-
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 700;
-
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  margin-bottom: 40px;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
-.logo::first-letter {
+.navbar .logo::first-letter {
   color: var(--gold);
 }
 
-/* Navigation */
+/* Nav links (vertical list inside sidebar) */
 
-.nav-links {
+.navbar .nav-links {
   display: flex;
-  align-items: center;
-  gap: 30px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
 }
 
-.nav-links a {
+.navbar .nav-links a {
   color: var(--white);
-
   text-decoration: none;
-
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-
   transition: 0.25s ease;
 }
 
-.nav-links a:hover {
+.navbar .nav-links a:hover {
   color: var(--gold);
 }
 
-/* Login */
+/* ================================
+   TOP-RIGHT BAR (user info / login / logout)
+   Stays fixed top-right, same spot as the original design
+================================ */
+
+.topbar-right {
+  position: fixed;
+  top: 18px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 201;
+}
+
+.topbar-right .welcome-user {
+  color: var(--navy);
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  text-decoration: none;
+  margin-left: 0;
+}
+
+.topbar-right .logout-btn {
+  margin-left: 0;
+}
+
+.topbar-right .login-btn {
+  margin-left: 0;
+}
+
+/* Shared button styling for login/logout (top-right) */
 
 .login-btn {
   border: none;
-
   background: var(--gold);
   color: var(--navy-dark);
-
   padding: 11px 23px;
-
   border-radius: 8px;
-
   font-size: 15px;
   font-weight: 700;
-
   cursor: pointer;
-
+  text-decoration: none;
+  display: inline-block;
   transition: 0.25s ease;
 }
 
 .login-btn:hover {
   background: #ffd36a;
   transform: translateY(-1px);
+}
+
+.logout-btn {
+  background: var(--gold);
+  color: var(--navy-dark);
+  border: none;
+  padding: 11px 23px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
 }
 
 /* ================================
@@ -329,20 +370,38 @@ body {
 
 @media (max-width: 768px) {
 
+  /* Sidebar collapses to a normal top bar on mobile */
   .navbar {
-    padding: 0 5%;
+    position: static;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    padding: 14px 5%;
+    box-shadow: none;
   }
 
-  .logo {
-    font-size: 20px;
+  .navbar .logo {
+    margin-bottom: 0;
+    font-size: 18px;
   }
 
-  .nav-links {
-    gap: 12px;
+  .navbar .nav-links {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
   }
 
-  .nav-links a {
-    display: none;
+  .topbar-right {
+    position: static;
+    justify-content: flex-end;
+    padding: 10px 5%;
+  }
+
+  body {
+    margin-left: 0;
   }
 
   .hero {
@@ -394,6 +453,10 @@ body {
 
   .login-btn {
     padding: 9px 16px;
+  }
+
+  .navbar .nav-links a {
+    font-size: 13px;
   }
 }
 /* =========================
@@ -1306,4 +1369,202 @@ body {
 .payment-option.selected {
   border: 2px solid #e5a400;
   background: #fff8df;
+}
+
+/* =========================
+   POPULAR EXAMS SECTION
+========================= */
+
+.exams-section {
+  padding: 80px 8%;
+  background: #f7f9fc;
+  text-align: center;
+}
+
+.exams-container {
+  max-width: 1300px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.exam-card {
+  background: white;
+  padding: 30px 20px;
+
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 8px 25px rgba(11, 31, 75, 0.08);
+
+  transition: 0.3s ease;
+}
+
+.exam-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--gold);
+  box-shadow: 0 15px 35px rgba(11, 31, 75, 0.15);
+}
+
+.exam-icon {
+  font-size: 36px;
+  margin-bottom: 14px;
+}
+
+.exam-card h3 {
+  font-size: 18px;
+  color: #0b1f4b;
+  margin-bottom: 8px;
+}
+
+.exam-card p {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  min-height: 40px;
+}
+
+.exam-btn {
+  width: 100%;
+  background: #0b1f4b;
+  color: white;
+
+  border: none;
+  border-radius: 7px;
+
+  padding: 10px 0;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.exam-btn:hover {
+  background: #d99a00;
+  color: #0b1f4b;
+}
+
+@media (max-width: 1000px) {
+  .exams-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .exams-container {
+    grid-template-columns: 1fr;
+  }
+
+  .exams-section {
+    padding: 60px 5%;
+  }
+}
+
+/* =========================
+   NOTES GRID (actual classes used in Notes.jsx)
+========================= */
+
+.notes-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.notes-grid .note-card {
+  background: white;
+  padding: 32px 26px;
+
+  border-radius: 16px;
+  border: 1px solid var(--border);
+
+  box-shadow: 0 8px 25px rgba(11, 31, 75, 0.07);
+
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+
+  transition: 0.3s ease;
+}
+
+.notes-grid .note-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--gold);
+  box-shadow: 0 16px 36px rgba(11, 31, 75, 0.14);
+}
+
+.notes-grid .note-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.notes-grid .note-content h2 {
+  color: var(--navy);
+  font-size: 21px;
+  margin-bottom: 6px;
+}
+
+.notes-grid .note-subject {
+  color: var(--gold-dark);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.notes-grid .note-description {
+  color: var(--text-gray);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+  flex: 1;
+}
+
+.notes-grid .note-price {
+  color: var(--navy);
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.notes-grid .note-button {
+  display: inline-block;
+  background: var(--navy);
+  color: white;
+  text-decoration: none;
+
+  padding: 12px 0;
+  border-radius: 8px;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  transition: 0.2s ease;
+}
+
+.notes-grid .note-button:hover {
+  background: var(--gold-dark);
+  color: var(--navy-dark);
+}
+
+@media (max-width: 1000px) {
+  .notes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .notes-grid {
+    grid-template-columns: 1fr;
+    padding: 30px 16px 60px;
+  }
 }

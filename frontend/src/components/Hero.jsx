@@ -1,10 +1,15 @@
+import { useNavigate } from "react-router-dom";
+
 function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section className="hero">
       <div className="hero-content">
-
+        <h4>Disha The Academy is Under Maintenance</h4>
+        <h4>⚠️ Please do not purchase or make any payments during this maintenance period.</h4>
         <h1>
-          Learn. Practice. <span>Achieve.</span>
+          Right Guidence <span>Brighter Tomorrow</span>
         </h1>
 
         <p>
@@ -17,7 +22,10 @@ function Hero() {
             Explore Notes
           </button>
 
-          <button className="secondary-btn">
+          <button
+            className="secondary-btn"
+            onClick={() => navigate("/take-mock-test")}
+          >
             Take a Mock Test
           </button>
         </div>
