@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const testsRouter = require("./routes/tests");
+const leaderboardRouter = require("./routes/leaderboard");
+ const contactRouter = require("./routes/contact");
 
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
@@ -20,6 +22,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/tests", testsRouter);
+app.use("/api/leaderboard", leaderboardRouter);
+app.use("/api/contact", contactRouter);
 
 // ======================================================
 // FILE PATHS
@@ -262,7 +266,7 @@ app.post("/api/register", async (req, res) => {
     // CHECK FIELDS
     // -----------------------------
 
-    if (
+       if (
       !finalName ||
       !email ||
       !mobile ||
@@ -272,6 +276,62 @@ app.post("/api/register", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
+      });
+
+    }
+
+    // -----------------------------
+    // NAME VALIDATION
+    // -----------------------------
+
+    if (finalName.trim().length < 2) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid full name",
+      });
+
+    }
+
+    // -----------------------------
+    // EMAIL FORMAT VALIDATION
+    // -----------------------------
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.trim())) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email address",
+      });
+
+    }
+
+    // -----------------------------
+    // MOBILE NUMBER VALIDATION (10-digit Indian number)
+    // -----------------------------
+
+    const mobileRegex = /^[6-9]\d{9}$/;
+
+    if (!mobileRegex.test(mobile.trim())) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 10-digit mobile number",
+      });
+
+    }
+
+    // -----------------------------
+    // PASSWORD STRENGTH VALIDATION
+    // -----------------------------
+
+    if (password.length < 6) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
       });
 
     }
