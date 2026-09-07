@@ -1,0 +1,142 @@
+[
+  {
+    "id": "ssc-cgl-math-01",
+    "category": "SSC CGL",
+    "title": "Mathematics Sectional Test - 01",
+    "subject": "Mathematics",
+    "duration": 1200,
+    "marksPerCorrect": 1,
+    "negativeMarking": 0.25,
+    "questions": [
+      {
+        "id": 1,
+        "question": "A car owner buys gasoline at Rs. 17, Rs. 19 & Rs. 21 per liter for three consecutive years. Compute the average cost per liter, if he spends Rs. 6783 per year?",
+        "options": ["Rs. 18.49", "Rs. 19.20", "Rs. 21.66", "Rs. 18.85"],
+        "correctAnswer": 0
+      },
+      {
+        "id": 2,
+        "question": "If the ratio of two numbers is 3:4 and their LCM is 84, find the smaller number.",
+        "options": ["18", "21", "24", "28"],
+        "correctAnswer": 1
+      },
+      {
+        "id": 3,
+        "question": "A sum of money doubles itself in 8 years at simple interest. In how many years will it triple?",
+        "options": ["12 years", "16 years", "20 years", "24 years"],
+        "correctAnswer": 1
+      },
+      {
+        "id": 4,
+        "question": "The average of 5 consecutive odd numbers is 61. What is the largest number?",
+        "options": ["61", "63", "65", "67"],
+        "correctAnswer": 2
+      },
+      {
+        "id": 5,
+        "question": "What is the value of (12 + 22 + 32 + ... + 102)?",
+        "options": ["370", "385", "405", "440"],
+        "correctAnswer": 1
+      }
+    ]
+  },
+  {
+    "id": "ssc-cgl-reasoning-01",
+    "category": "SSC CGL",
+    "title": "Reasoning Sectional Test - 01",
+    "subject": "Reasoning",
+    "duration": 900,
+    "marksPerCorrect": 1,
+    "negativeMarking": 0.25,
+    "questions": [
+      {
+        "id": 1,
+        "question": "Find the odd one out: Triangle, Square, Circle, Cube",
+        "options": ["Triangle", "Square", "Circle", "Cube"],
+        "correctAnswer": 3
+      },
+      {
+        "id": 2,
+        "question": "If CAT is coded as 24, DOG is coded as 26, then how is COW coded?",
+        "options": ["42", "45", "48", "50"],
+        "correctAnswer": 0
+      },
+      {
+        "id": 3,
+        "question": "Complete the series: 2, 6, 12, 20, 30, ?",
+        "options": ["40", "42", "44", "46"],
+        "correctAnswer": 1
+      },
+      {
+        "id": 4,
+        "question": "Pointing to a photograph, a man said, 'I have no brother or sister but that man's father is my father's son.' Whose photograph was it?",
+        "options": ["His own", "His son's", "His father's", "His nephew's"],
+        "correctAnswer": 1
+      }
+    ]
+  },
+  {
+    "id": "hp-police-constable-01",
+    "category": "HP Police Constable",
+    "title": "HP Police Constable Previous Paper - Full Test",
+    "subject": "General",
+    "duration": 1800,
+    "marksPerCorrect": 1,
+    "negativeMarking": 0.25,
+    "questions": [
+      {
+        "id": 1,
+        "question": "The current Chief Minister of Himachal Pradesh belongs to which political party? (as per last known info)",
+        "options": ["BJP", "INC", "AAP", "CPI(M)"],
+        "correctAnswer": 1
+      },
+      {
+        "id": 2,
+        "question": "Which river is known as the 'Dukh Bhanjani Nadi' in Himachal Pradesh?",
+        "options": ["Beas", "Sutlej", "Ravi", "Chenab"],
+        "correctAnswer": 0
+      },
+      {
+        "id": 3,
+        "question": "In which year was Himachal Pradesh granted full statehood?",
+        "options": ["1966", "1971", "1956", "1980"],
+        "correctAnswer": 1
+      },
+      {
+        "id": 4,
+        "question": "The Indian Constitution came into effect on:",
+        "options": ["15 August 1947", "26 January 1950", "26 November 1949", "2 October 1950"],
+        "correctAnswer": 1
+      }
+    ]
+  },
+  {
+    "id": "banking-quant-01",
+    "category": "Banking (IBPS/SBI)",
+    "title": "Quantitative Aptitude - Sectional Test 01",
+    "subject": "Quant",
+    "duration": 1200,
+    "marksPerCorrect": 1,
+    "negativeMarking": 0.25,
+    "questions": [
+      {
+        "id": 1,
+        "question": "A alone can do a piece of work in 6 days and B alone in 8 days. Working together, in how many days will they finish it?",
+        "options": ["24/7 days", "3 days", "4 days", "48/7 days"],
+        "correctAnswer": 0
+      },
+      {
+        "id": 2,
+        "question": "What is 15% of 480?",
+        "options": ["62", "68", "72", "76"],
+        "correctAnswer": 2
+      },
+      {
+        "id": 3,
+        "question": "The compound interest on Rs. 10,000 at 10% per annum for 2 years, compounded annually, is:",
+        "options": ["Rs. 2000", "Rs. 2100", "Rs. 2200", "Rs. 2300"],
+        "correctAnswer": 1
+      }
+    ]
+  }
+]
