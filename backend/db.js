@@ -13,11 +13,14 @@ const dbConfig = {
         process.env.DB_TRUST_SERVER_CERTIFICATE === "true",
     },
 
-    pool: {
+      pool: {
       max: 10,
       min: 0,
       idleTimeoutMillis: 30000,
     },
+
+    connectionTimeout: 30000,
+    requestTimeout: 30000,
   };
 
   let pool;
@@ -54,3 +57,5 @@ const dbConfig = {
     sql,
     connectDB,
   };
+
+  
