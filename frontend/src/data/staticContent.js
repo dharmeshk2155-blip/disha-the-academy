@@ -1,21 +1,21 @@
 export const CURRENT_AFFAIRS = [
   {
     id: 1,
-    date: "Sept 5, 2026",
-    title: "India signs new trade agreement",
-    summary: "India has signed a new bilateral trade agreement aimed at boosting exports in the technology sector.",
+    date: "31 August 2026",
+    title: "India’s GDP Growth Rises to 7.8%",
+    summary: "India recorded 7.8% real GDP growth in Q1 (April–June) of FY 2026–27, exceeding the RBI’s earlier 7% estimate. The growth was supported by strong consumption and investment activity. Why Important: Economy, GDP, RBI, national income — all are important for SSC, Banking, UPSC and state-level exams.",
   },
   {
     id: 2,
-    date: "Sept 3, 2026",
-    title: "New RBI monetary policy announced",
-    summary: "The Reserve Bank of India announced its latest monetary policy, keeping the repo rate unchanged at current levels.",
+    date: "1 September 2026",
+    title: "India Mandates Indian Standard Time (IST) as Official Time Reference",
+    summary: "The government notified the Legal Metrology (Indian Standard Time) Rules, 2026, making IST the official time reference for official and commercial activities in India. The move aims to promote uniformity and reduce discrepancies in timekeeping. Why Important: It is linked to Legal Metrology, IST and government regulations, making it a useful question for competitive exams.",
   },
   {
     id: 3,
-    date: "Sept 1, 2026",
-    title: "ISRO successfully launches new satellite",
-    summary: "ISRO successfully placed a new communication satellite into orbit, strengthening India's space infrastructure.",
+    date: "3 September 2026",
+    title: "India Strengthens Defence Diplomacy with ‘RAKSHA’ Framework",
+    summary: "Defence Minister Rajnath Singh released the ‘RAKSHA’ document, a 10-year strategic framework aimed at strengthening India's global defence partnerships and international defence cooperation. Why Important: The topic is important for questions related to Defence, International Relations and India’s strategic partnerships.",
   },
 ];
 
