@@ -78,79 +78,78 @@ function Notes() {
   return (
     <main className="notes-page">
 
-        {/* HEADER */}
+      {/* HEADER */}
 
-        <section className="notes-header">
+      <section className="notes-header">
 
-          <h1>Study Notes</h1>
+        <h1>Study Notes</h1>
 
-          <p>
-            Quality study material for competitive exam preparation
-          </p>
+        <p>
+          Quality study material for competitive exam preparation
+        </p>
 
-        </section>
-
-
-        {/* NOTES GRID */}
-
-        <section className="notes-grid">
-
-          {notes.map((note) => (
-
-            <div
-              className="note-card"
-              key={note.id}
-            >
-
-              {/* ICON */}
-
-              <div className="note-icon">
-                📚
-              </div>
+      </section>
 
 
-              {/* CONTENT */}
+      {/* NOTES GRID */}
 
-              <div className="note-content">
+      <section className="notes-grid">
 
-                <h2>
-                  {note.title}
-                </h2>
+        {notes.map((note) => (
 
-                <p className="note-subject">
-                  {note.subject}
-                </p>
+          <div
+            className="note-card"
+            key={note.id}
+          >
 
-                <p className="note-description">
-                  {note.description}
-                </p>
+            {/* ICON */}
 
+            <div className="note-icon">
+              📚
+            </div>
 
-                {/* PRICE */}
+            {/* CONTENT (title + subject + description) */}
 
-                <div className="note-price">
-                  ₹{note.price}
-                </div>
+            <div className="note-content">
 
+              <h2>
+                {note.title}
+              </h2>
 
-                {/* VIEW BUTTON */}
+              <p className="note-subject">
+                {note.subject}
+              </p>
 
-                <Link
-                  to={`/note/${note.id}`}
-                  className="note-button"
-                >
-                  View Notes →
-                </Link>
-
-              </div>
+              <p className="note-description">
+                {note.description}
+              </p>
 
             </div>
 
-          ))}
+            {/* PRICE + BUTTON (right side) */}
 
-        </section>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0 }}>
 
-      </main>
+              <div className="note-price">
+                ₹{note.price}
+              </div>
+
+              <Link
+                to={`/note/${note.id}`}
+                className="note-button"
+              >
+                View Notes →
+              </Link>
+
+            </div>
+
+          </div>
+
+        ))}
+
+      </section>
+
+    </main>
   );
 }
 
