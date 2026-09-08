@@ -364,13 +364,7 @@ body {
   line-height: 1.6;
 }
 
-/* ================================
-   MOBILE RESPONSIVE
-================================ */
-
-@media (max-width: 768px) {
-
-/* Hamburger toggle button - hidden on desktop */
+/* Hamburger toggle button - hidden on desktop, shown on mobile below */
 .navbar-toggle {
   display: none;
   position: fixed;
@@ -391,6 +385,10 @@ body {
 .navbar-overlay {
   display: none;
 }
+
+/* ================================
+   MOBILE RESPONSIVE
+================================ */
 
 @media (max-width: 768px) {
 
