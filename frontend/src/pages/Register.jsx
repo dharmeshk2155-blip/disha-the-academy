@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 function Register() {
   const [formData, setFormData] = useState({
     name: "",
@@ -68,7 +70,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/register",
+        `${API_BASE}/api/register`,
         {
           method: "POST",
           headers: {
