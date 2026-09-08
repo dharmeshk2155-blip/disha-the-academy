@@ -378,7 +378,8 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 24px;
+    flex-wrap: wrap;
+    gap: 14px;
     padding: 14px 5%;
     box-shadow: none;
   }
@@ -392,6 +393,13 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .xp-search-form {
+    order: 3;
+    flex-basis: 100%;
+    margin: 6px 0 0;
   }
 
   .topbar-right {
@@ -814,6 +822,21 @@ body {
   margin-top: 22px;
   color: #64748b;
   font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 20px 12px;
+  }
+
+  .login-card {
+    padding: 32px 22px 28px;
+    border-radius: 20px;
+  }
+
+  .login-card h1 {
+    font-size: 22px;
+  }
 }
 /* =========================
    NOTES PAGE
