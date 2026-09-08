@@ -424,6 +424,63 @@
   color: #8a92a0;
   font-style: italic;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .ta-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .ta-body {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .ta-sidebar {
+    width: 100%;
+    order: 2;
+  }
+
+  .ta-main {
+    order: 1;
+    padding: 18px;
+  }
+
+  .ta-q-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .ta-actions {
+    flex-direction: column;
+  }
+
+  .ta-actions .ta-btn {
+    width: 100%;
+  }
+
+  .ta-instructions-card {
+    padding: 22px;
+  }
+
+  .ta-result-stats {
+    gap: 16px;
+  }
+
+  .ta-modal {
+    width: 90%;
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 400px) {
+  .ta-q-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 /* Instructions screen (before test starts) */
 .ta-instructions-page {
   min-height: 100vh;
