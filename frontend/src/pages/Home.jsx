@@ -33,7 +33,7 @@ function Home() {
                 className="exam-btn"
                 onClick={() => navigate(`/take-mock-test/${group.slug}`)}
               >
-                Explore exam
+                Explore Exam
               </button>
             </div>
           ))}
