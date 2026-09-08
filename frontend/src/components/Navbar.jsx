@@ -12,14 +12,18 @@ function Navbar() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotif, setShowNotif] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const user = JSON.parse(
     localStorage.getItem("dishaUser")
   );
 
+  const closeMenu = () => setMenuOpen(false);
+
   const handleLogout = () => {
     localStorage.removeItem("dishaUser");
     localStorage.removeItem("dishaToken");
+    closeMenu();
     navigate("/login");
   };
 
@@ -27,13 +31,28 @@ function Navbar() {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      closeMenu();
     }
   };
 
   return (
     <>
+      {/* HAMBURGER TOGGLE - mobile only (hidden on desktop via CSS) */}
+      <button
+        className="navbar-toggle"
+        onClick={() => setMenuOpen((prev) => !prev)}
+        aria-label="Toggle menu"
+      >
+        {menuOpen ? "✕" : "☰"}
+      </button>
+
+      {/* DARK OVERLAY - shows behind the drawer on mobile when open */}
+      {menuOpen && (
+        <div className="navbar-overlay" onClick={closeMenu} />
+      )}
+
       {/* LEFT VERTICAL SIDEBAR - logo + search + nav links */}
-      <nav className="navbar">
+      <nav className={`navbar ${menuOpen ? "open" : ""}`}>
         <div className="logo">
           <span>D</span>isha The Academy
         </div>
@@ -49,17 +68,17 @@ function Navbar() {
         </form>
 
         <div className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/notes">Notes</Link>
-          <Link to="/tests">Tests</Link>
-          {user && <Link to="/dashboard">Dashboard</Link>}
-          {user && <Link to="/my-results">My Results</Link>}
-          <Link to="/leaderboard">Leaderboard</Link>
-          <Link to="/current-affairs">Current Affairs</Link>
-          <Link to="/blog">Blog</Link>
-          <Link to="/faq">FAQ</Link>
-          <Link to="/contact">Contact Us</Link>
-          <Link to="/about">About</Link>
+          <Link to="/" onClick={closeMenu}>Home</Link>
+          <Link to="/notes" onClick={closeMenu}>Notes</Link>
+          <Link to="/tests" onClick={closeMenu}>Tests</Link>
+          {user && <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>}
+          {user && <Link to="/my-results" onClick={closeMenu}>My Results</Link>}
+          <Link to="/leaderboard" onClick={closeMenu}>Leaderboard</Link>
+          <Link to="/current-affairs" onClick={closeMenu}>Current Affairs</Link>
+          <Link to="/blog" onClick={closeMenu}>Blog</Link>
+          <Link to="/faq" onClick={closeMenu}>FAQ</Link>
+          <Link to="/contact" onClick={closeMenu}>Contact Us</Link>
+          <Link to="/about" onClick={closeMenu}>About</Link>
         </div>
       </nav>
 
@@ -89,7 +108,7 @@ function Navbar() {
 
         {user ? (
           <>
-            <Link to="/account" className="welcome-user">
+            <Link to="/account" className="welcome-user" onClick={closeMenu}>
               Hi, {user.fullName}
             </Link>
 
@@ -98,7 +117,7 @@ function Navbar() {
             </button>
           </>
         ) : (
-          <Link to="/login" className="login-btn">
+          <Link to="/login" className="login-btn" onClick={closeMenu}>
             Login
           </Link>
         )}
