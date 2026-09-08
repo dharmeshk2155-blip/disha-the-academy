@@ -16,8 +16,7 @@ function Home() {
           <h2>Popular Exams</h2>
 
           <p>
-            Practice mock tests for India's most in-demand
-            competitive exams.
+            Select your exam and start your preparation today.
           </p>
         </div>
 
@@ -34,7 +33,7 @@ function Home() {
                 className="exam-btn"
                 onClick={() => navigate(`/take-mock-test/${group.slug}`)}
               >
-                Explore Tests
+                Explore exam
               </button>
             </div>
           ))}
