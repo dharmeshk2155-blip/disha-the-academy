@@ -4,7 +4,6 @@ require("dotenv").config();
 const testsRouter = require("./routes/tests");
 const leaderboardRouter = require("./routes/leaderboard");
 const contactRouter = require("./routes/contact");
-const authRoutes = require("./routes/auth");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const path = require("path");
