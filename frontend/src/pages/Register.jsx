@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -20,6 +21,54 @@ function Register() {
       [e.target.name]: e.target.value,
     });
     setMessage("");
+  };
+
+  function handleLoginSuccess(data) {
+    if (data.token) {
+      localStorage.setItem("dishaToken", data.token);
+    }
+    localStorage.setItem("dishaUser", JSON.stringify(data.user));
+    setMessage("Account created successfully!");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 600);
+  }
+
+  const handleGoogleLogin = () => {
+    if (!window.google || !window.google.accounts) {
+      setMessage("Google login is still loading, please try again in a moment.");
+      return;
+    }
+
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "email profile",
+      callback: async (response) => {
+        if (response.error) {
+          setMessage("Google login failed. Please try again.");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken: response.access_token }),
+          });
+          const data = await res.json();
+
+          if (res.ok && data.success) {
+            handleLoginSuccess(data);
+          } else {
+            setMessage(data.message || "Google sign up failed.");
+          }
+        } catch (err) {
+          setMessage("Backend se connection nahi ho raha. Check karo backend running hai ya nahi.");
+        }
+      },
+    });
+
+    client.requestAccessToken();
   };
 
   // Returns an error string, or null if everything is valid
@@ -128,7 +177,7 @@ function Register() {
 
         {/* GOOGLE SIGN IN */}
         <div className="google-login-wrapper">
-          <button type="button" className="google-login-btn" onClick={() => alert("Google login setup pending")}>
+          <button type="button" className="google-login-btn" onClick={handleGoogleLogin}>
             <svg viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.8l5.7-5.7C33.5 6.5 29 5 24 5 13 5 4 14 4 25s9 20 20 20c11 0 19.5-8 19.5-19.5 0-1.3-.1-2.7-.4-3.9z"/>
               <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c2.8 0 5.3 1 7.3 2.8l5.7-5.7C33.5 6.5 29 5 24 5c-7.4 0-13.8 4.2-17 10.7z"/>
