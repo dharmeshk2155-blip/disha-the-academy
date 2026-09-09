@@ -3,8 +3,8 @@ const cors = require("cors");
 require("dotenv").config();
 const testsRouter = require("./routes/tests");
 const leaderboardRouter = require("./routes/leaderboard");
- const contactRouter = require("./routes/contact");
-
+const contactRouter = require("./routes/contact");
+const authRoutes = require("./routes/auth");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const path = require("path");
@@ -24,6 +24,7 @@ app.use(express.json());
 app.use("/api/tests", testsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/contact", contactRouter);
+app.use("/api/auth", authRoutes);
 
 // ======================================================
 // FILE PATHS
@@ -241,6 +242,117 @@ app.get("/api/notes/:id", (req, res) => {
 
   res.json(note);
 
+});
+
+
+// ======================================================
+// GOOGLE LOGIN
+// ======================================================
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Access token is required",
+      });
+    }
+
+    // Verify the token actually belongs to our app
+    const tokenInfoRes = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`
+    );
+    const tokenInfo = await tokenInfoRes.json();
+
+    if (!tokenInfoRes.ok || tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Google token",
+      });
+    }
+
+    // Get the user's profile info from Google
+    const profileRes = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const profile = await profileRes.json();
+
+    if (!profile.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Could not get email from Google",
+      });
+    }
+
+    const normalizedEmail = profile.email.trim().toLowerCase();
+    const pool = await connectDB();
+
+    // Check if this user already exists
+    let userResult = await pool
+      .request()
+      .input("Email", sql.NVarChar(150), normalizedEmail)
+      .query(`SELECT Id, Name, Email, Mobile FROM dbo.Users WHERE Email = @Email`);
+
+    let user;
+
+    if (userResult.recordset.length > 0) {
+      // Existing user - just log them in
+      user = userResult.recordset[0];
+    } else {
+      // New user - create an account (no password needed for Google users)
+      const randomPassword = crypto.randomBytes(32).toString("hex");
+      const passwordHash = hashPassword(randomPassword);
+
+      const insertResult = await pool
+        .request()
+        .input("Name", sql.NVarChar(100), profile.name || "Google User")
+        .input("Email", sql.NVarChar(150), normalizedEmail)
+        .input("Mobile", sql.NVarChar(20), "")
+        .input("PasswordHash", sql.NVarChar(255), passwordHash)
+        .query(`
+          INSERT INTO dbo.Users (Name, Email, Mobile, PasswordHash)
+          OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Email, INSERTED.Mobile
+          VALUES (@Name, @Email, @Mobile, @PasswordHash)
+        `);
+
+      user = insertResult.recordset[0];
+    }
+
+    const token = jwt.sign(
+      { userId: user.Id, email: user.Email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    console.log("");
+    console.log("=================================");
+    console.log("GOOGLE LOGIN SUCCESSFUL");
+    console.log("USER ID:", user.Id);
+    console.log("EMAIL:", user.Email);
+    console.log("=================================");
+    console.log("");
+
+    return res.json({
+      success: true,
+      message: "Google login successful",
+      token,
+      user: {
+        id: user.Id,
+        fullName: user.Name,
+        email: user.Email,
+        mobile: user.Mobile,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Google login failed",
+    });
+  }
 });
 
 // ======================================================
