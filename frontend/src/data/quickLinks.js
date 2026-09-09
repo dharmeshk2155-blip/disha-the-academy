@@ -1,16 +1,5 @@
 export const quickLinks = [
   {
-    id: "live-classes",
-    label: "Live Classes",
-    to: "/live-classes",
-    badge: "FREE",
-    badgeColor: "#22c55e",
-    bg: "#fdecec",
-    color: "#e11d48",
-    inNav: false, // skip in navbar
-    icon: "play",
-  },
-  {
     id: "live-tests",
     label: "Live Test & Quizzes",
     to: "/mock-tests",
