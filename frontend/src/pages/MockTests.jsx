@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getExamGroup, getSubExam } from "../data/examTaxonomy";
 import "./MockTests.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -11,10 +10,8 @@ function formatDuration(seconds) {
 }
 
 export default function MockTests() {
-  const { topSlug, subSlug, section } = useParams();
-  const group = getExamGroup(topSlug);
-  const subExam = getSubExam(topSlug, subSlug);
-  const sectionName = section ? decodeURIComponent(section) : null;
+  const { category } = useParams();
+  const decodedCategory = decodeURIComponent(category);
 
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,20 +19,13 @@ export default function MockTests() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
     fetch(`${API_BASE}/api/tests`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch tests");
         return res.json();
       })
       .then((data) => {
-        const filtered = data.filter((t) => {
-          const matchesExam = t.topCategory === topSlug && t.subExam === subSlug;
-          const matchesSection = sectionName
-            ? (t.subject || "General") === sectionName
-            : true;
-          return matchesExam && matchesSection;
-        });
+        const filtered = data.filter((t) => t.category === decodedCategory);
         setTests(filtered);
         setLoading(false);
       })
@@ -43,10 +33,7 @@ export default function MockTests() {
         setError(err.message);
         setLoading(false);
       });
-  }, [topSlug, subSlug, sectionName]);
-
-  const pageTitle = sectionName || (subExam ? subExam.name : subSlug);
-  const backLabel = subExam ? `← Back to ${subExam.name}` : "← Back";
+  }, [decodedCategory]);
 
   if (loading) {
     return <div className="mt-status">Loading mock tests...</div>;
@@ -58,22 +45,17 @@ export default function MockTests() {
 
   return (
     <div className="mt-page">
-      <button
-        className="mt-back-btn"
-        onClick={() => navigate(`/take-mock-test/${topSlug}/${subSlug}`)}
-      >
-        {backLabel}
+      <button className="mt-back-btn" onClick={() => navigate("/take-mock-test")}>
+        ← Back to Test Series
       </button>
 
       <div className="mt-header">
-        <h1>{pageTitle}</h1>
-        <p>Choose a test below and start practicing.</p>
+        <h1>{decodedCategory} Mock Test Series</h1>
+        <p>{tests.length} {tests.length === 1 ? "test" : "tests"} available. Choose one to start.</p>
       </div>
 
       {tests.length === 0 && (
-        <div className="mt-status">
-          No mock tests available here yet. Check back soon!
-        </div>
+        <div className="mt-status">No mock tests available in this series yet.</div>
       )}
 
       <div className="mt-grid">
