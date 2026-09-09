@@ -41,7 +41,7 @@ export default function ExamGroups() {
               <div className="ec-card-title">{exam.name}</div>
               <div className="ec-card-subtitle">{exam.groupTitle}</div>
             </div>
-            <button className="ec-card-btn">Explore Tests</button>
+            <button className="ec-card-btn">Go To Test Series</button>
           </div>
         ))}
       </div>
