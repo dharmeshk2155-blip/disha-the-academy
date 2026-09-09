@@ -145,3 +145,14 @@
     padding: 24px 16px 40px;
   }
 }
+/* Add this to your existing ExamCategories.css */
+
+.ec-card-icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 6px;
+  flex-shrink: 0;
+}
