@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import Hero from "../components/Hero";
-import QuickLinks from "../components/QuickLinks";
 import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 
 function Home() {
@@ -9,7 +8,6 @@ function Home() {
   return (
     <>
       <Hero />
-      <QuickLinks />
 
       {/* Popular Exams Section */}
       <section className="exams-section">
@@ -18,7 +16,8 @@ function Home() {
           <h2>Popular Exams</h2>
 
           <p>
-            Select your exam and start your preparation today.
+            Practice mock tests for India's most in-demand
+            competitive exams.
           </p>
         </div>
 
@@ -33,9 +32,9 @@ function Home() {
               </div>
               <button
                 className="exam-btn"
-                onClick={() => navigate(`/take-mock-test/${group.slug}`)}
+                onClick={() => navigate("/take-mock-test")}
               >
-                Explore Exam
+                Explore Tests
               </button>
             </div>
           ))}
