@@ -2,6 +2,17 @@ import { useNavigate } from "react-router-dom";
 import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 import "./ExamCategories.css";
 
+// Flatten all sub-exams from every category into one list,
+// keeping a reference to the parent group (for icon/title/back-link).
+const ALL_EXAMS = EXAM_TAXONOMY.flatMap((group) =>
+  group.subExams.map((sub) => ({
+    ...sub,
+    groupSlug: group.slug,
+    groupTitle: group.title,
+    groupIcon: group.icon,
+  }))
+);
+
 export default function ExamGroups() {
   const navigate = useNavigate();
 
@@ -13,22 +24,22 @@ export default function ExamGroups() {
 
       <div className="ec-header">
         <h1>Take a Mock Test</h1>
-        <p>Choose an exam category to see available exams.</p>
+        <p>Choose an exam to see available mock tests.</p>
       </div>
 
       <div className="ec-grid">
-        {EXAM_TAXONOMY.map((group) => (
+        {ALL_EXAMS.map((exam) => (
           <div
-            key={group.slug}
+            key={`${exam.groupSlug}-${exam.slug}`}
             className="ec-card"
-            onClick={() => navigate(`/take-mock-test/${group.slug}`)}
+            onClick={() =>
+              navigate(`/take-mock-test/${exam.groupSlug}/${exam.slug}`)
+            }
           >
-            <div className="ec-card-icon">{group.icon}</div>
+            <div className="ec-card-icon">{exam.groupIcon}</div>
             <div className="ec-card-info">
-              <div className="ec-card-title">{group.title}</div>
-              <div className="ec-card-subtitle">
-                {group.subExams.map((s) => s.name).join(", ")}
-              </div>
+              <div className="ec-card-title">{exam.name}</div>
+              <div className="ec-card-subtitle">{exam.groupTitle}</div>
             </div>
             <button className="ec-card-btn">Explore Tests</button>
           </div>

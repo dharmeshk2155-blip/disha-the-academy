@@ -11,7 +11,7 @@ import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
-import SubExams from "./pages/SubExams";
+import ExamDetail from "./pages/ExamDetail";
 import MockTests from "./pages/MockTests";
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
@@ -23,7 +23,6 @@ import ContactUs from "./pages/ContactUs";
 import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
-
 import "./App.css";
 
 function App() {
@@ -100,7 +99,7 @@ function App() {
           {/* SEARCH */}
           <Route path="/search" element={<SearchResults />} />
 
-          {/* TAKE A MOCK TEST - level 1: exam groups (SSC, Banking, Railway...) */}
+          {/* TAKE A MOCK TEST - level 1: flat list of all exams (category step skipped) */}
           <Route
             path="/take-mock-test"
             element={
@@ -110,19 +109,19 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 2: sub-exams within a group (CGL, CHSL...) */}
+          {/* TAKE A MOCK TEST - level 2: exam detail page (sections) */}
           <Route
-            path="/take-mock-test/:topSlug"
+            path="/take-mock-test/:topSlug/:subSlug"
             element={
               <ProtectedRoute>
-                <SubExams />
+                <ExamDetail />
               </ProtectedRoute>
             }
           />
 
-          {/* TAKE A MOCK TEST - level 3: actual mock tests for that sub-exam */}
+          {/* TAKE A MOCK TEST - level 3: actual mock tests within a section */}
           <Route
-            path="/take-mock-test/:topSlug/:subSlug"
+            path="/take-mock-test/:topSlug/:subSlug/:section"
             element={
               <ProtectedRoute>
                 <MockTests />
