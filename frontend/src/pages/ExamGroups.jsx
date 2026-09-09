@@ -3,7 +3,7 @@ import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 import "./ExamCategories.css";
 
 // Flatten all sub-exams from every category into one list,
-// keeping a reference to the parent group (for icon/title/back-link).
+// keeping a reference to the parent group (for title/back-link).
 const ALL_EXAMS = EXAM_TAXONOMY.flatMap((group) =>
   group.subExams.map((sub) => ({
     ...sub,
@@ -36,7 +36,25 @@ export default function ExamGroups() {
               navigate(`/take-mock-test/${exam.groupSlug}/${exam.slug}`)
             }
           >
-            <div className="ec-card-icon">{exam.groupIcon}</div>
+            {exam.iconUrl ? (
+              <img
+                src={exam.iconUrl}
+                alt={`${exam.name} logo`}
+                className="ec-card-icon-img"
+                loading="lazy"
+                onError={(e) => {
+                  // If the hotlinked logo ever breaks, fall back to the emoji
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+            ) : null}
+            <div
+              className="ec-card-icon"
+              style={{ display: exam.iconUrl ? "none" : "flex" }}
+            >
+              {exam.groupIcon}
+            </div>
             <div className="ec-card-info">
               <div className="ec-card-title">{exam.name}</div>
               <div className="ec-card-subtitle">{exam.groupTitle}</div>
