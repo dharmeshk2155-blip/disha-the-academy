@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Hero from "../components/Hero";
+import QuickLinks from "../components/QuickLinks";
 import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 
 function Home() {
@@ -8,6 +9,7 @@ function Home() {
   return (
     <>
       <Hero />
+      <QuickLinks />
 
       {/* Popular Exams Section */}
       <section className="exams-section">
