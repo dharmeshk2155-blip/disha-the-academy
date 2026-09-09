@@ -1,60 +1,30 @@
-export const quickLinks = [
-  {
-    id: "live-classes",
-    label: "Live Classes",
-    to: "/live-classes",
-    badge: "FREE",
-    badgeColor: "#22c55e",
-    bg: "#fdecec",
-    color: "#e11d48",
-    inNav: false, // skip in navbar
-    icon: "play",
-  },
-  {
-    id: "live-tests",
-    label: "Live Test & Quizzes",
-    to: "/mock-tests",
-    bg: "#e8f7ee",
-    color: "#16a34a",
-    inNav: true,
-    icon: "clipboard",
-  },
-  {
-    id: "free-quizzes",
-    label: "Free Quizzes",
-    to: "/mock-tests?type=free",
-    badge: "NEW",
-    badgeColor: "#f97316",
-    bg: "#f1edfb",
-    color: "#7c3aed",
-    inNav: true,
-    icon: "help",
-  },
-  {
-    id: "prev-papers",
-    label: "Prev. Year Papers",
-    to: "/notes?category=previous-year",
-    bg: "#fdf3e3",
-    color: "#d97706",
-    inNav: true,
-    icon: "file",
-  },
-  {
-    id: "practice",
-    label: "Practice",
-    to: "/mock-tests?mode=practice",
-    bg: "#fdecec",
-    color: "#e11d48",
-    inNav: true,
-    icon: "history",
-  },
-  {
-    id: "gk-ca",
-    label: "GK & CA",
-    to: "/current-affairs",
-    bg: "#eef0f5",
-    color: "#4338ca",
-    inNav: true,
-    icon: "newspaper",
-  },
-];
+import { Link } from "react-router-dom";
+import { quickLinks } from "../data/quickLinks";
+import QuickIcon from "./QuickIcon";
+import "./QuickLinks.css";
+
+export default function QuickLinks() {
+  return (
+    <div className="quicklinks-card">
+      {quickLinks.map((item) => (
+        <Link key={item.id} to={item.to} className="quicklinks-item">
+          <div
+            className="quicklinks-icon-wrap"
+            style={{ backgroundColor: item.bg }}
+          >
+            <QuickIcon name={item.icon} color={item.color} />
+            {item.badge && (
+              <span
+                className="quicklinks-badge"
+                style={{ backgroundColor: item.badgeColor }}
+              >
+                {item.badge}
+              </span>
+            )}
+          </div>
+          <span className="quicklinks-label">{item.label}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
