@@ -4,6 +4,16 @@
 
 export const EXAM_TAXONOMY = [
   {
+    slug: "police",
+    icon: "👮",
+    title: "Police Exams",
+    subExams: [
+      { slug: "state-police", name: "Himachal Pradesh Police" },
+      { slug: "ssc-gd", name: "SSC GD" },
+      { slug: "si", name: "SI" },
+    ],
+  },
+  {
     slug: "ssc",
     icon: "📝",
     title: "SSC Exams",
@@ -66,16 +76,6 @@ export const EXAM_TAXONOMY = [
       { slug: "cds", name: "CDS" },
       { slug: "afcat", name: "AFCAT" },
       { slug: "agniveer", name: "Agniveer" },
-    ],
-  },
-  {
-    slug: "police",
-    icon: "👮",
-    title: "Police Exams",
-    subExams: [
-      { slug: "state-police", name: "State Police" },
-      { slug: "ssc-gd", name: "SSC GD" },
-      { slug: "si", name: "SI" },
     ],
   },
   {
