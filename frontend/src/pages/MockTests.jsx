@@ -11,9 +11,10 @@ function formatDuration(seconds) {
 }
 
 export default function MockTests() {
-  const { topSlug, subSlug } = useParams();
+  const { topSlug, subSlug, section } = useParams();
   const group = getExamGroup(topSlug);
   const subExam = getSubExam(topSlug, subSlug);
+  const sectionName = section ? decodeURIComponent(section) : null;
 
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,15 +22,20 @@ export default function MockTests() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     fetch(`${API_BASE}/api/tests`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch tests");
         return res.json();
       })
       .then((data) => {
-        const filtered = data.filter(
-          (t) => t.topCategory === topSlug && t.subExam === subSlug
-        );
+        const filtered = data.filter((t) => {
+          const matchesExam = t.topCategory === topSlug && t.subExam === subSlug;
+          const matchesSection = sectionName
+            ? (t.subject || "General") === sectionName
+            : true;
+          return matchesExam && matchesSection;
+        });
         setTests(filtered);
         setLoading(false);
       })
@@ -37,10 +43,10 @@ export default function MockTests() {
         setError(err.message);
         setLoading(false);
       });
-  }, [topSlug, subSlug]);
+  }, [topSlug, subSlug, sectionName]);
 
-  const pageTitle = subExam ? subExam.name : subSlug;
-  const backLabel = group ? `← Back to ${group.title}` : "← Back";
+  const pageTitle = sectionName || (subExam ? subExam.name : subSlug);
+  const backLabel = subExam ? `← Back to ${subExam.name}` : "← Back";
 
   if (loading) {
     return <div className="mt-status">Loading mock tests...</div>;
@@ -54,7 +60,7 @@ export default function MockTests() {
     <div className="mt-page">
       <button
         className="mt-back-btn"
-        onClick={() => navigate(`/take-mock-test/${topSlug}`)}
+        onClick={() => navigate(`/take-mock-test/${topSlug}/${subSlug}`)}
       >
         {backLabel}
       </button>
@@ -66,7 +72,7 @@ export default function MockTests() {
 
       {tests.length === 0 && (
         <div className="mt-status">
-          No mock tests available for {pageTitle} yet. Check back soon!
+          No mock tests available here yet. Check back soon!
         </div>
       )}
 
