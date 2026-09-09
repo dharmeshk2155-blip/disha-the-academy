@@ -1,0 +1,114 @@
+.ed-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.ed-back-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 0 16px;
+}
+
+.ed-back-btn:hover {
+  color: #374151;
+}
+
+.ed-header {
+  margin-bottom: 20px;
+}
+
+.ed-header h1 {
+  font-size: 24px;
+  margin: 0 0 4px;
+  color: #111827;
+}
+
+.ed-header p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.ed-status {
+  padding: 40px 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.ed-error {
+  color: #dc2626;
+}
+
+.ed-type-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ed-type-pill {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ed-type-pill:hover {
+  border-color: #22d3ee;
+}
+
+.ed-type-pill.active {
+  background: #22d3ee;
+  border-color: #22d3ee;
+  color: #fff;
+}
+
+.ed-tabs-bar {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 0 20px;
+}
+
+.ed-tabs-scroll {
+  display: flex;
+  gap: 32px;
+  overflow-x: auto;
+}
+
+.ed-tab-item {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 15px;
+  padding: 16px 2px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.ed-tab-item:hover {
+  color: #111827;
+}
+
+.ed-tab-item:first-child {
+  color: #22d3ee;
+  border-bottom-color: #22d3ee;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .ed-tabs-scroll {
+    gap: 20px;
+  }
+}
