@@ -17,6 +17,8 @@ router.get("/", async (req, res) => {
         t.Duration AS duration,
         t.MarksPerCorrect AS marksPerCorrect,
         t.NegativeMarking AS negativeMarking,
+        t.TopCategory AS topCategory,
+        t.SubExam AS subExam,
         (SELECT COUNT(*) FROM Questions q WHERE q.TestId = t.TestId) AS totalQuestions
       FROM Tests t
     `);
