@@ -23,7 +23,6 @@ app.use(express.json());
 app.use("/api/tests", testsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/contact", contactRouter);
-app.use("/api/auth", authRoutes);
 
 // ======================================================
 // FILE PATHS
