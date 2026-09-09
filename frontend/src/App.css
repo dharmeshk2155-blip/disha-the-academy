@@ -750,6 +750,7 @@ body {
   font-size: 15px;
   outline: none;
   background: #f8faff;
+  color: #172033;
   transition: 0.2s ease;
 }
 
@@ -757,6 +758,15 @@ body {
   border-color: #0b1f4d;
   background: #fff;
   box-shadow: 0 0 0 4px rgba(11, 31, 77, 0.08);
+}
+
+/* Fix mobile browsers/autofill turning input text white/invisible */
+.input-group input:-webkit-autofill,
+.input-group input:-webkit-autofill:hover,
+.input-group input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #172033 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #f8faff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .login-options {
@@ -921,6 +931,7 @@ body {
   border-radius: 10px;
 
   background: white;
+  color: #172033;
 
   font-size: 16px;
   outline: none;
@@ -1261,6 +1272,7 @@ body {
   border-radius: 8px;
   font-size: 15px;
   outline: none;
+  color: #172033;
 }
 
 .checkout-form input:focus {

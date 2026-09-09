@@ -233,6 +233,7 @@
   font-size: 14px;
   outline: none;
   font-family: inherit;
+  color: #172033;
 }
 
 .xp-form-group input:focus,
@@ -270,6 +271,7 @@
   border: none;
   font-size: 14px;
   outline: none;
+  color: #172033;
 }
 
 /* Notifications dropdown */
