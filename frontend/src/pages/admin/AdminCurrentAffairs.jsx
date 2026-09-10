@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import "./AdminCurrentAffairs.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 export default function AdminCurrentAffairs() {
-  const [adminKey, setAdminKey] = useState(
-    () => sessionStorage.getItem("adminKey") || ""
-  );
-  const [unlocked, setUnlocked] = useState(!!sessionStorage.getItem("adminKey"));
-  const [keyInput, setKeyInput] = useState("");
+  const { adminKey } = useOutletContext();
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,15 +32,8 @@ export default function AdminCurrentAffairs() {
   }
 
   useEffect(() => {
-    if (unlocked) loadEntries();
-  }, [unlocked]);
-
-  function handleUnlock(e) {
-    e.preventDefault();
-    sessionStorage.setItem("adminKey", keyInput);
-    setAdminKey(keyInput);
-    setUnlocked(true);
-  }
+    loadEntries();
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -59,10 +49,7 @@ export default function AdminCurrentAffairs() {
         body: JSON.stringify({ title, summary, date }),
       });
       if (res.status === 401) {
-        // Wrong/expired key — send back to the unlock screen
-        sessionStorage.removeItem("adminKey");
-        setUnlocked(false);
-        throw new Error("Admin key rejected. Please re-enter it.");
+        throw new Error("Admin key rejected. Try locking and re-entering it.");
       }
       if (!res.ok) throw new Error("Failed to add entry");
       setTitle("");
@@ -87,25 +74,6 @@ export default function AdminCurrentAffairs() {
     } catch (err) {
       alert(err.message);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <div className="admin-ca-lock-page">
-        <form className="admin-ca-lock-card" onSubmit={handleUnlock}>
-          <h2>Admin — Current Affairs</h2>
-          <p>Enter the admin key to manage entries.</p>
-          <input
-            type="password"
-            placeholder="Admin key"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            required
-          />
-          <button type="submit">Unlock</button>
-        </form>
-      </div>
-    );
   }
 
   return (
