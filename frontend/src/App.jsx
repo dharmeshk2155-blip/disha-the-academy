@@ -11,8 +11,10 @@ import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
-import ExamDetail from "./pages/ExamDetail";
+import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+import PopularExamsSub from "./pages/PopularExamsSub";
+import PopularExamsTests from "./pages/PopularExamsTests";
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
@@ -23,6 +25,12 @@ import ContactUs from "./pages/ContactUs";
 import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import About from "./pages/About";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
+import AdminComingSoon from "./pages/admin/AdminComingSoon";
+
 import "./App.css";
 
 function App() {
@@ -60,6 +68,27 @@ function App() {
 
           {/* ORDER SUCCESS */}
           <Route path="/order-success/:id" element={<OrderSuccess />} />
+
+          {/* ABOUT */}
+          <Route path="/about" element={<About />} />
+
+          {/* ADMIN DASHBOARD (shared unlock + sidebar, nested sections) */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminHome />} />
+            <Route path="current-affairs" element={<AdminCurrentAffairs />} />
+            <Route path="blog" element={<AdminComingSoon section="Blog" />} />
+            <Route path="faq" element={<AdminComingSoon section="FAQ" />} />
+            <Route
+              path="contact-submissions"
+              element={<AdminComingSoon section="Contact Us Messages" />}
+            />
+            <Route path="about" element={<AdminComingSoon section="About Page" />} />
+            <Route path="notes" element={<AdminComingSoon section="Notes" />} />
+            <Route
+              path="tests"
+              element={<AdminComingSoon section="Tests / Mock Tests" />}
+            />
+          </Route>
 
           {/* DASHBOARD (LOGIN REQUIRED) */}
           <Route
@@ -99,7 +128,7 @@ function App() {
           {/* SEARCH */}
           <Route path="/search" element={<SearchResults />} />
 
-          {/* TAKE A MOCK TEST - level 1: flat list of all exams (category step skipped) */}
+          {/* TAKE A MOCK TEST - level 1: exam groups (SSC, Banking, Railway...) */}
           <Route
             path="/take-mock-test"
             element={
@@ -109,19 +138,19 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 2: exam detail page (sections) */}
+          {/* TAKE A MOCK TEST - level 2: sub-exams within a group (CGL, CHSL...) */}
           <Route
-            path="/take-mock-test/:topSlug/:subSlug"
+            path="/take-mock-test/:topSlug"
             element={
               <ProtectedRoute>
-                <ExamDetail />
+                <SubExams />
               </ProtectedRoute>
             }
           />
 
-          {/* TAKE A MOCK TEST - level 3: actual mock tests within a section */}
+          {/* TAKE A MOCK TEST - level 3: actual mock tests for that sub-exam */}
           <Route
-            path="/take-mock-test/:topSlug/:subSlug/:section"
+            path="/take-mock-test/:topSlug/:subSlug"
             element={
               <ProtectedRoute>
                 <MockTests />
@@ -135,6 +164,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <TestAttempt />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* POPULAR EXAMS (Home page section) - completely independent
+              from the "Take a Mock Test" navbar flow above */}
+          <Route
+            path="/popular-exams/:topSlug"
+            element={
+              <ProtectedRoute>
+                <PopularExamsSub />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/popular-exams/:topSlug/:subSlug"
+            element={
+              <ProtectedRoute>
+                <PopularExamsTests />
               </ProtectedRoute>
             }
           />
