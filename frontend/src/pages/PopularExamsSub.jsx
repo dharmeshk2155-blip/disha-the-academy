@@ -33,7 +33,9 @@ export default function PopularExamsSub() {
       </div>
 
       <div className="ec-grid">
-        {group.subExams.map((sub) => (
+        {group.subExams
+          .filter((sub) => sub.slug !== "ssc-gd")
+          .map((sub) => (
           <div
             key={sub.slug}
             className="ec-card"
