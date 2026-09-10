@@ -28,7 +28,12 @@ function Home() {
               <div className="exam-icon">{group.icon}</div>
               <div className="exam-info">
                 <h3>{group.title}</h3>
-                <p>{group.subExams.map((s) => s.name).join(", ")}</p>
+                <p>
+                {group.subExams
+                  .filter((s) => s.slug !== "ssc-gd")
+                  .map((s) => s.name)
+                  .join(", ")}
+              </p>
               </div>
               <button
                 className="exam-btn"
