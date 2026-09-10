@@ -13,6 +13,8 @@ import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+import PopularExamsSub from "./pages/PopularExamsSub";
+import PopularExamsTests from "./pages/PopularExamsTests";
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
@@ -136,6 +138,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <TestAttempt />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* POPULAR EXAMS (Home page section) - completely independent
+              from the "Take a Mock Test" navbar flow above */}
+          <Route
+            path="/popular-exams/:topSlug"
+            element={
+              <ProtectedRoute>
+                <PopularExamsSub />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/popular-exams/:topSlug/:subSlug"
+            element={
+              <ProtectedRoute>
+                <PopularExamsTests />
               </ProtectedRoute>
             }
           />

@@ -32,7 +32,7 @@ function Home() {
               </div>
               <button
                 className="exam-btn"
-                onClick={() => navigate("/take-mock-test")}
+                onClick={() => navigate(`/popular-exams/${group.slug}`)}
               >
                 Explore Tests
               </button>
