@@ -40,10 +40,26 @@ export default function About() {
   }, []);
 
   const displayStats = [
-    { label: "Registered Students", value: stats?.registeredStudents },
-    { label: "Mock Tests", value: stats?.mockTestsCount },
-    { label: "Exam Categories", value: EXAM_TAXONOMY.length },
-    { label: "Questions Bank", value: stats?.questionsCount },
+    {
+      label: "Registered Students",
+      value: stats?.registeredStudents,
+      loading: statsLoading,
+    },
+    {
+      label: "Mock Tests",
+      value: stats?.mockTestsCount,
+      loading: statsLoading,
+    },
+    {
+      label: "Exam Categories",
+      value: EXAM_TAXONOMY.length,
+      loading: false, // this one is static, never depends on the API call
+    },
+    {
+      label: "Questions Bank",
+      value: stats?.questionsCount,
+      loading: statsLoading,
+    },
   ];
 
   return (
@@ -89,7 +105,7 @@ export default function About() {
           {displayStats.map((stat) => (
             <div key={stat.label} className="about-stat-card">
               <div className="about-stat-value">
-                {statsLoading ? "…" : formatNumber(stat.value)}
+                {stat.loading ? "…" : formatNumber(stat.value)}
               </div>
               <div className="about-stat-label">{stat.label}</div>
             </div>
