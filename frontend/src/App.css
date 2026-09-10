@@ -186,13 +186,13 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      #e9f0ff 0%,
+      #fff8e6 0%,
       transparent 35%
     ),
     linear-gradient(
       135deg,
       #ffffff 0%,
-      #f3f7ff 100%
+      #fffaf0 100%
     );
 }
 
