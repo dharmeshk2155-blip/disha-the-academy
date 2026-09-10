@@ -183,17 +183,13 @@ body {
 
   padding: 80px 20px;
 
-  background:
-    radial-gradient(
-      circle at top left,
-      #fff8e6 0%,
-      transparent 35%
-    ),
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #fffaf0 100%
-    );
+  background: linear-gradient(
+    180deg,
+    #fff8e6 0%,
+    #fffaf0 30%,
+    #ffffff 55%,
+    #ffffff 100%
+  );
 }
 
 .hero-content {
