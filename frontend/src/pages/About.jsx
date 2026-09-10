@@ -1,12 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { EXAM_TAXONOMY } from "../data/examTaxonomy";
 import "./About.css";
 
-const STATS = [
-  { label: "Registered Students", value: "10,000+" },
-  { label: "Mock Tests", value: "500+" },
-  { label: "Exam Categories", value: "8" },
-  { label: "Questions Bank", value: "50,000+" },
-];
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const TEAM = [
   {
@@ -16,7 +13,39 @@ const TEAM = [
   },
 ];
 
+function formatNumber(n) {
+  if (n === null || n === undefined) return "—";
+  return n.toLocaleString("en-IN");
+}
+
 export default function About() {
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/stats`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load stats");
+        return res.json();
+      })
+      .then((data) => {
+        setStats(data);
+        setStatsLoading(false);
+      })
+      .catch(() => {
+        // If the stats endpoint fails, we simply don't show fabricated numbers.
+        setStats(null);
+        setStatsLoading(false);
+      });
+  }, []);
+
+  const displayStats = [
+    { label: "Registered Students", value: stats?.registeredStudents },
+    { label: "Mock Tests", value: stats?.mockTestsCount },
+    { label: "Exam Categories", value: EXAM_TAXONOMY.length },
+    { label: "Questions Bank", value: stats?.questionsCount },
+  ];
+
   return (
     <div className="about-page">
       {/* Hero / Mission */}
@@ -53,19 +82,21 @@ export default function About() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats — real numbers from the database, not placeholders */}
       <section className="about-section about-stats-section">
         <h2>Disha The Academy in Numbers</h2>
         <div className="about-stats-grid">
-          {STATS.map((stat) => (
+          {displayStats.map((stat) => (
             <div key={stat.label} className="about-stat-card">
-              <div className="about-stat-value">{stat.value}</div>
+              <div className="about-stat-value">
+                {statsLoading ? "…" : formatNumber(stat.value)}
+              </div>
               <div className="about-stat-label">{stat.label}</div>
             </div>
           ))}
         </div>
         <p className="about-stats-note">
-          * Figures updated periodically as our community grows.
+          Live numbers, updated automatically as our platform grows.
         </p>
       </section>
 
