@@ -200,6 +200,15 @@ body {
   max-width: 850px;
 }
 
+.hero-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 28px;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(11, 31, 77, 0.15);
+}
+
 /* Hero Heading */
 
 .hero h1 {
@@ -1714,11 +1723,4 @@ body {
   .notes-grid .note-card {
     flex-wrap: wrap;
   }
-}
-.hero-image {
-  width: 100%;
-  max-width: 550px;
-  height: auto;
-  display: block;
-  object-fit: contain;
 }
