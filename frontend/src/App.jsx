@@ -25,6 +25,7 @@ import ContactUs from "./pages/ContactUs";
 import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import About from "./pages/About";
 
 import "./App.css";
 
@@ -65,6 +66,9 @@ function App() {
           <Route path="/order-success/:id" element={<OrderSuccess />} />
 
           {/* DASHBOARD (LOGIN REQUIRED) */}
+
+          {/* ABOUT */}
+          <Route path="/about" element={<About />} />
           <Route
             path="/dashboard"
             element={
