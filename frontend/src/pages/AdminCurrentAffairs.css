@@ -1,0 +1,148 @@
+.admin-ca-lock-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-ca-lock-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+  width: 320px;
+  text-align: center;
+}
+
+.admin-ca-lock-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.admin-ca-lock-card p {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.admin-ca-lock-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.admin-ca-lock-card button {
+  width: 100%;
+  padding: 10px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-ca-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+.admin-ca-form {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.admin-ca-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  gap: 6px;
+}
+
+.admin-ca-form input,
+.admin-ca-form textarea {
+  font-weight: normal;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.admin-ca-form button {
+  padding: 12px;
+  background: #0891b2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-ca-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-ca-error {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.admin-ca-list-heading {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.admin-ca-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-ca-item {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+}
+
+.admin-ca-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.admin-ca-item p {
+  color: #4b5563;
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.admin-ca-delete-btn {
+  background: none;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-ca-delete-btn:hover {
+  background: #fef2f2;
+}

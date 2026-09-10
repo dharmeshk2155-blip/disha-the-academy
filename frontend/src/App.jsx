@@ -26,6 +26,7 @@ import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import About from "./pages/About";
+import AdminCurrentAffairs from "./pages/AdminCurrentAffairs";
 
 import "./App.css";
 
@@ -69,6 +70,7 @@ function App() {
 
           {/* ABOUT */}
           <Route path="/about" element={<About />} />
+          <Route path="/admin/current-affairs" element={<AdminCurrentAffairs />} />
           <Route
             path="/dashboard"
             element={

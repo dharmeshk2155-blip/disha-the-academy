@@ -14,6 +14,7 @@ const { sql, connectDB } = require("./db");
 
 const app = express();
 const statsRoutes = require("./routes/stats");
+const currentAffairsRoutes = require("./routes/currentAffairs");
 
 // ======================================================
 // BASIC SETUP
@@ -25,6 +26,7 @@ app.use("/api/tests", testsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/stats", statsRoutes);
+app.use("/api/current-affairs", currentAffairsRoutes);
 
 // ======================================================
 // FILE PATHS
