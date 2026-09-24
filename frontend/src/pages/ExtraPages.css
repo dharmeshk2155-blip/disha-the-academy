@@ -337,3 +337,38 @@
     grid-template-columns: 1fr;
   }
 }
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-links a svg {
+  flex-shrink: 0;
+  color: #8fa6b5;
+}
+
+.nav-links a:hover svg {
+  color: #f5b82e;
+}
+
+.navbar-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.navbar-search-wrapper svg {
+  color: #7b8794;
+  flex-shrink: 0;
+}
+
+.xp-notif-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-notif-btn svg {
+  color: #8fa6b5;
+}
