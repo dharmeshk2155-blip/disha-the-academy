@@ -7,8 +7,6 @@ function Hero() {
   return (
     <section className="hero">
       <div className="hero-content">
-        <h4>Disha The Academy is Under Maintenance</h4>
-        <h4>⚠️ Please do not purchase or make any payments during this maintenance period.</h4>
         <img
   src={heroImage}
   alt="Disha The Academy"
