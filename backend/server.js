@@ -112,82 +112,66 @@ const razorpay = new Razorpay({
 // NOTES
 // ======================================================
 
+// ======================================================
+// NOTES (flat list of all topics — must stay in sync with
+// frontend/src/data/notesContent.js, same ids/prices/pdf names)
+// ======================================================
+
 const notes = [
+  { id: 1, title: "HP History Notes", subject: "Himachal Pradesh History", price: 49, pdf: "HP High Court Process Server Syllabus.pdf" },
+  { id: 2, title: "HP Geography Notes", subject: "Himachal Pradesh Geography", price: 49, pdf: null },
+  { id: 3, title: "HP Polity Notes", subject: "HP Polity", price: 49, pdf: null },
+  { id: 4, title: "HP Current Affairs Notes", subject: "HP Current Affairs", price: 49, pdf: null },
+  { id: 5, title: "HP GK Important MCQs", subject: "Important MCQs", price: 49, pdf: null },
 
-  {
-    id: 1,
-    title: "HP General Knowledge",
-    subject: "Himachal Pradesh GK",
-    price: 49,
-    pdf: "HP High Court Process Server Syllabus.pdf",
-  },
+  { id: 6, title: "GK for HP Police Constable", subject: "General Knowledge", price: 99, pdf: "All One Word Substitution asked in SSC Exam 2025(P).pdf" },
+  { id: 7, title: "Science for HP Police Constable", subject: "General Science", price: 99, pdf: null },
+  { id: 8, title: "Maths for HP Police Constable", subject: "Mathematics", price: 99, pdf: null },
+  { id: 9, title: "Reasoning for HP Police Constable", subject: "Reasoning", price: 99, pdf: null },
+  { id: 10, title: "Current Affairs for HP Police Constable", subject: "Current Affairs", price: 99, pdf: null },
 
-  {
-    id: 2,
-    title: "HP Police Constable",
-    subject: "Complete Exam Preparation",
-    price: 99,
-    pdf: "All One Word Substitution asked in SSC Exam 2025(P).pdf",
-  },
+  { id: 11, title: "Percentage Notes", subject: "Percentage", price: 49, pdf: "Formula Cheat-Sheet(P).pdf" },
+  { id: 12, title: "Profit & Loss Notes", subject: "Profit & Loss", price: 49, pdf: null },
+  { id: 13, title: "Ratio & Proportion Notes", subject: "Ratio & Proportion", price: 49, pdf: null },
+  { id: 14, title: "Average Notes", subject: "Average", price: 49, pdf: null },
+  { id: 15, title: "Time & Work Notes", subject: "Time & Work", price: 49, pdf: null },
 
-  {
-    id: 3,
-    title: "Mathematics Notes",
-    subject: "Quantitative Aptitude",
-    price: 49,
-    pdf: "Formula Cheat-Sheet(P).pdf",
-  },
+  { id: 16, title: "Analogy Notes", subject: "Analogy", price: 49, pdf: "Adverbs & Adjectives Revision Notes.pdf" },
+  { id: 17, title: "Series Notes", subject: "Series", price: 49, pdf: null },
+  { id: 18, title: "Coding-Decoding Notes", subject: "Coding-Decoding", price: 49, pdf: null },
+  { id: 19, title: "Blood Relations Notes", subject: "Blood Relations", price: 49, pdf: null },
+  { id: 20, title: "Direction Test Notes", subject: "Direction Test", price: 49, pdf: null },
 
-  {
-    id: 4,
-    title: "Reasoning Notes",
-    subject: "Verbal & Non-Verbal Reasoning",
-    price: 49,
-    pdf: "Adverbs & Adjectives Revision Notes.pdf",
-  },
+  { id: 21, title: "Physics Notes", subject: "Physics", price: 59, pdf: "May 2026 current affairs_compressed.pdf" },
+  { id: 22, title: "Chemistry Notes", subject: "Chemistry", price: 59, pdf: null },
+  { id: 23, title: "Biology Notes", subject: "Biology", price: 59, pdf: null },
+  { id: 24, title: "Human Body Notes", subject: "Human Body", price: 59, pdf: null },
+  { id: 25, title: "Science Important MCQs", subject: "Important Science MCQs", price: 59, pdf: null },
 
-  {
-    id: 5,
-    title: "General Science",
-    subject: "Physics, Chemistry & Biology",
-    price: 59,
-    pdf: "May 2026 current affairs_compressed.pdf",
-  },
+  { id: 26, title: "Parts of Speech Notes", subject: "Parts of Speech", price: 49, pdf: "1000+ Idioms and Phrases Notes(P).pdf" },
+  { id: 27, title: "Tenses Notes", subject: "Tenses", price: 49, pdf: null },
+  { id: 28, title: "Articles Notes", subject: "Articles", price: 49, pdf: null },
+  { id: 29, title: "Prepositions Notes", subject: "Prepositions", price: 49, pdf: null },
+  { id: 30, title: "Vocabulary Notes", subject: "Vocabulary", price: 49, pdf: null },
 
-  {
-    id: 6,
-    title: "English Notes",
-    subject: "Grammar & Vocabulary",
-    price: 49,
-    pdf: "1000+ Idioms and Phrases Notes(P).pdf",
-  },
+  { id: 31, title: "Indian Constitution Notes", subject: "Indian Constitution", price: 59, pdf: "January CA class-compressed.pdf" },
+  { id: 32, title: "Fundamental Rights Notes", subject: "Fundamental Rights", price: 59, pdf: null },
+  { id: 33, title: "Parliament Notes", subject: "Parliament", price: 59, pdf: null },
+  { id: 34, title: "President Notes", subject: "President", price: 59, pdf: null },
+  { id: 35, title: "Supreme Court Notes", subject: "Supreme Court", price: 59, pdf: null },
 
-  {
-    id: 7,
-    title: "Indian Polity",
-    subject: "Constitution & Government",
-    price: 59,
-    pdf: "January CA class-compressed.pdf",
-  },
+  { id: 36, title: "National Affairs Notes", subject: "National Affairs", price: 39, pdf: "March+April CA_compressed.pdf" },
+  { id: 37, title: "International Affairs Notes", subject: "International Affairs", price: 39, pdf: null },
+  { id: 38, title: "Sports Notes", subject: "Sports", price: 39, pdf: null },
+  { id: 39, title: "Awards Notes", subject: "Awards", price: 39, pdf: null },
+  { id: 40, title: "Important Events Notes", subject: "Important Events", price: 39, pdf: null },
 
-  {
-    id: 8,
-    title: "Current Affairs",
-    subject: "Important Current Affairs",
-    price: 39,
-    pdf: "March+April CA_compressed.pdf",
-  },
-
-  {
-    id: 9,
-    title: "General Hindi",
-    subject: "Hindi Grammar & Vocabulary",
-    price: 49,
-    pdf: "Hindi_TESTBOOK NEWS BULLETIN_08 Jul testbook_pass.pdf",
-  },
-
+  { id: 41, title: "संधि Notes", subject: "संधि", price: 49, pdf: "Hindi_TESTBOOK NEWS BULLETIN_08 Jul testbook_pass.pdf" },
+  { id: 42, title: "समास Notes", subject: "समास", price: 49, pdf: null },
+  { id: 43, title: "पर्यायवाची शब्द Notes", subject: "पर्यायवाची शब्द", price: 49, pdf: null },
+  { id: 44, title: "विलोम शब्द Notes", subject: "विलोम शब्द", price: 49, pdf: null },
+  { id: 45, title: "मुहावरे Notes", subject: "मुहावरे", price: 49, pdf: null },
 ];
-
 // ======================================================
 // HOME
 // ======================================================
