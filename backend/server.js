@@ -871,7 +871,14 @@ app.post(
       // CHECK NOTE ID
       // -----------------------------
 
-      if (!noteId) {
+      if (!noteId) {if (!note.pdf) {
+  return res.status(400).json({
+    success: false,
+    error: "This note is not available for purchase yet",
+  });
+}if (!note.pdf) {
+  return res.status(400).json({ success: false, error: "This note is not available for purchase yet" });
+}
 
         return res.status(400).json({
 
@@ -879,8 +886,10 @@ app.post(
 
           error:
             "Note ID is required",
+            
 
         });
+        
 
       }
 

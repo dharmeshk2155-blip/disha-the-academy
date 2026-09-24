@@ -1,0 +1,163 @@
+.nf-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.nf-back-link {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 0 16px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.nf-back-link:hover {
+  color: #374151;
+}
+
+.nf-header {
+  margin-bottom: 24px;
+}
+
+.nf-header h1 {
+  font-size: 26px;
+  margin: 0 0 4px;
+  color: #111827;
+}
+
+.nf-header p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.nf-status {
+  padding: 40px 0;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Subcategory cards grid */
+.nf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.nf-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.nf-card:hover {
+  transform: translateY(-2px);
+}
+
+.nf-card-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.nf-card-info {
+  flex: 1;
+}
+
+.nf-card-title {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.nf-card-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.nf-card-btn {
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Topic list (with price) */
+.nf-topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-topic-row {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nf-topic-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.nf-topic-info {
+  flex: 1;
+}
+
+.nf-topic-title {
+  font-weight: 700;
+  color: #111827;
+}
+
+.nf-coming-soon-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.nf-topic-price {
+  font-weight: 700;
+  color: #111827;
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.nf-topic-btn {
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nf-topic-btn.disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

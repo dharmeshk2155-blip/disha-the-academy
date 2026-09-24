@@ -1,61 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-
-const notes = {
-  1: {
-    title: "HP General Knowledge",
-    subject: "Himachal Pradesh GK",
-    price: 49,
-  },
-
-  2: {
-    title: "HP Police Constable",
-    subject: "Complete Exam Preparation",
-    price: 99,
-  },
-
-  3: {
-    title: "Mathematics Notes",
-    subject: "Quantitative Aptitude",
-    price: 49,
-  },
-
-  4: {
-    title: "Reasoning Notes",
-    subject: "Verbal & Non-Verbal Reasoning",
-    price: 49,
-  },
-
-  5: {
-    title: "General Science",
-    subject: "Physics, Chemistry & Biology",
-    price: 59,
-  },
-
-  6: {
-    title: "English Notes",
-    subject: "Grammar & Vocabulary",
-    price: 49,
-  },
-
-  7: {
-    title: "Indian Polity",
-    subject: "Constitution & Government",
-    price: 59,
-  },
-
-  8: {
-    title: "Current Affairs",
-    subject: "Important Current Affairs",
-    price: 39,
-  },
-
-  9: {
-    title: "General Hindi",
-    subject: "Hindi Grammar & Vocabulary",
-    price: 49,
-  },
-};
+import { getTopicById } from "../data/notesContent";
 
 function Payment() {
   const { id } = useParams();
@@ -64,17 +9,11 @@ function Payment() {
   const [method, setMethod] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const note = notes[id];
-
-  // ======================================================
-  // GET LOGGED-IN USER
-  // ======================================================
+  const found = getTopicById(id);
 
   let user = null;
-
   try {
     const savedUser = localStorage.getItem("dishaUser");
-
     if (savedUser) {
       user = JSON.parse(savedUser);
     }
@@ -82,16 +21,11 @@ function Payment() {
     console.error("User data error:", error);
   }
 
-  // ======================================================
-  // NOTE NOT FOUND
-  // ======================================================
-
-  if (!note) {
+  if (!found) {
     return (
       <main className="payment-page">
         <div className="payment-card">
           <h1>Note Not Found</h1>
-
           <Link to="/notes" className="back-link">
             ← Back to Notes
           </Link>
@@ -100,9 +34,7 @@ function Payment() {
     );
   }
 
-  // ======================================================
-  // LOAD RAZORPAY
-  // ======================================================
+  const { topic, subcategory, category } = found;
 
   const loadRazorpay = () => {
     return new Promise((resolve) => {
@@ -110,76 +42,40 @@ function Payment() {
         resolve(true);
         return;
       }
-
       const script = document.createElement("script");
-
-      script.src =
-        "https://checkout.razorpay.com/v1/checkout.js";
-
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
-
       script.onerror = () => resolve(false);
-
       document.body.appendChild(script);
     });
   };
 
-  // ======================================================
-  // VERIFY PAYMENT
-  // ======================================================
-
   const verifyPayment = async (paymentResponse) => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/payment/verify",
+        `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/payment/verify`,
         {
           method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            razorpay_order_id:
-              paymentResponse.razorpay_order_id,
-
-            razorpay_payment_id:
-              paymentResponse.razorpay_payment_id,
-
-            razorpay_signature:
-              paymentResponse.razorpay_signature,
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
           }),
         }
       );
-
       const data = await response.json();
-
-      console.log("VERIFY RESPONSE:", data);
-
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.error || "Payment verification failed"
-        );
+        throw new Error(data.error || "Payment verification failed");
       }
-
       return data;
     } catch (error) {
       console.error("Verification error:", error);
-
-      alert(
-        error.message ||
-          "Payment verification failed."
-      );
-
+      alert(error.message || "Payment verification failed.");
       setLoading(false);
-
       return null;
     }
   };
-
-  // ======================================================
-  // HANDLE PAYMENT
-  // ======================================================
 
   const handlePayment = async () => {
     if (!method) {
@@ -190,185 +86,89 @@ function Payment() {
     try {
       setLoading(true);
 
-      // Load Razorpay
       const razorpayLoaded = await loadRazorpay();
-
       if (!razorpayLoaded) {
-        alert(
-          "Razorpay failed to load. Please check your internet connection."
-        );
-
+        alert("Razorpay failed to load. Please check your internet connection.");
         setLoading(false);
         return;
       }
 
-      console.log("Creating Razorpay order...");
-
-      // ==================================================
-      // CREATE ORDER
-      // ==================================================
-
-console.log("USER ID:", user?.id);
-     console.log("USER ID BEING SENT:", user?.id);
       const response = await fetch(
-  "http://localhost:5000/api/payment/create-order",
-  {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-   body: JSON.stringify({
-  noteId: Number(id),
-  userId: user?.id,
-}),
-  }
-);
+        `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/payment/create-order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            noteId: Number(id),
+            userId: user?.id,
+          }),
+        }
+      );
 
       const order = await response.json();
 
-      console.log("ORDER RESPONSE:", order);
-
       if (!response.ok || !order.success) {
-        throw new Error(
-          order.error ||
-            "Failed to create payment order"
-        );
+        throw new Error(order.error || "Failed to create payment order");
       }
-
-      // ==================================================
-      // RAZORPAY OPTIONS
-      // ==================================================
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-
         amount: order.amount,
-
         currency: order.currency,
-
         name: "Disha The Academy",
-
-        description: note.title,
-
+        description: topic.title,
         order_id: order.id,
-
         prefill: {
           name: user?.fullName || "",
           email: user?.email || "",
           contact: user?.mobile || "",
         },
-
-        theme: {
-          color: "#2563eb",
-        },
-
+        theme: { color: "#2563eb" },
         handler: async function (paymentResponse) {
-          console.log(
-            "RAZORPAY PAYMENT RESPONSE:",
-            paymentResponse
-          );
-
-          const result =
-            await verifyPayment(paymentResponse);
-
+          const result = await verifyPayment(paymentResponse);
           if (result && result.success) {
-            console.log(
-              "PAYMENT VERIFIED:",
-              result
-            );
-
-            navigate(
-              `/order-success/${id}?orderId=${paymentResponse.razorpay_order_id}`
-            );
+            navigate(`/order-success/${id}?orderId=${paymentResponse.razorpay_order_id}`);
           }
         },
-
         modal: {
           ondismiss: function () {
-            console.log(
-              "Payment popup closed"
-            );
-
             setLoading(false);
           },
         },
       };
 
-      // ==================================================
-      // OPEN RAZORPAY
-      // ==================================================
-
       const razorpay = new window.Razorpay(options);
-
-      razorpay.on(
-        "payment.failed",
-        function (response) {
-          console.error(
-            "PAYMENT FAILED:",
-            response.error
-          );
-
-          alert(
-            response.error?.description ||
-              "Payment failed. Please try again."
-          );
-
-          setLoading(false);
-        }
-      );
-
+      razorpay.on("payment.failed", function (response) {
+        console.error("PAYMENT FAILED:", response.error);
+        alert(response.error?.description || "Payment failed. Please try again.");
+        setLoading(false);
+      });
       razorpay.open();
     } catch (error) {
       console.error("Payment error:", error);
-
-      alert(
-        error.message ||
-          "Unable to start payment."
-      );
-
+      alert(error.message || "Unable to start payment.");
       setLoading(false);
     }
   };
 
-  // ======================================================
-  // UI
-  // ======================================================
-
   return (
     <main className="payment-page">
-
-      <Link
-        to={`/checkout/${id}`}
-        className="back-link"
-      >
+      <Link to={`/checkout/${id}`} className="back-link">
         ← Back to Checkout
       </Link>
 
       <section className="payment-header">
         <h1>Payment</h1>
-
-        <p>
-          Choose your preferred payment method
-        </p>
+        <p>Choose your preferred payment method</p>
       </section>
 
       <div className="payment-container">
-
-        {/* PAYMENT METHODS */}
-
         <div className="payment-card">
-
           <h2>Payment Method</h2>
 
           <button
             type="button"
-            className={`payment-option ${
-              method === "upi"
-                ? "selected"
-                : ""
-            }`}
+            className={`payment-option ${method === "upi" ? "selected" : ""}`}
             onClick={() => setMethod("upi")}
           >
             📱 UPI
@@ -376,11 +176,7 @@ console.log("USER ID:", user?.id);
 
           <button
             type="button"
-            className={`payment-option ${
-              method === "card"
-                ? "selected"
-                : ""
-            }`}
+            className={`payment-option ${method === "card" ? "selected" : ""}`}
             onClick={() => setMethod("card")}
           >
             💳 Debit / Credit Card
@@ -388,42 +184,24 @@ console.log("USER ID:", user?.id);
 
           <button
             type="button"
-            className={`payment-option ${
-              method === "netbanking"
-                ? "selected"
-                : ""
-            }`}
-            onClick={() =>
-              setMethod("netbanking")
-            }
+            className={`payment-option ${method === "netbanking" ? "selected" : ""}`}
+            onClick={() => setMethod("netbanking")}
           >
             🏦 Net Banking
           </button>
-
         </div>
 
-        {/* ORDER SUMMARY */}
-
         <div className="payment-summary">
-
           <h2>Order Summary</h2>
 
-          <div className="order-icon">
-            📚
-          </div>
+          <div className="order-icon">📚</div>
 
-          <h3>{note.title}</h3>
-
-          <p>{note.subject}</p>
+          <h3>{topic.title}</h3>
+          <p>{category.title} · {subcategory.title}</p>
 
           <div className="payment-total">
-
             <span>Total Amount</span>
-
-            <strong>
-              ₹{note.price}
-            </strong>
-
+            <strong>₹{topic.price}</strong>
           </div>
 
           <button
@@ -432,15 +210,10 @@ console.log("USER ID:", user?.id);
             onClick={handlePayment}
             disabled={loading}
           >
-            {loading
-              ? "Processing..."
-              : `Pay ₹${note.price}`}
+            {loading ? "Processing..." : `Pay ₹${topic.price}`}
           </button>
-
         </div>
-
       </div>
-
     </main>
   );
 }

@@ -30,6 +30,9 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
+import Notes from "./pages/Notes";
+import NoteCategory from "./pages/NoteCategory";
+import NoteSubcategory from "./pages/NoteSubcategory";
 
 import "./App.css";
 
@@ -86,7 +89,13 @@ function App() {
             <Route path="notes" element={<AdminComingSoon section="Notes" />} />
             <Route
               path="tests"
-              element={<AdminComingSoon section="Tests / Mock Tests" />}
+              element={<AdminComingSoon section="Tests / Mock Tests" />}<Route path="/notes" element={<Notes />} />
+<Route path="/notes/:categorySlug" element={<NoteCategory />} />
+<Route path="/notes/:categorySlug/:subcategorySlug" element={<NoteSubcategory />} />
+<Route path="/note/:id" element={<NoteDetails />} />
+<Route path="/checkout/:id" element={<Checkout />} />
+<Route path="/payment/:id" element={<Payment />} />
+
             />
           </Route>
 
