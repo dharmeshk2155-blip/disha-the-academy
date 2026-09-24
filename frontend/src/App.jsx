@@ -1,38 +1,47 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
+
 import Home from "./pages/Home";
 import Notes from "./pages/Notes";
+import NoteCategory from "./pages/NoteCategory";
+import NoteSubcategory from "./pages/NoteSubcategory";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Account from "./pages/Account";
+
 import NoteDetails from "./pages/NoteDetails";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import OrderSuccess from "./pages/OrderSuccess";
+
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+
 import PopularExamsSub from "./pages/PopularExamsSub";
 import PopularExamsTests from "./pages/PopularExamsTests";
+
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
+
 import CurrentAffairs from "./pages/CurrentAffairs";
 import Blog from "./pages/Blog";
 import FAQ from "./pages/FAQ";
 import ContactUs from "./pages/ContactUs";
+import About from "./pages/About";
 import SearchResults from "./pages/SearchResults";
+
 import TestAttempt from "./pages/TestAttempt";
 import ProtectedRoute from "./pages/ProtectedRoute";
-import About from "./pages/About";
+
+// ADMIN
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
-import Notes from "./pages/Notes";
-import NoteCategory from "./pages/NoteCategory";
-import NoteSubcategory from "./pages/NoteSubcategory";
 
 import "./App.css";
 
@@ -41,65 +50,74 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Every route below renders inside Layout, which shows the
-            sidebar Navbar exactly once. No page needs its own <Navbar />. */}
+        {/* MAIN WEBSITE */}
         <Route element={<Layout />}>
 
           {/* HOME */}
           <Route path="/" element={<Home />} />
 
-          {/* NOTES */}
+          {/* ================= NOTES ================= */}
+
           <Route path="/notes" element={<Notes />} />
 
-          {/* LOGIN */}
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/notes/:categorySlug"
+            element={<NoteCategory />}
+          />
 
-          {/* REGISTER */}
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/notes/:categorySlug/:subcategorySlug"
+            element={<NoteSubcategory />}
+          />
 
-          {/* ACCOUNT */}
-          <Route path="/account" element={<Account />} />
+          <Route
+            path="/note/:id"
+            element={<NoteDetails />}
+          />
 
-          {/* NOTE DETAILS */}
-          <Route path="/note/:id" element={<NoteDetails />} />
+          {/* ================= LOGIN / ACCOUNT ================= */}
 
-          {/* CHECKOUT */}
-          <Route path="/checkout/:id" element={<Checkout />} />
+          <Route
+            path="/login"
+            element={<Login />}
+          />
 
-          {/* PAYMENT */}
-          <Route path="/payment/:id" element={<Payment />} />
+          <Route
+            path="/register"
+            element={<Register />}
+          />
 
-          {/* ORDER SUCCESS */}
-          <Route path="/order-success/:id" element={<OrderSuccess />} />
+          <Route
+            path="/account"
+            element={<Account />}
+          />
 
-          {/* ABOUT */}
-          <Route path="/about" element={<About />} />
+          {/* ================= CHECKOUT ================= */}
 
-          {/* ADMIN DASHBOARD (shared unlock + sidebar, nested sections) */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminHome />} />
-            <Route path="current-affairs" element={<AdminCurrentAffairs />} />
-            <Route path="blog" element={<AdminComingSoon section="Blog" />} />
-            <Route path="faq" element={<AdminComingSoon section="FAQ" />} />
-            <Route
-              path="contact-submissions"
-              element={<AdminComingSoon section="Contact Us Messages" />}
-            />
-            <Route path="about" element={<AdminComingSoon section="About Page" />} />
-            <Route path="notes" element={<AdminComingSoon section="Notes" />} />
-            <Route
-              path="tests"
-              element={<AdminComingSoon section="Tests / Mock Tests" />}<Route path="/notes" element={<Notes />} />
-<Route path="/notes/:categorySlug" element={<NoteCategory />} />
-<Route path="/notes/:categorySlug/:subcategorySlug" element={<NoteSubcategory />} />
-<Route path="/note/:id" element={<NoteDetails />} />
-<Route path="/checkout/:id" element={<Checkout />} />
-<Route path="/payment/:id" element={<Payment />} />
+          <Route
+            path="/checkout/:id"
+            element={<Checkout />}
+          />
 
-            />
-          </Route>
+          <Route
+            path="/payment/:id"
+            element={<Payment />}
+          />
 
-          {/* DASHBOARD (LOGIN REQUIRED) */}
+          <Route
+            path="/order-success/:id"
+            element={<OrderSuccess />}
+          />
+
+          {/* ================= ABOUT ================= */}
+
+          <Route
+            path="/about"
+            element={<About />}
+          />
+
+          {/* ================= DASHBOARD ================= */}
+
           <Route
             path="/dashboard"
             element={
@@ -109,7 +127,8 @@ function App() {
             }
           />
 
-          {/* MY RESULTS (LOGIN REQUIRED) */}
+          {/* ================= MY RESULTS ================= */}
+
           <Route
             path="/my-results"
             element={
@@ -119,25 +138,54 @@ function App() {
             }
           />
 
-          {/* LEADERBOARD */}
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          {/* ================= LEADERBOARD ================= */}
 
-          {/* CURRENT AFFAIRS */}
-          <Route path="/current-affairs" element={<CurrentAffairs />} />
+          <Route
+            path="/leaderboard"
+            element={<Leaderboard />}
+          />
 
-          {/* BLOG */}
-          <Route path="/blog" element={<Blog />} />
+          {/* ================= CURRENT AFFAIRS ================= */}
 
-          {/* FAQ */}
-          <Route path="/faq" element={<FAQ />} />
+          <Route
+            path="/current-affairs"
+            element={<CurrentAffairs />}
+          />
 
-          {/* CONTACT US */}
-          <Route path="/contact" element={<ContactUs />} />
+          {/* ================= BLOG ================= */}
 
-          {/* SEARCH */}
-          <Route path="/search" element={<SearchResults />} />
+          <Route
+            path="/blog"
+            element={<Blog />}
+          />
 
-          {/* TAKE A MOCK TEST - level 1: exam groups (SSC, Banking, Railway...) */}
+          {/* ================= FAQ ================= */}
+
+          <Route
+            path="/faq"
+            element={<FAQ />}
+          />
+
+          {/* ================= CONTACT ================= */}
+
+          <Route
+            path="/contact"
+            element={<ContactUs />}
+          />
+
+          {/* ================= SEARCH ================= */}
+
+          <Route
+            path="/search"
+            element={<SearchResults />}
+          />
+
+          {/* =================================================
+              TAKE A MOCK TEST
+              This flow is completely independent
+              ================================================= */}
+
+          {/* Level 1 - Exam Groups */}
           <Route
             path="/take-mock-test"
             element={
@@ -147,7 +195,7 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 2: sub-exams within a group (CGL, CHSL...) */}
+          {/* Level 2 - Sub Exams */}
           <Route
             path="/take-mock-test/:topSlug"
             element={
@@ -157,7 +205,7 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 3: actual mock tests for that sub-exam */}
+          {/* Level 3 - Mock Tests */}
           <Route
             path="/take-mock-test/:topSlug/:subSlug"
             element={
@@ -167,7 +215,7 @@ function App() {
             }
           />
 
-          {/* MOCK TEST ATTEMPT - actual test taking page (LOGIN REQUIRED) */}
+          {/* Actual Test Attempt */}
           <Route
             path="/mock-test/:testId"
             element={
@@ -177,8 +225,12 @@ function App() {
             }
           />
 
-          {/* POPULAR EXAMS (Home page section) - completely independent
-              from the "Take a Mock Test" navbar flow above */}
+          {/* =================================================
+              POPULAR EXAMS
+              Completely independent from Mock Test flow
+              ================================================= */}
+
+          {/* Popular Exam -> Sub Exam */}
           <Route
             path="/popular-exams/:topSlug"
             element={
@@ -188,12 +240,85 @@ function App() {
             }
           />
 
+          {/* Popular Exam -> Tests */}
           <Route
             path="/popular-exams/:topSlug/:subSlug"
             element={
               <ProtectedRoute>
                 <PopularExamsTests />
               </ProtectedRoute>
+            }
+          />
+
+        </Route>
+
+
+        {/* =================================================
+            ADMIN PANEL
+            ================================================= */}
+
+        <Route
+          path="/admin"
+          element={<AdminLayout />}
+        >
+
+          {/* Admin Home */}
+          <Route
+            index
+            element={<AdminHome />}
+          />
+
+          {/* Current Affairs */}
+          <Route
+            path="current-affairs"
+            element={<AdminCurrentAffairs />}
+          />
+
+          {/* Blog */}
+          <Route
+            path="blog"
+            element={
+              <AdminComingSoon section="Blog" />
+            }
+          />
+
+          {/* FAQ */}
+          <Route
+            path="faq"
+            element={
+              <AdminComingSoon section="FAQ" />
+            }
+          />
+
+          {/* Contact Messages */}
+          <Route
+            path="contact-submissions"
+            element={
+              <AdminComingSoon section="Contact Us Messages" />
+            }
+          />
+
+          {/* About */}
+          <Route
+            path="about"
+            element={
+              <AdminComingSoon section="About Page" />
+            }
+          />
+
+          {/* Notes */}
+          <Route
+            path="notes"
+            element={
+              <AdminComingSoon section="Notes" />
+            }
+          />
+
+          {/* Tests */}
+          <Route
+            path="tests"
+            element={
+              <AdminComingSoon section="Tests / Mock Tests" />
             }
           />
 
