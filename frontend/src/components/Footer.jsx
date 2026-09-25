@@ -1,5 +1,4 @@
-```jsx
-import React from "react";
+﻿import React from "react";
 import "./Footer.css";
 
 const Footer = () => {
@@ -7,7 +6,6 @@ const Footer = () => {
     <footer className="site-footer">
       <div className="footer-container">
 
-        {/* Brand */}
         <div className="footer-column footer-brand">
           <h2>Disha The Academy</h2>
           <p>
@@ -23,7 +21,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Quick Links */}
         <div className="footer-column">
           <h3>Quick Links</h3>
           <a href="/">Home</a>
@@ -32,7 +29,6 @@ const Footer = () => {
           <a href="/current-affairs">Current Affairs</a>
         </div>
 
-        {/* Exams */}
         <div className="footer-column">
           <h3>Popular Exams</h3>
           <a href="/exams/hp-police">HP Police</a>
@@ -41,7 +37,6 @@ const Footer = () => {
           <a href="/exams/railways">Railway Exams</a>
         </div>
 
-        {/* Important Links */}
         <div className="footer-column">
           <h3>Important</h3>
           <a href="/about">About Us</a>
@@ -53,7 +48,6 @@ const Footer = () => {
 
       </div>
 
-      {/* Bottom Footer */}
       <div className="footer-bottom">
         <p>
           © {new Date().getFullYear()} <strong>Disha The Academy</strong>.
@@ -69,4 +63,3 @@ const Footer = () => {
 };
 
 export default Footer;
-```
