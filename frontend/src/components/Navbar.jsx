@@ -1,5 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import logoIcon from "../assets/logo-icon.png";
+import logoWordmark from "../assets/logo-wordmark.png";
 import {
   House,
   BookOpen,
@@ -89,8 +91,9 @@ function Navbar() {
 
         {/* LOGO */}
         <div className="logo">
-          <span>D</span>isha The Academy
-        </div>
+  <img src={logoIcon} alt="Disha" className="logo-icon" />
+  <img src={logoWordmark} alt="Disha The Academy" className="logo-wordmark" />
+</div>
 
         {/* NAVIGATION */}
         <div className="nav-links">
