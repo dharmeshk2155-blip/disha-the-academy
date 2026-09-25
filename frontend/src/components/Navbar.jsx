@@ -16,6 +16,7 @@ import {
   X,
   Menu,
   Search,
+  Languages,
 } from "lucide-react";
 
 import "../pages/ExtraPages.css";
@@ -43,9 +44,11 @@ function Navbar() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotif, setShowNotif] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("dishaUser"));
+  const initial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?";
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -88,21 +91,6 @@ function Navbar() {
         <div className="logo">
           <span>D</span>isha The Academy
         </div>
-
-        {/* SEARCH */}
-        <form className="xp-search-form" onSubmit={handleSearch}>
-          <div className="navbar-search-wrapper">
-            <Search size={19} strokeWidth={1.8} />
-
-            <input
-              type="text"
-              className="xp-search-input"
-              placeholder="Search notes, tests..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </form>
 
         {/* NAVIGATION */}
         <div className="nav-links">
@@ -166,72 +154,110 @@ function Navbar() {
             <span>About</span>
           </Link>
 
+          {/* Search moved here for mobile drawer only (top bar search is desktop) */}
+          <form className="xp-search-form navbar-mobile-search" onSubmit={handleSearch}>
+            <div className="navbar-search-wrapper">
+              <Search size={19} strokeWidth={1.8} />
+              <input
+                type="text"
+                className="xp-search-input"
+                placeholder="Search notes, tests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </form>
+
         </div>
       </nav>
 
-      {/* TOP RIGHT BAR */}
+      {/* TOP HEADER BAR */}
       <div className="topbar-right">
 
-        {/* NOTIFICATIONS */}
-        {user && (
-          <div className="xp-notif-wrapper">
+        {/* SEARCH (desktop) */}
+        <form className="topbar-search-form" onSubmit={handleSearch}>
+          <div className="topbar-search-wrapper">
+            <Search size={18} strokeWidth={1.8} />
+            <input
+              type="text"
+              className="topbar-search-input"
+              placeholder="Search notes, tests..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </form>
 
+        <div className="topbar-actions">
+
+          {/* LANGUAGE (icon only for now, functionality coming later) */}
+          <div className="topbar-lang-wrapper">
             <button
-              className="xp-notif-btn"
-              onClick={() => setShowNotif((prev) => !prev)}
-              aria-label="Notifications"
+              className="topbar-icon-btn"
+              onClick={() => setShowLangMenu((prev) => !prev)}
+              aria-label="Language"
             >
-              <Bell size={22} strokeWidth={1.8} />
-              <span className="xp-notif-dot" />
+              <Languages size={20} strokeWidth={1.8} />
             </button>
 
-            {showNotif && (
-              <div className="xp-notif-dropdown">
-
-                {SAMPLE_NOTIFICATIONS.map((n) => (
-                  <div
-                    key={n.id}
-                    className="xp-notif-item"
-                  >
-                    <strong>{n.title}</strong>
-                    <span>{n.body}</span>
-                  </div>
-                ))}
-
+            {showLangMenu && (
+              <div className="topbar-lang-dropdown">
+                <div className="topbar-lang-item active">English</div>
+                <div className="topbar-lang-item disabled">
+                  हिंदी <span className="topbar-soon-tag">soon</span>
+                </div>
               </div>
             )}
-
           </div>
-        )}
 
-        {/* USER */}
-        {user ? (
-          <>
-            <Link
-              to="/account"
-              className="welcome-user"
-              onClick={closeMenu}
-            >
-              Hi, {user.fullName}
+          {/* NOTIFICATIONS */}
+          {user && (
+            <div className="xp-notif-wrapper">
+              <button
+                className="xp-notif-btn"
+                onClick={() => setShowNotif((prev) => !prev)}
+                aria-label="Notifications"
+              >
+                <Bell size={20} strokeWidth={1.8} />
+                <span className="xp-notif-dot" />
+              </button>
+
+              {showNotif && (
+                <div className="xp-notif-dropdown">
+                  {SAMPLE_NOTIFICATIONS.map((n) => (
+                    <div key={n.id} className="xp-notif-item">
+                      <strong>{n.title}</strong>
+                      <span>{n.body}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* USER */}
+          {user ? (
+            <>
+              <Link
+                to="/account"
+                className="topbar-avatar"
+                title={user.fullName}
+                onClick={closeMenu}
+              >
+                {initial}
+              </Link>
+
+              <button className="logout-btn" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="login-btn" onClick={closeMenu}>
+              Login
             </Link>
+          )}
 
-            <button
-              className="logout-btn"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <Link
-            to="/login"
-            className="login-btn"
-            onClick={closeMenu}
-          >
-            Login
-          </Link>
-        )}
-
+        </div>
       </div>
     </>
   );
