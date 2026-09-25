@@ -103,35 +103,29 @@ body {
    TOP-RIGHT BAR (user info / login / logout)
    Stays fixed top-right, same spot as the original design
 ================================ */
-/* =========================================
-   ADMIN / TOP HEADER BAR
-   ========================================= */
-
 .topbar-right {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 220px;
+  width: calc(100% - 220px);
 
   height: 64px;
 
-  background: #b5b4b4;
+  margin: 0;
+  padding: 0 24px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 14px;
 
-  gap: 0px;
-
-  padding: 0 28px;
-
-  box-sizing: border-box;
-
-  border-bottom: 1px solid #e5e7eb;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .topbar-right {
