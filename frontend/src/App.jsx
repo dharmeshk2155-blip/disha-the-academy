@@ -32,6 +32,9 @@ import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
 import NoteCategory from "./pages/NoteCategory";
 import NoteSubcategory from "./pages/NoteSubcategory";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import RefundPolicy from "./pages/RefundPolicy";
 
 import "./App.css";
 
@@ -39,6 +42,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+<Route path="/terms" element={<TermsConditions />} />
+<Route path="/refund-policy" element={<RefundPolicy />} />
 
         {/* Every route below renders inside Layout, which shows the
             sidebar Navbar exactly once. No page needs its own <Navbar />. */}
@@ -91,6 +97,7 @@ function App() {
             <Route
               path="tests"
               element={<AdminComingSoon section="Tests / Mock Tests" />}
+              
             />
           </Route>
 
