@@ -84,13 +84,13 @@ body {
 }
 
 .logo-icon {
-  height: 38px;
+  height: 45px;
   width: auto;
   flex-shrink: 0;
 }
 
 .logo-wordmark {
-  height: 20px;
+  height: 60px;
   width: auto;
 }
 
