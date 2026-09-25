@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   House,
@@ -95,64 +95,64 @@ function Navbar() {
         {/* NAVIGATION */}
         <div className="nav-links">
 
-          <Link to="/" onClick={closeMenu}>
+          <NavLink to="/" end onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <House size={21} strokeWidth={1.8} />
             <span>Home</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/notes" onClick={closeMenu}>
+          <NavLink to="/notes" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <BookOpen size={21} strokeWidth={1.8} />
             <span>Notes</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/tests" onClick={closeMenu}>
+          <NavLink to="/tests" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <ClipboardList size={21} strokeWidth={1.8} />
             <span>Tests</span>
-          </Link>
+          </NavLink>
 
           {user && (
-            <Link to="/dashboard" onClick={closeMenu}>
+            <NavLink to="/dashboard" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
               <LayoutDashboard size={21} strokeWidth={1.8} />
               <span>Dashboard</span>
-            </Link>
+            </NavLink>
           )}
 
           {user && (
-            <Link to="/my-results" onClick={closeMenu}>
+            <NavLink to="/my-results" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
               <Target size={21} strokeWidth={1.8} />
               <span>My Results</span>
-            </Link>
+            </NavLink>
           )}
 
-          <Link to="/leaderboard" onClick={closeMenu}>
+          <NavLink to="/leaderboard" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <Trophy size={21} strokeWidth={1.8} />
             <span>Leaderboard</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/current-affairs" onClick={closeMenu}>
+          <NavLink to="/current-affairs" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <Newspaper size={21} strokeWidth={1.8} />
             <span>Current Affairs</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/blog" onClick={closeMenu}>
+          <NavLink to="/blog" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <PenLine size={21} strokeWidth={1.8} />
             <span>Blog</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/faq" onClick={closeMenu}>
+          <NavLink to="/faq" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <CircleHelp size={21} strokeWidth={1.8} />
             <span>FAQ</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/contact" onClick={closeMenu}>
+          <NavLink to="/contact" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <Mail size={21} strokeWidth={1.8} />
             <span>Contact Us</span>
-          </Link>
+          </NavLink>
 
-          <Link to="/about" onClick={closeMenu}>
+          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <Info size={21} strokeWidth={1.8} />
             <span>About</span>
-          </Link>
+          </NavLink>
 
           {/* Search moved here for mobile drawer only (top bar search is desktop) */}
           <form className="xp-search-form navbar-mobile-search" onSubmit={handleSearch}>
