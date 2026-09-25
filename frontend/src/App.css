@@ -77,17 +77,21 @@ body {
 /* Logo (inside sidebar) */
 
 .navbar .logo {
-  color: var(--white);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  margin: 6px 6px 32px;
-  line-height: 1.3;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 40px;
 }
 
-.navbar .logo::first-letter {
-  color: var(--gold);
+.logo-icon {
+  height: 38px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.logo-wordmark {
+  height: 20px;
+  width: auto;
 }
 
 /* Nav links (vertical list inside sidebar) */
