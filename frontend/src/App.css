@@ -110,18 +110,18 @@ body {
 .topbar-right {
   position: fixed;
   top: 0;
-  left: 220px;
+  left: 0;
   right: 0;
 
   height: 64px;
 
-  background: #ffffff;
+  background: #b5b4b4;
 
   display: flex;
   align-items: center;
   justify-content: flex-end;
 
-  gap: 14px;
+  gap: 0px;
 
   padding: 0 28px;
 
