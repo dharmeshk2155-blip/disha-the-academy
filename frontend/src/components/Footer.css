@@ -1,23 +1,23 @@
 .site-footer {
   background: #071a3d;
   color: #ffffff;
-  margin-top: 60px;
+  margin-top: 35px;
 }
 
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 55px 25px 45px;
+  padding: 30px 25px 22px;
 
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 45px;
+  gap: 30px;
 }
 
 /* Brand */
 .footer-brand h2 {
-  margin: 0 0 15px;
-  font-size: 25px;
+  margin: 0 0 8px;
+  font-size: 22px;
   color: #f5c542;
 }
 
@@ -35,8 +35,8 @@
 }
 
 .footer-column h3 {
-  margin: 0 0 18px;
-  font-size: 17px;
+  margin: 0 0 10px;
+  font-size: 16px;
   color: #f5c542;
 }
 
@@ -44,7 +44,7 @@
   color: #dbe4f0;
   text-decoration: none;
   font-size: 14px;
-  margin-bottom: 11px;
+  margin-bottom: 7px;
   transition: 0.2s ease;
 }
 
@@ -57,7 +57,7 @@
 .footer-social {
   display: flex;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 12px;
 }
 
 .footer-social a {
@@ -91,7 +91,7 @@
   max-width: 1200px;
   margin: 0 auto;
 
-  padding: 18px 25px;
+  padding: 10px 25px;
 
   display: flex;
   align-items: center;
