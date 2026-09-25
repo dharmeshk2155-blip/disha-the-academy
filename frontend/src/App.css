@@ -78,8 +78,8 @@ body {
 
 .navbar .logo {
   display: flex;
-  align-items: top;
-  gap: 8px;
+  align-items: top center;
+  gap: 4px;
   margin-bottom: 8px;
 }
 
