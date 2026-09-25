@@ -80,7 +80,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 50px;
+  margin-bottom: 40px;
 }
 
 .logo-icon {
@@ -90,7 +90,7 @@ body {
 }
 
 .logo-wordmark {
-  height: 65px;
+  height: 60px;
   width: auto;
 }
 
