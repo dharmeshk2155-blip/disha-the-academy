@@ -109,7 +109,7 @@ body {
   left: 220px;
   width: calc(100% - 220px);
 
-  height: 0px;
+  height: 64px;
 
   margin: 0;
   padding: 0 24px;
