@@ -103,7 +103,7 @@ body {
 }
 
 /* ================================
-   TOP HEADER BAR (notifications / user info / login / logout)
+   TOP HEADER BAR (search / language / notifications / user)
    Fixed, spans full width to the right of the sidebar, white background
 ================================ */
 
@@ -118,28 +118,141 @@ body {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 0 30px;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 24px;
   z-index: 201;
   box-sizing: border-box;
 }
 
-.topbar-right .welcome-user {
+/* Search bar, now living in the top header instead of the sidebar */
+
+.topbar-search-form {
+  flex: 1;
+  max-width: 420px;
+}
+
+.topbar-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+.topbar-search-wrapper svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.topbar-search-input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text-dark);
+  width: 100%;
+  font-family: inherit;
+}
+
+/* Right-side action cluster: language, notifications, avatar/login */
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.topbar-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border-radius: 8px;
+}
+
+.topbar-icon-btn:hover {
+  background: var(--background);
   color: var(--navy);
-  font-weight: 600;
-  font-size: 15px;
-  white-space: nowrap;
+}
+
+.topbar-lang-wrapper {
+  position: relative;
+}
+
+.topbar-lang-dropdown {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 300;
+  min-width: 150px;
+}
+
+.topbar-lang-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-dark);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topbar-lang-item.active {
+  color: var(--navy);
+  font-weight: 700;
+  background: var(--gold-light);
+}
+
+.topbar-lang-item.disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.topbar-soon-tag {
+  font-size: 10px;
+  background: #e5e7eb;
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
   text-decoration: none;
-  margin-left: 0;
+  flex-shrink: 0;
+  transition: 0.2s ease;
 }
 
-.topbar-right .logout-btn {
-  margin-left: 0;
+.topbar-avatar:hover {
+  background: var(--gold-dark);
+  color: var(--navy-dark);
 }
 
-.topbar-right .login-btn {
-  margin-left: 0;
+/* Search bar shown inside the mobile drawer instead — hidden on desktop */
+.navbar-mobile-search {
+  display: none;
 }
 
 /* Shared button styling for login/logout (top-right) */
@@ -148,9 +261,9 @@ body {
   border: none;
   background: var(--gold);
   color: var(--navy-dark);
-  padding: 11px 23px;
+  padding: 9px 20px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -167,9 +280,9 @@ body {
   background: var(--gold);
   color: var(--navy-dark);
   border: none;
-  padding: 11px 23px;
+  padding: 9px 20px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: 0.25s ease;
@@ -192,7 +305,7 @@ body {
 
   text-align: center;
 
-  padding: 80px 20px;
+  padding: 10px 20px 80px;
 
   background: linear-gradient(
     180deg,
@@ -453,9 +566,15 @@ body {
     overflow-y: auto;
   }
 
-  .xp-search-form {
-    margin: 0 0 20px;
-    flex-basis: auto;
+  /* Search lives in the mobile drawer instead of the top bar */
+  .topbar-search-form {
+    display: none;
+  }
+
+  .navbar-mobile-search {
+    display: block;
+    width: 100%;
+    margin: 4px 0 4px;
   }
 
   /* On mobile there's no persistent sidebar taking up space, so the
@@ -480,7 +599,7 @@ body {
   .hero {
     min-height: 500px;
 
-    padding: 60px 20px 80px;
+    padding: 60px 20px;
   }
 
   .hero h1 {
