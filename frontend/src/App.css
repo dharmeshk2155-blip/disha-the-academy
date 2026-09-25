@@ -78,9 +78,9 @@ body {
 
 .navbar .logo {
   display: flex;
-  align-items: center;
+  align-items: top;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .logo-icon {
