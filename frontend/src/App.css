@@ -21,6 +21,15 @@
   --border: #e2e8f0;
 
   --header-height: 56px;
+
+  /* Sidebar theme — dark, Testbook-style */
+  --sidebar-bg: #141522;
+  --sidebar-section: #6b7280;
+  --sidebar-text: #c7cad6;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-hover-bg: #1f2133;
+  --sidebar-active-bg: #f4b942;
+  --sidebar-active-text: #141522;
 }
 
 /* ================================
@@ -55,14 +64,14 @@ body {
   left: 0;
   width: 220px;
   height: 100vh;
-  background: var(--navy);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  padding: 28px 20px;
+  padding: 24px 14px;
   box-sizing: border-box;
   z-index: 200;
   overflow-y: auto;
-  box-shadow: 0 3px 15px rgba(7, 22, 51, 0.2);
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.35);
 }
 
 /* Logo (inside sidebar) */
@@ -72,7 +81,7 @@ body {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  margin-bottom: 40px;
+  margin: 6px 6px 32px;
   line-height: 1.3;
   white-space: nowrap;
 }
@@ -86,20 +95,41 @@ body {
 .navbar .nav-links {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 22px;
+  align-items: stretch;
+  gap: 4px;
 }
 
 .navbar .nav-links a {
-  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--sidebar-text);
   text-decoration: none;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 500;
-  transition: 0.25s ease;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.navbar .nav-links a svg {
+  flex-shrink: 0;
+  color: inherit;
 }
 
 .navbar .nav-links a:hover {
-  color: var(--gold);
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-hover);
+}
+
+.navbar .nav-links a.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 700;
+}
+
+.navbar .nav-links a.active svg {
+  color: var(--sidebar-active-text);
 }
 
 /* ================================
@@ -500,7 +530,7 @@ body {
   top: 14px;
   left: 16px;
   z-index: 260;
-  background: var(--navy);
+  background: var(--sidebar-bg);
   color: #fff;
   border: none;
   border-radius: 8px;
