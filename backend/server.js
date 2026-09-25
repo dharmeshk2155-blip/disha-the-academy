@@ -4,6 +4,7 @@ require("dotenv").config();
 const testsRouter = require("./routes/tests");
 const leaderboardRouter = require("./routes/leaderboard");
 const contactRouter = require("./routes/contact");
+const passwordRouter = require("./routes/password");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const path = require("path");
@@ -27,6 +28,7 @@ app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
+app.use("/api", passwordRouter);
 
 // ======================================================
 // FILE PATHS
@@ -35,69 +37,10 @@ app.use("/api/current-affairs", currentAffairsRoutes);
 const pdfFolder = path.join(__dirname, "pdfs");
 
 // ======================================================
-// PASSWORD HASHING
+// PASSWORD HASHING (shared with routes/password.js)
 // ======================================================
 
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
-
-  const hash = crypto
-    .scryptSync(password, salt, 64)
-    .toString("hex");
-
-  return `${salt}:${hash}`;
-}
-
-// ======================================================
-// PASSWORD VERIFICATION
-// ======================================================
-
-function verifyPassword(password, storedPassword) {
-  try {
-    const parts = storedPassword.split(":");
-
-    if (parts.length !== 2) {
-      return false;
-    }
-
-    const salt = parts[0];
-    const storedHash = parts[1];
-
-    const hash = crypto
-      .scryptSync(password, salt, 64)
-      .toString("hex");
-
-    const storedHashBuffer = Buffer.from(
-      storedHash,
-      "hex"
-    );
-
-    const hashBuffer = Buffer.from(
-      hash,
-      "hex"
-    );
-
-    if (
-      storedHashBuffer.length !==
-      hashBuffer.length
-    ) {
-      return false;
-    }
-
-    return crypto.timingSafeEqual(
-      hashBuffer,
-      storedHashBuffer
-    );
-
-  } catch (error) {
-    console.error(
-      "Password verification error:",
-      error
-    );
-
-    return false;
-  }
-}
+const { hashPassword, verifyPassword } = require("./utils/password");
 
 // ======================================================
 // RAZORPAY
