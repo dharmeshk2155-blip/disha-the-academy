@@ -4,6 +4,7 @@ import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import Notes from "./pages/Notes";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
 import Account from "./pages/Account";
 import NoteDetails from "./pages/NoteDetails";
@@ -60,6 +61,9 @@ function App() {
 
           {/* LOGIN */}
           <Route path="/login" element={<Login />} />
+
+          {/* FORGOT PASSWORD */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* REGISTER */}
           <Route path="/register" element={<Register />} />
