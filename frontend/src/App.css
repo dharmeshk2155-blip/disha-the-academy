@@ -1902,3 +1902,769 @@ body {
     flex-wrap: wrap;
   }
 }
+
+/* ======================================================
+   ORDER SUCCESS PAGE — PREMIUM CELEBRATION
+====================================================== */
+
+.success-page {
+  position: relative;
+  min-height: calc(100vh - var(--header-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 80px;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(244, 185, 66, 0.18),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 85% 75%,
+      rgba(11, 31, 77, 0.12),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #f8fbff 0%,
+      #fffdf7 50%,
+      #f8faff 100%
+    );
+}
+
+
+/* ======================================================
+   BACKGROUND GLOW
+====================================================== */
+
+.success-page::before,
+.success-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.success-page::before {
+  width: 350px;
+  height: 350px;
+  background: rgba(244, 185, 66, 0.12);
+  top: -150px;
+  right: -80px;
+  animation: successFloat 7s ease-in-out infinite;
+}
+
+.success-page::after {
+  width: 300px;
+  height: 300px;
+  background: rgba(11, 31, 77, 0.08);
+  bottom: -150px;
+  left: -70px;
+  animation: successFloat 8s ease-in-out infinite reverse;
+}
+
+
+/* ======================================================
+   MAIN SUCCESS CARD
+====================================================== */
+
+.success-card {
+  position: relative;
+  z-index: 5;
+
+  width: 100%;
+  max-width: 650px;
+
+  padding: 48px 45px 42px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 28px;
+
+  text-align: center;
+
+  box-shadow:
+    0 25px 70px rgba(11, 31, 77, 0.13),
+    0 5px 20px rgba(11, 31, 77, 0.06);
+
+  animation: successCardEnter 0.8s
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+
+/* Gold top line */
+
+.success-card::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  width: 120px;
+  height: 5px;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(
+    90deg,
+    #d99a16,
+    #f4b942,
+    #ffd978
+  );
+
+  border-radius: 0 0 10px 10px;
+}
+
+
+/* ======================================================
+   ANIMATED CHECKMARK
+====================================================== */
+
+.success-icon {
+  width: 92px;
+  height: 92px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #16a34a,
+      #22c55e
+    );
+
+  color: white;
+
+  font-size: 48px;
+  font-weight: 800;
+
+  box-shadow:
+    0 0 0 10px rgba(34, 197, 94, 0.08),
+    0 15px 35px rgba(34, 197, 94, 0.28);
+
+  animation:
+    successCheckPop 0.75s
+      cubic-bezier(0.34, 1.56, 0.64, 1)
+      0.25s both,
+    successPulse 2.5s ease-in-out 1.2s infinite;
+}
+
+
+/* ======================================================
+   HEADING
+====================================================== */
+
+.success-card h1 {
+  margin: 0 0 10px;
+
+  color: var(--navy);
+
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.1;
+  font-weight: 800;
+
+  letter-spacing: -1px;
+
+  animation: successFadeUp 0.7s ease 0.45s both;
+}
+
+
+.success-message {
+  margin: 0 0 25px;
+
+  color: #64748b;
+
+  font-size: 17px;
+  line-height: 1.6;
+
+  animation: successFadeUp 0.7s ease 0.55s both;
+}
+
+
+/* ======================================================
+   PURCHASED NOTE CARD
+====================================================== */
+
+.success-note {
+  position: relative;
+
+  margin: 26px auto;
+  padding: 24px 25px;
+
+  max-width: 470px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffaf0,
+      #ffffff
+    );
+
+  border: 1px solid rgba(244, 185, 66, 0.45);
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 30px rgba(11, 31, 77, 0.07);
+
+  overflow: hidden;
+
+  animation: successFadeUp 0.7s ease 0.65s both;
+}
+
+
+.success-note::before {
+  content: "PURCHASED";
+
+  position: absolute;
+
+  top: 12px;
+  right: -31px;
+
+  width: 120px;
+
+  padding: 5px 0;
+
+  background: var(--gold);
+
+  color: var(--navy-dark);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  transform: rotate(45deg);
+}
+
+
+.success-note h2 {
+  margin: 0 35px 7px 0;
+
+  color: var(--navy);
+
+  font-size: 23px;
+  font-weight: 800;
+}
+
+
+.success-note p {
+  margin: 0 0 14px;
+
+  color: #64748b;
+
+  font-size: 15px;
+}
+
+
+.success-note strong {
+  display: inline-block;
+
+  color: #b77900;
+
+  font-size: 30px;
+  font-weight: 800;
+}
+
+
+/* ======================================================
+   INFO MESSAGE
+====================================================== */
+
+.success-info {
+  max-width: 500px;
+
+  margin: 22px auto;
+
+  color: #64748b;
+
+  font-size: 15px;
+  line-height: 1.7;
+
+  animation: successFadeUp 0.7s ease 0.75s both;
+}
+
+
+/* ======================================================
+   DOWNLOAD BUTTON
+====================================================== */
+
+.success-download-button {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: 100%;
+  max-width: 390px;
+
+  padding: 17px 28px;
+
+  margin-top: 4px;
+
+  border: none;
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0b1f4d,
+      #17356f
+    );
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  box-shadow:
+    0 12px 30px rgba(11, 31, 77, 0.25);
+
+  overflow: hidden;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+
+  animation:
+    successFadeUp 0.7s ease 0.9s both,
+    downloadGlow 2.5s ease-in-out 1.7s infinite;
+}
+
+
+.success-download-button::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -100%;
+
+  width: 60%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.28),
+      transparent
+    );
+
+  transform: skewX(-20deg);
+
+  animation: successShine 3s ease-in-out 1.5s infinite;
+}
+
+
+.success-download-button:hover {
+  transform: translateY(-4px) scale(1.02);
+
+  box-shadow:
+    0 18px 40px rgba(11, 31, 77, 0.35);
+
+  color: white;
+}
+
+
+/* ======================================================
+   CONTINUE SHOPPING BUTTON
+====================================================== */
+
+.success-shopping-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 18px;
+
+  padding: 12px 22px;
+
+  color: var(--navy);
+
+  text-decoration: none;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  border-radius: 10px;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+
+  animation: successFadeUp 0.7s ease 1s both;
+}
+
+
+.success-shopping-button:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+
+/* ======================================================
+   VERIFIED BADGE
+====================================================== */
+
+.success-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  margin-bottom: 8px;
+
+  padding: 7px 13px;
+
+  background: #ecfdf3;
+
+  color: #15803d;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+
+  animation: successFadeUp 0.7s ease 0.4s both;
+}
+
+
+/* ======================================================
+   READY MESSAGE
+====================================================== */
+
+.success-ready {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin: 22px 0 10px;
+
+  color: var(--navy);
+
+  font-size: 16px;
+  font-weight: 700;
+
+  animation: successFadeUp 0.7s ease 0.82s both;
+}
+
+
+/* ======================================================
+   SECURITY TEXT
+====================================================== */
+
+.success-security {
+  margin-top: 22px;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+
+  animation: successFadeUp 0.7s ease 1.1s both;
+}
+
+
+/* ======================================================
+   CONFETTI
+====================================================== */
+
+.success-confetti {
+  position: absolute;
+
+  width: 10px;
+  height: 18px;
+
+  border-radius: 3px;
+
+  z-index: 2;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  animation: confettiFall 3.2s ease-out forwards;
+}
+
+
+.confetti-1 {
+  left: 10%;
+  background: #f4b942;
+  animation-delay: 0.1s;
+}
+
+.confetti-2 {
+  left: 20%;
+  background: #22c55e;
+  animation-delay: 0.35s;
+}
+
+.confetti-3 {
+  left: 30%;
+  background: #17356f;
+  animation-delay: 0.15s;
+}
+
+.confetti-4 {
+  left: 42%;
+  background: #f59e0b;
+  animation-delay: 0.45s;
+}
+
+.confetti-5 {
+  left: 55%;
+  background: #3b82f6;
+  animation-delay: 0.2s;
+}
+
+.confetti-6 {
+  left: 67%;
+  background: #f4b942;
+  animation-delay: 0.5s;
+}
+
+.confetti-7 {
+  left: 78%;
+  background: #22c55e;
+  animation-delay: 0.25s;
+}
+
+.confetti-8 {
+  left: 90%;
+  background: #17356f;
+  animation-delay: 0.4s;
+}
+
+
+/* ======================================================
+   ANIMATIONS
+====================================================== */
+
+@keyframes successCardEnter {
+
+  0% {
+    opacity: 0;
+    transform:
+      translateY(35px)
+      scale(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+@keyframes successCheckPop {
+
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-25deg);
+  }
+
+  70% {
+    transform: scale(1.12) rotate(4deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+
+}
+
+
+@keyframes successPulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 10px rgba(34, 197, 94, 0.08),
+      0 15px 35px rgba(34, 197, 94, 0.25);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 18px rgba(34, 197, 94, 0),
+      0 18px 40px rgba(34, 197, 94, 0.32);
+  }
+
+}
+
+
+@keyframes successFadeUp {
+
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+
+@keyframes successShine {
+
+  0% {
+    left: -100%;
+  }
+
+  45%,
+  100% {
+    left: 150%;
+  }
+
+}
+
+
+@keyframes downloadGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 12px 30px rgba(11, 31, 77, 0.25);
+  }
+
+  50% {
+    box-shadow:
+      0 15px 38px rgba(244, 185, 66, 0.38);
+  }
+
+}
+
+
+@keyframes successFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(25px);
+  }
+
+}
+
+
+@keyframes confettiFall {
+
+  0% {
+    top: -30px;
+    opacity: 1;
+    transform:
+      translateY(0)
+      rotate(0deg);
+  }
+
+  100% {
+    top: 90%;
+    opacity: 0;
+    transform:
+      translateY(150px)
+      rotate(720deg);
+  }
+
+}
+
+
+/* ======================================================
+   MOBILE
+====================================================== */
+
+@media (max-width: 600px) {
+
+  .success-page {
+    padding: 35px 14px 60px;
+  }
+
+  .success-card {
+    padding: 38px 20px 32px;
+    border-radius: 22px;
+  }
+
+  .success-icon {
+    width: 78px;
+    height: 78px;
+
+    font-size: 40px;
+  }
+
+  .success-card h1 {
+    font-size: 31px;
+  }
+
+  .success-message {
+    font-size: 15px;
+  }
+
+  .success-note {
+    padding: 21px 18px;
+  }
+
+  .success-note h2 {
+    font-size: 20px;
+  }
+
+  .success-note strong {
+    font-size: 26px;
+  }
+
+  .success-download-button {
+    max-width: 100%;
+
+    padding: 16px 18px;
+
+    font-size: 16px;
+  }
+
+}
+
+
+/* ======================================================
+   REDUCED MOTION ACCESSIBILITY
+====================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .success-card,
+  .success-icon,
+  .success-message,
+  .success-note,
+  .success-info,
+  .success-download-button,
+  .success-shopping-button,
+  .success-verified,
+  .success-ready,
+  .success-confetti {
+    animation: none !important;
+  }
+
+}
