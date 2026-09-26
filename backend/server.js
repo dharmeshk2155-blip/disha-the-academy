@@ -2382,6 +2382,355 @@ app.put("/api/admin/tests/:testId", async (req, res) => {
   }
 });
 
+// =====================================================
+// ADMIN - GET QUESTIONS OF A TEST
+// =====================================================
+
+app.get("/api/admin/tests/:testId/questions", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const testId = String(req.params.testId || "").trim();
+
+    if (!testId) {
+      return res.status(400).json({
+        success: false,
+        message: "Test ID is required.",
+      });
+    }
+
+    const pool = await connectDB();
+
+    // First check that test exists
+    const testResult = await pool
+      .request()
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        SELECT
+          TestId,
+          Category,
+          Title,
+          Subject,
+          Duration,
+          MarksPerCorrect,
+          NegativeMarking,
+          TopCategory,
+          SubExam
+        FROM dbo.Tests
+        WHERE TestId = @TestId
+      `);
+
+    if (testResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found.",
+      });
+    }
+
+    // Get questions belonging to this test
+    const questionsResult = await pool
+      .request()
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        SELECT
+          QuestionId,
+          TestId,
+          QuestionText,
+          OptionA,
+          OptionB,
+          OptionC,
+          OptionD,
+          CorrectAnswer,
+          QuestionTextHi,
+          OptionAHi,
+          OptionBHi,
+          OptionCHi,
+          OptionDHi
+        FROM dbo.Questions
+        WHERE TestId = @TestId
+        ORDER BY QuestionId ASC
+      `);
+
+    const test = testResult.recordset[0];
+
+    const questions = questionsResult.recordset.map((question) => ({
+      questionId: question.QuestionId,
+      testId: question.TestId,
+
+      questionText: question.QuestionText,
+
+      optionA: question.OptionA,
+      optionB: question.OptionB,
+      optionC: question.OptionC,
+      optionD: question.OptionD,
+
+      correctAnswer: Number(question.CorrectAnswer),
+
+      questionTextHi: question.QuestionTextHi || "",
+      optionAHi: question.OptionAHi || "",
+      optionBHi: question.OptionBHi || "",
+      optionCHi: question.OptionCHi || "",
+      optionDHi: question.OptionDHi || "",
+    }));
+
+    return res.json({
+      success: true,
+
+      test: {
+        testId: test.TestId,
+        category: test.Category,
+        title: test.Title,
+        subject: test.Subject,
+        duration: Number(test.Duration) || 0,
+        marksPerCorrect: Number(test.MarksPerCorrect) || 0,
+        negativeMarking: Number(test.NegativeMarking) || 0,
+        topCategory: test.TopCategory,
+        subExam: test.SubExam,
+      },
+
+      count: questions.length,
+      questions,
+    });
+  } catch (error) {
+    console.error("Admin get questions error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load questions.",
+    });
+  }
+});
+
+// =====================================================
+// ADMIN - ADD QUESTION TO TEST
+// =====================================================
+
+app.post("/api/admin/tests/:testId/questions", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const testId = String(req.params.testId || "").trim();
+
+    const {
+      questionText,
+      optionA,
+      optionB,
+      optionC,
+      optionD,
+      correctAnswer,
+      questionTextHi,
+      optionAHi,
+      optionBHi,
+      optionCHi,
+      optionDHi,
+    } = req.body;
+
+    // -----------------------------
+    // Clean required fields
+    // -----------------------------
+
+    const cleanQuestionText = String(questionText || "").trim();
+    const cleanOptionA = String(optionA || "").trim();
+    const cleanOptionB = String(optionB || "").trim();
+    const cleanOptionC = String(optionC || "").trim();
+    const cleanOptionD = String(optionD || "").trim();
+
+    const correctAnswerNumber = Number(correctAnswer);
+
+    // -----------------------------
+    // Validation
+    // -----------------------------
+
+    if (!testId) {
+      return res.status(400).json({
+        success: false,
+        message: "Test ID is required.",
+      });
+    }
+
+    if (
+      !cleanQuestionText ||
+      !cleanOptionA ||
+      !cleanOptionB ||
+      !cleanOptionC ||
+      !cleanOptionD
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Question and all four options are required.",
+      });
+    }
+
+    if (
+      !Number.isInteger(correctAnswerNumber) ||
+      correctAnswerNumber < 1 ||
+      correctAnswerNumber > 4
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Correct answer must be between 1 and 4.",
+      });
+    }
+
+    const pool = await connectDB();
+
+    // -----------------------------
+    // Check test exists
+    // -----------------------------
+
+    const testResult = await pool
+      .request()
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        SELECT TOP 1 TestId
+        FROM dbo.Tests
+        WHERE TestId = @TestId
+      `);
+
+    if (testResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found.",
+      });
+    }
+
+    // -----------------------------
+    // Generate next QuestionId
+    // -----------------------------
+
+    const idResult = await pool.request().query(`
+      SELECT ISNULL(MAX(QuestionId), 0) + 1 AS NextQuestionId
+      FROM dbo.Questions
+    `);
+
+    const nextQuestionId =
+      Number(idResult.recordset[0]?.NextQuestionId) || 1;
+
+    // -----------------------------
+    // Insert question
+    // -----------------------------
+
+    await pool
+      .request()
+      .input("QuestionId", sql.Int, nextQuestionId)
+      .input("TestId", sql.NVarChar, testId)
+      .input("QuestionText", sql.NVarChar, cleanQuestionText)
+      .input("OptionA", sql.NVarChar, cleanOptionA)
+      .input("OptionB", sql.NVarChar, cleanOptionB)
+      .input("OptionC", sql.NVarChar, cleanOptionC)
+      .input("OptionD", sql.NVarChar, cleanOptionD)
+      .input("CorrectAnswer", sql.Int, correctAnswerNumber)
+
+      .input(
+        "QuestionTextHi",
+        sql.NVarChar,
+        String(questionTextHi || "").trim() || null
+      )
+      .input(
+        "OptionAHi",
+        sql.NVarChar,
+        String(optionAHi || "").trim() || null
+      )
+      .input(
+        "OptionBHi",
+        sql.NVarChar,
+        String(optionBHi || "").trim() || null
+      )
+      .input(
+        "OptionCHi",
+        sql.NVarChar,
+        String(optionCHi || "").trim() || null
+      )
+      .input(
+        "OptionDHi",
+        sql.NVarChar,
+        String(optionDHi || "").trim() || null
+      )
+
+      .query(`
+        INSERT INTO dbo.Questions
+        (
+          QuestionId,
+          TestId,
+          QuestionText,
+          OptionA,
+          OptionB,
+          OptionC,
+          OptionD,
+          CorrectAnswer,
+          QuestionTextHi,
+          OptionAHi,
+          OptionBHi,
+          OptionCHi,
+          OptionDHi
+        )
+        VALUES
+        (
+          @QuestionId,
+          @TestId,
+          @QuestionText,
+          @OptionA,
+          @OptionB,
+          @OptionC,
+          @OptionD,
+          @CorrectAnswer,
+          @QuestionTextHi,
+          @OptionAHi,
+          @OptionBHi,
+          @OptionCHi,
+          @OptionDHi
+        )
+      `);
+
+    // -----------------------------
+    // Success
+    // -----------------------------
+
+    return res.status(201).json({
+      success: true,
+      message: "Question added successfully.",
+
+      question: {
+        questionId: nextQuestionId,
+        testId,
+        questionText: cleanQuestionText,
+        optionA: cleanOptionA,
+        optionB: cleanOptionB,
+        optionC: cleanOptionC,
+        optionD: cleanOptionD,
+        correctAnswer: correctAnswerNumber,
+
+        questionTextHi: String(questionTextHi || "").trim(),
+        optionAHi: String(optionAHi || "").trim(),
+        optionBHi: String(optionBHi || "").trim(),
+        optionCHi: String(optionCHi || "").trim(),
+        optionDHi: String(optionDHi || "").trim(),
+      },
+    });
+  } catch (error) {
+    console.error("Admin add question error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add question.",
+    });
+  }
+});
+
 // ======================================================
 // 404 ROUTE
 // ======================================================
