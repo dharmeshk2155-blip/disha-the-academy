@@ -2612,90 +2612,82 @@ app.post("/api/admin/tests/:testId/questions", async (req, res) => {
     // Generate next QuestionId
     // -----------------------------
 
-    const idResult = await pool.request().query(`
-      SELECT ISNULL(MAX(QuestionId), 0) + 1 AS NextQuestionId
-      FROM dbo.Questions
-    `);
-
-    const nextQuestionId =
-      Number(idResult.recordset[0]?.NextQuestionId) || 1;
+   
 
     // -----------------------------
     // Insert question
     // -----------------------------
 
-    await pool
-      .request()
-      .input("QuestionId", sql.Int, nextQuestionId)
-      .input("TestId", sql.NVarChar, testId)
-      .input("QuestionText", sql.NVarChar, cleanQuestionText)
-      .input("OptionA", sql.NVarChar, cleanOptionA)
-      .input("OptionB", sql.NVarChar, cleanOptionB)
-      .input("OptionC", sql.NVarChar, cleanOptionC)
-      .input("OptionD", sql.NVarChar, cleanOptionD)
-      .input("CorrectAnswer", sql.Int, correctAnswerNumber)
+   const insertResult = await pool
+  .request()
+  .input("TestId", sql.NVarChar, testId)
+  .input("QuestionText", sql.NVarChar, cleanQuestionText)
+  .input("OptionA", sql.NVarChar, cleanOptionA)
+  .input("OptionB", sql.NVarChar, cleanOptionB)
+  .input("OptionC", sql.NVarChar, cleanOptionC)
+  .input("OptionD", sql.NVarChar, cleanOptionD)
+  .input("CorrectAnswer", sql.Int, correctAnswerNumber)
+  .input(
+    "QuestionTextHi",
+    sql.NVarChar,
+    String(questionTextHi || "").trim() || null
+  )
+  .input(
+    "OptionAHi",
+    sql.NVarChar,
+    String(optionAHi || "").trim() || null
+  )
+  .input(
+    "OptionBHi",
+    sql.NVarChar,
+    String(optionBHi || "").trim() || null
+  )
+  .input(
+    "OptionCHi",
+    sql.NVarChar,
+    String(optionCHi || "").trim() || null
+  )
+  .input(
+    "OptionDHi",
+    sql.NVarChar,
+    String(optionDHi || "").trim() || null
+  )
+  .query(`
+    INSERT INTO dbo.Questions
+    (
+      TestId,
+      QuestionText,
+      OptionA,
+      OptionB,
+      OptionC,
+      OptionD,
+      CorrectAnswer,
+      QuestionTextHi,
+      OptionAHi,
+      OptionBHi,
+      OptionCHi,
+      OptionDHi
+    )
+    OUTPUT INSERTED.QuestionId
+    VALUES
+    (
+      @TestId,
+      @QuestionText,
+      @OptionA,
+      @OptionB,
+      @OptionC,
+      @OptionD,
+      @CorrectAnswer,
+      @QuestionTextHi,
+      @OptionAHi,
+      @OptionBHi,
+      @OptionCHi,
+      @OptionDHi
+    )
+  `);
 
-      .input(
-        "QuestionTextHi",
-        sql.NVarChar,
-        String(questionTextHi || "").trim() || null
-      )
-      .input(
-        "OptionAHi",
-        sql.NVarChar,
-        String(optionAHi || "").trim() || null
-      )
-      .input(
-        "OptionBHi",
-        sql.NVarChar,
-        String(optionBHi || "").trim() || null
-      )
-      .input(
-        "OptionCHi",
-        sql.NVarChar,
-        String(optionCHi || "").trim() || null
-      )
-      .input(
-        "OptionDHi",
-        sql.NVarChar,
-        String(optionDHi || "").trim() || null
-      )
-
-      .query(`
-        INSERT INTO dbo.Questions
-        (
-          QuestionId,
-          TestId,
-          QuestionText,
-          OptionA,
-          OptionB,
-          OptionC,
-          OptionD,
-          CorrectAnswer,
-          QuestionTextHi,
-          OptionAHi,
-          OptionBHi,
-          OptionCHi,
-          OptionDHi
-        )
-        VALUES
-        (
-          @QuestionId,
-          @TestId,
-          @QuestionText,
-          @OptionA,
-          @OptionB,
-          @OptionC,
-          @OptionD,
-          @CorrectAnswer,
-          @QuestionTextHi,
-          @OptionAHi,
-          @OptionBHi,
-          @OptionCHi,
-          @OptionDHi
-        )
-      `);
-
+const newQuestionId =
+  insertResult.recordset[0].QuestionId;
     // -----------------------------
     // Success
     // -----------------------------
