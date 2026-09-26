@@ -1894,3 +1894,32 @@ body:has(.admin-lock-page) {
   width: 100%;
   margin: 0;
 }
+
+/* =========================================================
+   FINAL ADMIN FULL SCREEN ISOLATION
+========================================================= */
+
+body:has(.admin-shell),
+body:has(.admin-lock-page) {
+  margin-left: 0 !important;
+  padding-top: 0 !important;
+  overflow-x: hidden !important;
+}
+
+body:has(.admin-shell) .admin-shell {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.admin-content-area {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+.admin-dashboard {
+  min-width: 0;
+}
