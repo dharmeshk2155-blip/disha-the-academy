@@ -478,3 +478,245 @@
     min-height: 92px;
   }
 }
+
+/* =========================================
+   ADD TEST MODAL
+========================================= */
+
+.admin-test-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 20, 39, 0.66);
+  backdrop-filter: blur(5px);
+}
+
+.admin-test-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 1px solid #dfe5ed;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(5, 17, 36, 0.28);
+}
+
+.admin-test-modal-header {
+  padding: 22px 24px 19px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.admin-test-modal-header span {
+  display: block;
+  margin-bottom: 5px;
+  color: #b7861f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.admin-test-modal-header h2 {
+  margin: 0;
+  color: #10213c;
+  font-size: 24px;
+}
+
+.admin-test-modal-header p {
+  margin: 6px 0 0;
+  color: #7a8798;
+  font-size: 13px;
+}
+
+.admin-test-modal-close {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dfe4eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #617086;
+  cursor: pointer;
+}
+
+.admin-test-modal-close:hover {
+  background: #f5f7fa;
+  color: #172a45;
+}
+
+.admin-test-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-test-form {
+  padding: 22px 24px 24px;
+}
+
+.admin-test-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.admin-test-form-field {
+  min-width: 0;
+}
+
+.admin-test-form-full {
+  grid-column: 1 / -1;
+}
+
+.admin-test-form-field label {
+  display: block;
+  margin-bottom: 7px;
+  color: #34445c;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.admin-test-form-field input,
+.admin-test-form-field select {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #d9e0e8;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #25364e;
+  font: inherit;
+  font-size: 13px;
+  transition: 0.18s ease;
+}
+
+.admin-test-form-field input:focus,
+.admin-test-form-field select:focus {
+  border-color: #b7861f;
+  box-shadow: 0 0 0 3px rgba(183, 134, 31, 0.1);
+}
+
+.admin-test-form-field input:disabled,
+.admin-test-form-field select:disabled {
+  background: #f5f6f8;
+  color: #8b95a3;
+  cursor: not-allowed;
+}
+
+.admin-test-form-field small {
+  display: block;
+  margin-top: 6px;
+  color: #929cab;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.admin-test-form-message {
+  margin-bottom: 18px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.admin-test-form-message.error {
+  border: 1px solid #f0c8c8;
+  background: #fff5f5;
+  color: #b83e3e;
+}
+
+.admin-test-form-message.success {
+  border: 1px solid #bfe1ca;
+  background: #f1fbf4;
+  color: #287442;
+}
+
+.admin-test-form-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e9edf2;
+}
+
+.admin-test-form-footer button {
+  min-height: 42px;
+  padding: 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-test-cancel-btn {
+  border: 1px solid #d9e0e8;
+  background: #ffffff;
+  color: #536177;
+}
+
+.admin-test-save-btn {
+  min-width: 130px;
+  border: 1px solid #10213c;
+  background: #10213c;
+  color: #ffffff;
+}
+
+.admin-test-save-btn:hover {
+  background: #192f50;
+}
+
+.admin-test-form-footer button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 650px) {
+  .admin-test-modal-overlay {
+    padding: 12px;
+  }
+
+  .admin-test-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .admin-test-modal-header,
+  .admin-test-form {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+
+  .admin-test-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-test-form-full {
+    grid-column: auto;
+  }
+
+  .admin-test-form-footer {
+    flex-direction: column-reverse;
+  }
+
+  .admin-test-form-footer button {
+    width: 100%;
+  }
+}
