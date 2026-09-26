@@ -47,6 +47,7 @@ function AdminTests() {
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTestId, setEditingTestId] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -174,19 +175,22 @@ function AdminTests() {
   };
 
   const openAddModal = () => {
-    setForm(INITIAL_FORM);
-    setFormError("");
-    setSuccessMessage("");
-    setShowAddModal(true);
-  };
+  setEditingTestId(null);
+  setForm(INITIAL_FORM);
+  setFormError("");
+  setSuccessMessage("");
+  setShowAddModal(true);
+};
 
   const closeAddModal = () => {
-    if (saving) return;
+  if (saving) return;
 
-    setShowAddModal(false);
-    setForm(INITIAL_FORM);
-    setFormError("");
-  };
+  setShowAddModal(false);
+  setEditingTestId(null);
+  setForm(INITIAL_FORM);
+  setFormError("");
+  setSuccessMessage("");
+};
 
   const handleFormChange = (event) => {
     const { name, value } = event.target;
@@ -212,117 +216,152 @@ function AdminTests() {
     }));
   };
 
-  const handleCreateTest = async (event) => {
-    event.preventDefault();
+ const handleCreateTest = async (event) => {
+  event.preventDefault();
 
-    setFormError("");
-    setSuccessMessage("");
+  setFormError("");
+  setSuccessMessage("");
 
-    const testId = form.testId.trim().toLowerCase();
-    const category = form.category.trim();
-    const title = form.title.trim();
-    const subject = form.subject.trim();
-    const durationMinutes = Number(form.durationMinutes);
-    const marksPerCorrect = Number(form.marksPerCorrect);
-    const negativeMarking = Number(form.negativeMarking);
+  const testId = form.testId.trim().toLowerCase();
+  const category = form.category.trim();
+  const title = form.title.trim();
+  const subject = form.subject.trim();
 
-    if (
-      !testId ||
-      !form.topCategory ||
-      !form.subExam ||
-      !category ||
-      !title ||
-      !subject ||
-      !form.durationMinutes ||
-      form.marksPerCorrect === "" ||
-      form.negativeMarking === ""
-    ) {
-      setFormError("Please fill all required fields.");
-      return;
-    }
+  const durationMinutes = Number(form.durationMinutes);
+  const marksPerCorrect = Number(form.marksPerCorrect);
+  const negativeMarking = Number(form.negativeMarking);
 
-    if (!/^[a-z0-9-]+$/.test(testId)) {
-      setFormError(
-        "Test ID can contain only lowercase letters, numbers and hyphens."
+  // Required fields validation
+  if (
+    !testId ||
+    !form.topCategory ||
+    !form.subExam ||
+    !category ||
+    !title ||
+    !subject ||
+    !form.durationMinutes ||
+    form.marksPerCorrect === "" ||
+    form.negativeMarking === ""
+  ) {
+    setFormError("Please fill all required fields.");
+    return;
+  }
+
+  // Test ID validation
+  if (!/^[a-z0-9-]+$/.test(testId)) {
+    setFormError(
+      "Test ID can contain only lowercase letters, numbers and hyphens."
+    );
+    return;
+  }
+
+  // Duration validation
+  if (
+    !Number.isFinite(durationMinutes) ||
+    durationMinutes <= 0
+  ) {
+    setFormError("Duration must be greater than 0 minutes.");
+    return;
+  }
+
+  // Marks validation
+  if (
+    !Number.isFinite(marksPerCorrect) ||
+    marksPerCorrect <= 0
+  ) {
+    setFormError(
+      "Marks per correct answer must be greater than 0."
+    );
+    return;
+  }
+
+  // Negative marking validation
+  if (
+    !Number.isFinite(negativeMarking) ||
+    negativeMarking < 0
+  ) {
+    setFormError(
+      "Negative marking cannot be less than 0."
+    );
+    return;
+  }
+
+  try {
+    setSaving(true);
+
+    // Check whether we are creating or editing
+    const isEditing = Boolean(editingTestId);
+
+    // EDIT = PUT
+    // ADD = POST
+    const url = isEditing
+      ? `${API_BASE}/api/admin/tests/${encodeURIComponent(
+          editingTestId
+        )}`
+      : `${API_BASE}/api/admin/tests`;
+
+    const response = await fetch(url, {
+      method: isEditing ? "PUT" : "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": adminKey,
+      },
+
+      body: JSON.stringify({
+        testId,
+        category,
+        title,
+        subject,
+
+        // Frontend minutes -> Backend seconds
+        duration: Math.round(durationMinutes * 60),
+
+        marksPerCorrect,
+        negativeMarking,
+        topCategory: form.topCategory,
+        subExam: form.subExam,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+          (isEditing
+            ? "Failed to update test."
+            : "Failed to create test.")
       );
-      return;
     }
 
-    if (
-      !Number.isFinite(durationMinutes) ||
-      durationMinutes <= 0
-    ) {
-      setFormError("Duration must be greater than 0 minutes.");
-      return;
-    }
+    // Success message
+    setSuccessMessage(
+      isEditing
+        ? "Test updated successfully."
+        : "Test created successfully."
+    );
 
-    if (
-      !Number.isFinite(marksPerCorrect) ||
-      marksPerCorrect <= 0
-    ) {
-      setFormError(
-        "Marks per correct answer must be greater than 0."
-      );
-      return;
-    }
+    // Refresh test table
+    await fetchTests();
 
-    if (
-      !Number.isFinite(negativeMarking) ||
-      negativeMarking < 0
-    ) {
-      setFormError("Negative marking cannot be less than 0.");
-      return;
-    }
+    // Close modal after success
+    setTimeout(() => {
+      setShowAddModal(false);
+      setEditingTestId(null);
+      setForm(INITIAL_FORM);
+      setSuccessMessage("");
+    }, 900);
+  } catch (err) {
+    console.error("Save test error:", err);
 
-    try {
-      setSaving(true);
-
-      const response = await fetch(
-        `${API_BASE}/api/admin/tests`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-key": adminKey,
-          },
-          body: JSON.stringify({
-            testId,
-            category,
-            title,
-            subject,
-            duration: Math.round(durationMinutes * 60),
-            marksPerCorrect,
-            negativeMarking,
-            topCategory: form.topCategory,
-            subExam: form.subExam,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to create test."
-        );
-      }
-
-      setSuccessMessage("Test created successfully.");
-
-      await fetchTests();
-
-      setTimeout(() => {
-        setShowAddModal(false);
-        setForm(INITIAL_FORM);
-        setSuccessMessage("");
-      }, 900);
-    } catch (err) {
-      console.error("Create test error:", err);
-      setFormError(err.message || "Failed to create test.");
-    } finally {
-      setSaving(false);
-    }
-  };
+    setFormError(
+      err.message || "Failed to save test."
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleManageQuestions = (test) => {
     alert(
@@ -330,11 +369,27 @@ function AdminTests() {
     );
   };
 
-  const handleEdit = (test) => {
-    alert(
-      `Edit Test: ${test.title}\n\nEdit functionality next step mein connect karenge.`
-    );
-  };
+ const handleEdit = (test) => {
+  setEditingTestId(test.testId);
+
+  setForm({
+    testId: test.testId || "",
+    topCategory: test.topCategory || "",
+    subExam: test.subExam || "",
+    category: test.category || "",
+    title: test.title || "",
+    subject: test.subject || "",
+    durationMinutes: test.duration
+      ? String(Math.round(Number(test.duration) / 60))
+      : "",
+    marksPerCorrect: String(test.marksPerCorrect ?? 1),
+    negativeMarking: String(test.negativeMarking ?? 0),
+  });
+
+  setFormError("");
+  setSuccessMessage("");
+  setShowAddModal(true);
+};
 
   const handleDelete = (test) => {
     alert(
@@ -625,12 +680,19 @@ function AdminTests() {
           <div className="admin-test-modal">
             <div className="admin-test-modal-header">
               <div>
-                <span>NEW MOCK TEST</span>
-                <h2>Add Test</h2>
-                <p>
-                  Create a new test for the Take a Mock Test
-                  section.
-                </p>
+                <span>
+  {editingTestId ? "EDIT MOCK TEST" : "NEW MOCK TEST"}
+</span>
+
+<h2>
+  {editingTestId ? "Edit Test" : "Add Test"}
+</h2>
+
+<p>
+  {editingTestId
+    ? "Update the selected mock test details."
+    : "Create a new test for the Take a Mock Test section."}
+</p>
               </div>
 
               <button
@@ -735,14 +797,15 @@ function AdminTests() {
                     value={form.testId}
                     onChange={handleFormChange}
                     placeholder="e.g. ssc-cgl-math-02"
-                    disabled={saving}
+                    disabled={saving || Boolean(editingTestId)}
                     autoComplete="off"
                   />
 
                   <small>
-                    Lowercase letters, numbers and hyphens
-                    only.
-                  </small>
+  {editingTestId
+    ? "Test ID cannot be changed because questions are linked to this ID."
+    : "Lowercase letters, numbers and hyphens only."}
+</small>
                 </div>
 
                 <div className="admin-test-form-field">
@@ -861,20 +924,20 @@ function AdminTests() {
                   className="admin-test-save-btn"
                   disabled={saving}
                 >
-                  {saving ? (
-                    <>
-                      <RefreshCw
-                        size={17}
-                        className="admin-tests-spin"
-                      />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={17} />
-                      Create Test
-                    </>
-                  )}
+                 {saving ? (
+  <>
+    <RefreshCw
+      size={17}
+      className="admin-tests-spin"
+    />
+    {editingTestId ? "Saving..." : "Creating..."}
+  </>
+) : (
+  <>
+    <Save size={17} />
+    {editingTestId ? "Save Changes" : "Create Test"}
+  </>
+)}
                 </button>
               </div>
             </form>

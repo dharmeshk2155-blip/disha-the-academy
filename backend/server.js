@@ -2209,6 +2209,179 @@ app.post("/api/admin/tests", async (req, res) => {
   }
 });
 
+// =====================================================
+// ADMIN - UPDATE MOCK TEST
+// =====================================================
+
+app.put("/api/admin/tests/:testId", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const currentTestId = String(req.params.testId || "").trim();
+
+    const {
+      category,
+      title,
+      subject,
+      duration,
+      marksPerCorrect,
+      negativeMarking,
+      topCategory,
+      subExam,
+    } = req.body;
+
+    const cleanCategory = String(category || "").trim();
+    const cleanTitle = String(title || "").trim();
+    const cleanSubject = String(subject || "").trim();
+    const cleanTopCategory = String(topCategory || "").trim();
+    const cleanSubExam = String(subExam || "").trim();
+
+    if (
+      !currentTestId ||
+      !cleanCategory ||
+      !cleanTitle ||
+      !cleanSubject ||
+      !cleanTopCategory ||
+      !cleanSubExam
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields.",
+      });
+    }
+
+    const durationNumber = Number(duration);
+    const marksNumber = Number(marksPerCorrect);
+    const negativeNumber = Number(negativeMarking);
+
+    if (
+      !Number.isFinite(durationNumber) ||
+      durationNumber <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Duration must be greater than 0.",
+      });
+    }
+
+    if (
+      !Number.isFinite(marksNumber) ||
+      marksNumber <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Marks per correct answer must be greater than 0.",
+      });
+    }
+
+    if (
+      !Number.isFinite(negativeNumber) ||
+      negativeNumber < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Negative marking cannot be less than 0.",
+      });
+    }
+
+    const pool = await connectDB();
+
+    // Check whether the test actually exists
+    const existingTest = await pool
+      .request()
+      .input("TestId", sql.NVarChar, currentTestId)
+      .query(`
+        SELECT TOP 1 TestId
+        FROM dbo.Tests
+        WHERE TestId = @TestId
+      `);
+
+    if (existingTest.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found.",
+      });
+    }
+
+    // TestId itself is intentionally not changed.
+    await pool
+      .request()
+      .input("TestId", sql.NVarChar, currentTestId)
+      .input("Category", sql.NVarChar, cleanCategory)
+      .input("Title", sql.NVarChar, cleanTitle)
+      .input("Subject", sql.NVarChar, cleanSubject)
+      .input(
+        "Duration",
+        sql.Int,
+        Math.round(durationNumber)
+      )
+      .input(
+        "MarksPerCorrect",
+        sql.Decimal(10, 2),
+        marksNumber
+      )
+      .input(
+        "NegativeMarking",
+        sql.Decimal(10, 2),
+        negativeNumber
+      )
+      .input(
+        "TopCategory",
+        sql.NVarChar,
+        cleanTopCategory
+      )
+      .input(
+        "SubExam",
+        sql.NVarChar,
+        cleanSubExam
+      )
+      .query(`
+        UPDATE dbo.Tests
+        SET
+          Category = @Category,
+          Title = @Title,
+          Subject = @Subject,
+          Duration = @Duration,
+          MarksPerCorrect = @MarksPerCorrect,
+          NegativeMarking = @NegativeMarking,
+          TopCategory = @TopCategory,
+          SubExam = @SubExam
+        WHERE TestId = @TestId
+      `);
+
+    return res.json({
+      success: true,
+      message: "Test updated successfully.",
+      test: {
+        testId: currentTestId,
+        category: cleanCategory,
+        title: cleanTitle,
+        subject: cleanSubject,
+        duration: Math.round(durationNumber),
+        marksPerCorrect: marksNumber,
+        negativeMarking: negativeNumber,
+        topCategory: cleanTopCategory,
+        subExam: cleanSubExam,
+      },
+    });
+  } catch (error) {
+    console.error("Admin update test error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update test.",
+    });
+  }
+});
+
 // ======================================================
 // 404 ROUTE
 // ======================================================
