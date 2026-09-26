@@ -798,14 +798,7 @@ app.post(
       // CHECK NOTE ID
       // -----------------------------
 
-      if (!noteId) {if (!note.pdf) {
-  return res.status(400).json({
-    success: false,
-    error: "This note is not available for purchase yet",
-  });
-}if (!note.pdf) {
-  return res.status(400).json({ success: false, error: "This note is not available for purchase yet" });
-}
+      if (!noteId) {
 
         return res.status(400).json({
 
@@ -813,10 +806,8 @@ app.post(
 
           error:
             "Note ID is required",
-            
 
         });
-        
 
       }
 
@@ -856,6 +847,19 @@ app.post(
 
           error:
             "Note not found",
+
+        });
+
+      }
+
+      if (!note.pdf) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          error:
+            "This note is not available for purchase yet",
 
         });
 
@@ -1699,6 +1703,149 @@ app.get(
 
   }
 );
+
+// ======================================================
+// ADMIN DASHBOARD API
+// ======================================================
+
+app.get("/api/admin/dashboard", async (req, res) => {
+  try {
+    // -----------------------------------
+    // ADMIN KEY CHECK
+    // -----------------------------------
+
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // -----------------------------------
+    // DATABASE CONNECTION
+    // -----------------------------------
+
+    const pool = await connectDB();
+
+    // -----------------------------------
+    // TOTAL USERS
+    // -----------------------------------
+
+    const usersResult = await pool.request().query(`
+      SELECT COUNT(*) AS totalUsers
+      FROM dbo.Users
+    `);
+
+    // -----------------------------------
+    // ORDER / REVENUE STATS
+    // -----------------------------------
+
+    const ordersResult = await pool.request().query(`
+      SELECT
+        COUNT(CASE WHEN Paid = 1 THEN 1 END) AS paidOrders,
+        ISNULL(
+          SUM(
+            CASE
+              WHEN Paid = 1 THEN Price
+              ELSE 0
+            END
+          ),
+          0
+        ) AS totalRevenue
+      FROM dbo.Orders
+    `);
+
+    // -----------------------------------
+    // RECENT PAID ORDERS
+    // -----------------------------------
+
+    const recentOrdersResult = await pool.request().query(`
+      SELECT TOP 5
+        o.Id,
+        o.OrderId,
+        o.UserId,
+        o.NoteId,
+        o.Title,
+        o.Price,
+        o.Paid,
+        o.PaymentId,
+        o.CreatedAt,
+        o.VerifiedAt,
+        u.Name AS UserName,
+        u.Email AS UserEmail
+      FROM dbo.Orders o
+      LEFT JOIN dbo.Users u
+        ON o.UserId = u.Id
+      WHERE o.Paid = 1
+      ORDER BY
+        COALESCE(o.VerifiedAt, o.CreatedAt) DESC
+    `);
+
+    // -----------------------------------
+    // NOTES
+    // Currently notes are stored in
+    // server.js array, not SQL database.
+    // -----------------------------------
+
+    const totalNotes = notes.length;
+
+    // -----------------------------------
+    // TEST COUNT
+    // We will connect real test count
+    // after dashboard base is working.
+    // -----------------------------------
+
+    const totalTests = 0;
+
+    // -----------------------------------
+    // RESPONSE
+    // -----------------------------------
+
+    return res.json({
+      success: true,
+
+      stats: {
+        totalUsers:
+          Number(usersResult.recordset[0]?.totalUsers) || 0,
+
+        totalNotes,
+
+        totalTests,
+
+        paidOrders:
+          Number(ordersResult.recordset[0]?.paidOrders) || 0,
+
+        totalRevenue:
+          Number(ordersResult.recordset[0]?.totalRevenue) || 0,
+      },
+
+      recentOrders:
+        recentOrdersResult.recordset.map((order) => ({
+          id: order.Id,
+          orderId: order.OrderId,
+          userId: order.UserId,
+          userName: order.UserName || "Unknown User",
+          userEmail: order.UserEmail || "",
+          noteId: order.NoteId,
+          title: order.Title,
+          price: Number(order.Price) || 0,
+          paid: Boolean(order.Paid),
+          paymentId: order.PaymentId,
+          createdAt: order.CreatedAt,
+          verifiedAt: order.VerifiedAt,
+        })),
+    });
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load admin dashboard",
+    });
+  }
+});
 
 // ======================================================
 // 404 ROUTE
