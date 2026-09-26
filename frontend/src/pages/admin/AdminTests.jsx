@@ -22,7 +22,7 @@ import {
 
 import { EXAM_TAXONOMY } from "../../data/examTaxonomy";
 import "./AdminTests.css";
-const navigate = useNavigate();
+
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
@@ -42,7 +42,7 @@ const INITIAL_FORM = {
 
 function AdminTests() {
   const { adminKey } = useOutletContext();
-
+  const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
