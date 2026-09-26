@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import {
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
 import {
   Search,
   Plus,
@@ -19,6 +22,7 @@ import {
 
 import { EXAM_TAXONOMY } from "../../data/examTaxonomy";
 import "./AdminTests.css";
+const navigate = useNavigate();
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
@@ -364,10 +368,10 @@ function AdminTests() {
 };
 
   const handleManageQuestions = (test) => {
-    alert(
-      `Manage Questions: ${test.title}\n\nQuestion Manager next step mein banayenge.`
-    );
-  };
+  navigate(
+    `/admin/tests/${encodeURIComponent(test.testId)}/questions`
+  );
+};
 
  const handleEdit = (test) => {
   setEditingTestId(test.testId);

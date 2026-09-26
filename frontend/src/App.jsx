@@ -50,6 +50,7 @@ import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
+import AdminQuestions from "./pages/admin/AdminQuestions";
 
 import "./App.css";
 
@@ -345,6 +346,11 @@ function App() {
                path="tests"
                element={<AdminTests />}
              />
+
+             <Route
+  path="tests/:testId/questions"
+  element={<AdminQuestions />}
+/>
 
 
           {/* CURRENT AFFAIRS */}
