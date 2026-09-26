@@ -278,12 +278,63 @@ const handleEditQuestion = (question) => {
   setSuccessMessage("");
   setShowModal(true);
 };
+const handleDeleteQuestion = async (question) => {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete this question?\n\n${question.questionText}`
+  );
 
-  const handleDeleteQuestion = (question) => {
-    alert(
-      `Delete Question ${question.questionId} will be added next.`
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+    setSuccessMessage("");
+
+    const response = await fetch(
+      `${API_BASE}/api/admin/tests/${encodeURIComponent(
+        testId
+      )}/questions/${encodeURIComponent(
+        question.questionId
+      )}`,
+      {
+        method: "DELETE",
+        headers: {
+          "x-admin-key": adminKey,
+        },
+      }
     );
-  };
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Failed to delete question."
+      );
+    }
+
+    // Remove immediately from UI
+    setQuestions((currentQuestions) =>
+      currentQuestions.filter(
+        (item) =>
+          item.questionId !== question.questionId
+      )
+    );
+
+    setSuccessMessage(
+      "Question deleted successfully."
+    );
+  } catch (error) {
+    console.error(
+      "Delete question error:",
+      error
+    );
+
+    setError(
+      error.message || "Failed to delete question."
+    );
+  }
+};
 
   // ---------------------------------------------------
   // HELPERS
