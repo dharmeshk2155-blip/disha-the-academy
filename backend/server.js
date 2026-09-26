@@ -2972,6 +2972,122 @@ app.put(
   }
 );
 
+// =====================================================
+// ADMIN - DELETE QUESTION
+// =====================================================
+
+app.delete(
+  "/api/admin/tests/:testId/questions/:questionId",
+  async (req, res) => {
+    try {
+      const adminKey = req.header("x-admin-key");
+
+      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const testId = String(req.params.testId || "").trim();
+      const questionId = Number(req.params.questionId);
+
+      // -----------------------------
+      // VALIDATION
+      // -----------------------------
+
+      if (!testId) {
+        return res.status(400).json({
+          success: false,
+          message: "Test ID is required.",
+        });
+      }
+
+      if (
+        !Number.isInteger(questionId) ||
+        questionId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Question ID.",
+        });
+      }
+
+      const pool = await connectDB();
+
+      // -----------------------------
+      // CHECK QUESTION EXISTS
+      // -----------------------------
+
+      const existingQuestion = await pool
+        .request()
+        .input("QuestionId", sql.Int, questionId)
+        .input("TestId", sql.NVarChar, testId)
+        .query(`
+          SELECT TOP 1
+            QuestionId,
+            QuestionText
+          FROM dbo.Questions
+          WHERE
+            QuestionId = @QuestionId
+            AND TestId = @TestId
+        `);
+
+      if (existingQuestion.recordset.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Question not found.",
+        });
+      }
+
+      // -----------------------------
+      // DELETE QUESTION
+      // -----------------------------
+
+      const deleteResult = await pool
+        .request()
+        .input("QuestionId", sql.Int, questionId)
+        .input("TestId", sql.NVarChar, testId)
+        .query(`
+          DELETE FROM dbo.Questions
+          WHERE
+            QuestionId = @QuestionId
+            AND TestId = @TestId
+        `);
+
+      if (
+        !deleteResult.rowsAffected ||
+        deleteResult.rowsAffected[0] !== 1
+      ) {
+        return res.status(500).json({
+          success: false,
+          message: "Question could not be deleted.",
+        });
+      }
+
+      // -----------------------------
+      // SUCCESS
+      // -----------------------------
+
+      return res.json({
+        success: true,
+        message: "Question deleted successfully.",
+        questionId,
+      });
+    } catch (error) {
+      console.error(
+        "Admin delete question error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete question.",
+      });
+    }
+  }
+);
+
 // ======================================================
 // 404 ROUTE
 // ======================================================
