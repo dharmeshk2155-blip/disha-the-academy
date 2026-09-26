@@ -9,7 +9,6 @@ import Register from "./pages/Register";
 import Account from "./pages/Account";
 import NoteDetails from "./pages/NoteDetails";
 import Checkout from "./pages/Checkout";
-import Payment from "./pages/Payment";
 import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
@@ -78,7 +77,6 @@ function App() {
           <Route path="/checkout/:id" element={<Checkout />} />
 
           {/* PAYMENT */}
-          <Route path="/payment/:id" element={<Payment />} />
 
           {/* ORDER SUCCESS */}
           <Route path="/order-success/:id" element={<OrderSuccess />} />
