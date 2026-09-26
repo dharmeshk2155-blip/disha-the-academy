@@ -38,6 +38,7 @@ import NoteSubcategory from "./pages/NoteSubcategory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import AdminTests from "./pages/admin/AdminTests";
 
 /* =========================
    ADMIN
@@ -47,6 +48,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 
 import "./App.css";
 
@@ -336,12 +339,12 @@ function App() {
 
           {/* TESTS */}
 
-          <Route
-            path="tests"
-            element={
-              <AdminComingSoon section="Tests / Mock Tests" />
-            }
-          />
+          {/* TESTS */}
+
+            <Route
+               path="tests"
+               element={<AdminTests />}
+             />
 
 
           {/* CURRENT AFFAIRS */}
@@ -386,9 +389,7 @@ function App() {
 
           <Route
             path="orders"
-            element={
-              <AdminComingSoon section="Orders" />
-            }
+            element={<AdminOrders />}
           />
 
 
@@ -396,9 +397,7 @@ function App() {
 
           <Route
             path="contact-submissions"
-            element={
-              <AdminComingSoon section="Contact Messages" />
-            }
+            element={<AdminContactSubmissions />}
           />
 
 
