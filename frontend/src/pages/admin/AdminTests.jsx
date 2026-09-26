@@ -11,13 +11,30 @@ import {
   RefreshCw,
   BookOpenCheck,
   Filter,
+  X,
+  Save,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
+import { EXAM_TAXONOMY } from "../../data/examTaxonomy";
 import "./AdminTests.css";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://disha-the-academy.onrender.com";
+
+const INITIAL_FORM = {
+  testId: "",
+  topCategory: "",
+  subExam: "",
+  category: "",
+  title: "",
+  subject: "",
+  durationMinutes: "",
+  marksPerCorrect: "1",
+  negativeMarking: "0.25",
+};
 
 function AdminTests() {
   const { adminKey } = useOutletContext();
@@ -28,6 +45,12 @@ function AdminTests() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState(INITIAL_FORM);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const fetchTests = async () => {
     try {
@@ -109,6 +132,12 @@ function AdminTests() {
     return Math.round(totalSeconds / tests.length / 60);
   }, [tests]);
 
+  const selectedExamGroup = useMemo(() => {
+    return EXAM_TAXONOMY.find(
+      (group) => group.slug === form.topCategory
+    );
+  }, [form.topCategory]);
+
   const formatDuration = (seconds) => {
     const value = Number(seconds) || 0;
 
@@ -144,25 +173,172 @@ function AdminTests() {
       .join(" ");
   };
 
-  const handleAddTest = () => {
-    alert("Add Test form next step mein connect karenge.");
+  const openAddModal = () => {
+    setForm(INITIAL_FORM);
+    setFormError("");
+    setSuccessMessage("");
+    setShowAddModal(true);
+  };
+
+  const closeAddModal = () => {
+    if (saving) return;
+
+    setShowAddModal(false);
+    setForm(INITIAL_FORM);
+    setFormError("");
+  };
+
+  const handleFormChange = (event) => {
+    const { name, value } = event.target;
+
+    if (name === "topCategory") {
+      const group = EXAM_TAXONOMY.find(
+        (item) => item.slug === value
+      );
+
+      setForm((current) => ({
+        ...current,
+        topCategory: value,
+        subExam: "",
+        category: group?.title || "",
+      }));
+
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateTest = async (event) => {
+    event.preventDefault();
+
+    setFormError("");
+    setSuccessMessage("");
+
+    const testId = form.testId.trim().toLowerCase();
+    const category = form.category.trim();
+    const title = form.title.trim();
+    const subject = form.subject.trim();
+    const durationMinutes = Number(form.durationMinutes);
+    const marksPerCorrect = Number(form.marksPerCorrect);
+    const negativeMarking = Number(form.negativeMarking);
+
+    if (
+      !testId ||
+      !form.topCategory ||
+      !form.subExam ||
+      !category ||
+      !title ||
+      !subject ||
+      !form.durationMinutes ||
+      form.marksPerCorrect === "" ||
+      form.negativeMarking === ""
+    ) {
+      setFormError("Please fill all required fields.");
+      return;
+    }
+
+    if (!/^[a-z0-9-]+$/.test(testId)) {
+      setFormError(
+        "Test ID can contain only lowercase letters, numbers and hyphens."
+      );
+      return;
+    }
+
+    if (
+      !Number.isFinite(durationMinutes) ||
+      durationMinutes <= 0
+    ) {
+      setFormError("Duration must be greater than 0 minutes.");
+      return;
+    }
+
+    if (
+      !Number.isFinite(marksPerCorrect) ||
+      marksPerCorrect <= 0
+    ) {
+      setFormError(
+        "Marks per correct answer must be greater than 0."
+      );
+      return;
+    }
+
+    if (
+      !Number.isFinite(negativeMarking) ||
+      negativeMarking < 0
+    ) {
+      setFormError("Negative marking cannot be less than 0.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const response = await fetch(
+        `${API_BASE}/api/admin/tests`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({
+            testId,
+            category,
+            title,
+            subject,
+            duration: Math.round(durationMinutes * 60),
+            marksPerCorrect,
+            negativeMarking,
+            topCategory: form.topCategory,
+            subExam: form.subExam,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to create test."
+        );
+      }
+
+      setSuccessMessage("Test created successfully.");
+
+      await fetchTests();
+
+      setTimeout(() => {
+        setShowAddModal(false);
+        setForm(INITIAL_FORM);
+        setSuccessMessage("");
+      }, 900);
+    } catch (err) {
+      console.error("Create test error:", err);
+      setFormError(err.message || "Failed to create test.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleManageQuestions = (test) => {
     alert(
-      `Manage Questions: ${test.title}\n\nNext step mein Question Manager banayenge.`
+      `Manage Questions: ${test.title}\n\nQuestion Manager next step mein banayenge.`
     );
   };
 
   const handleEdit = (test) => {
     alert(
-      `Edit Test: ${test.title}\n\nEdit API next step mein connect karenge.`
+      `Edit Test: ${test.title}\n\nEdit functionality next step mein connect karenge.`
     );
   };
 
   const handleDelete = (test) => {
     alert(
-      `Delete Test: ${test.title}\n\nDelete API banne ke baad ye button activate hoga.`
+      `Delete Test: ${test.title}\n\nDelete functionality next step mein connect karenge.`
     );
   };
 
@@ -199,7 +375,7 @@ function AdminTests() {
           <button
             type="button"
             className="admin-tests-add-btn"
-            onClick={handleAddTest}
+            onClick={openAddModal}
           >
             <Plus size={18} />
             Add Test
@@ -305,13 +481,9 @@ function AdminTests() {
             <FileQuestion size={34} />
 
             <h3>Tests could not be loaded</h3>
-
             <p>{error}</p>
 
-            <button
-              type="button"
-              onClick={fetchTests}
-            >
+            <button type="button" onClick={fetchTests}>
               Try Again
             </button>
           </div>
@@ -326,9 +498,8 @@ function AdminTests() {
         ) : (
           <>
             <div className="admin-tests-table-info">
-              Showing{" "}
-              <strong>{filteredTests.length}</strong> of{" "}
-              <strong>{tests.length}</strong> tests
+              Showing <strong>{filteredTests.length}</strong>{" "}
+              of <strong>{tests.length}</strong> tests
             </div>
 
             <div className="admin-tests-table-wrapper">
@@ -352,7 +523,6 @@ function AdminTests() {
                       <td>
                         <div className="admin-test-name">
                           <strong>{test.title}</strong>
-
                           <span>{test.testId}</span>
                         </div>
                       </td>
@@ -362,7 +532,6 @@ function AdminTests() {
                           <strong>
                             {formatSlug(test.topCategory)}
                           </strong>
-
                           <span>
                             {formatSlug(test.subExam)}
                           </span>
@@ -382,7 +551,6 @@ function AdminTests() {
                           onClick={() =>
                             handleManageQuestions(test)
                           }
-                          title="Manage questions"
                         >
                           <FileQuestion size={15} />
                           {test.totalQuestions}
@@ -396,9 +564,7 @@ function AdminTests() {
                         </div>
                       </td>
 
-                      <td>
-                        +{test.marksPerCorrect}
-                      </td>
+                      <td>+{test.marksPerCorrect}</td>
 
                       <td>
                         {Number(test.negativeMarking) > 0
@@ -414,7 +580,6 @@ function AdminTests() {
                             onClick={() =>
                               handleManageQuestions(test)
                             }
-                            title="Manage Questions"
                           >
                             <FileQuestion size={16} />
                             Questions
@@ -423,9 +588,7 @@ function AdminTests() {
                           <button
                             type="button"
                             className="admin-test-icon-btn"
-                            onClick={() =>
-                              handleEdit(test)
-                            }
+                            onClick={() => handleEdit(test)}
                             title="Edit Test"
                           >
                             <Pencil size={16} />
@@ -434,9 +597,7 @@ function AdminTests() {
                           <button
                             type="button"
                             className="admin-test-icon-btn admin-test-delete-btn"
-                            onClick={() =>
-                              handleDelete(test)
-                            }
+                            onClick={() => handleDelete(test)}
                             title="Delete Test"
                           >
                             <Trash2 size={16} />
@@ -451,6 +612,275 @@ function AdminTests() {
           </>
         )}
       </div>
+
+      {showAddModal && (
+        <div
+          className="admin-test-modal-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              closeAddModal();
+            }
+          }}
+        >
+          <div className="admin-test-modal">
+            <div className="admin-test-modal-header">
+              <div>
+                <span>NEW MOCK TEST</span>
+                <h2>Add Test</h2>
+                <p>
+                  Create a new test for the Take a Mock Test
+                  section.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="admin-test-modal-close"
+                onClick={closeAddModal}
+                disabled={saving}
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form
+              className="admin-test-form"
+              onSubmit={handleCreateTest}
+            >
+              {formError && (
+                <div className="admin-test-form-message error">
+                  <AlertCircle size={18} />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="admin-test-form-message success">
+                  <CheckCircle2 size={18} />
+                  <span>{successMessage}</span>
+                </div>
+              )}
+
+              <div className="admin-test-form-grid">
+                <div className="admin-test-form-field">
+                  <label htmlFor="topCategory">
+                    Exam Group *
+                  </label>
+
+                  <select
+                    id="topCategory"
+                    name="topCategory"
+                    value={form.topCategory}
+                    onChange={handleFormChange}
+                    disabled={saving}
+                  >
+                    <option value="">
+                      Select exam group
+                    </option>
+
+                    {EXAM_TAXONOMY.map((group) => (
+                      <option
+                        key={group.slug}
+                        value={group.slug}
+                      >
+                        {group.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="subExam">
+                    Sub Exam *
+                  </label>
+
+                  <select
+                    id="subExam"
+                    name="subExam"
+                    value={form.subExam}
+                    onChange={handleFormChange}
+                    disabled={
+                      saving || !selectedExamGroup
+                    }
+                  >
+                    <option value="">
+                      {selectedExamGroup
+                        ? "Select sub exam"
+                        : "Select exam group first"}
+                    </option>
+
+                    {selectedExamGroup?.subExams.map(
+                      (subExam) => (
+                        <option
+                          key={subExam.slug}
+                          value={subExam.slug}
+                        >
+                          {subExam.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="testId">
+                    Test ID *
+                  </label>
+
+                  <input
+                    id="testId"
+                    name="testId"
+                    type="text"
+                    value={form.testId}
+                    onChange={handleFormChange}
+                    placeholder="e.g. ssc-cgl-math-02"
+                    disabled={saving}
+                    autoComplete="off"
+                  />
+
+                  <small>
+                    Lowercase letters, numbers and hyphens
+                    only.
+                  </small>
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="category">
+                    Category *
+                  </label>
+
+                  <input
+                    id="category"
+                    name="category"
+                    type="text"
+                    value={form.category}
+                    onChange={handleFormChange}
+                    placeholder="e.g. SSC CGL"
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="admin-test-form-field admin-test-form-full">
+                  <label htmlFor="title">
+                    Test Title *
+                  </label>
+
+                  <input
+                    id="title"
+                    name="title"
+                    type="text"
+                    value={form.title}
+                    onChange={handleFormChange}
+                    placeholder="e.g. Mathematics Sectional Test - 02"
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="subject">
+                    Subject *
+                  </label>
+
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    value={form.subject}
+                    onChange={handleFormChange}
+                    placeholder="e.g. Mathematics"
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="durationMinutes">
+                    Duration (minutes) *
+                  </label>
+
+                  <input
+                    id="durationMinutes"
+                    name="durationMinutes"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.durationMinutes}
+                    onChange={handleFormChange}
+                    placeholder="60"
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="marksPerCorrect">
+                    Marks per Correct *
+                  </label>
+
+                  <input
+                    id="marksPerCorrect"
+                    name="marksPerCorrect"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={form.marksPerCorrect}
+                    onChange={handleFormChange}
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="admin-test-form-field">
+                  <label htmlFor="negativeMarking">
+                    Negative Marking *
+                  </label>
+
+                  <input
+                    id="negativeMarking"
+                    name="negativeMarking"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.negativeMarking}
+                    onChange={handleFormChange}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-test-form-footer">
+                <button
+                  type="button"
+                  className="admin-test-cancel-btn"
+                  onClick={closeAddModal}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="admin-test-save-btn"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <RefreshCw
+                        size={17}
+                        className="admin-tests-spin"
+                      />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={17} />
+                      Create Test
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
