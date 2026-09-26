@@ -48,6 +48,7 @@ function AdminQuestions() {
   const [error, setError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState(INITIAL_FORM);
@@ -115,143 +116,168 @@ function AdminQuestions() {
   };
 
   const openAddQuestion = () => {
-    setForm(INITIAL_FORM);
-    setFormError("");
-    setSuccessMessage("");
-    setShowModal(true);
-  };
+  setEditingQuestionId(null);
+  setForm(INITIAL_FORM);
+  setFormError("");
+  setSuccessMessage("");
+  setShowModal(true);
+};
 
-  const closeModal = () => {
-    if (saving) return;
+ const closeModal = () => {
+  if (saving) return;
 
-    setShowModal(false);
-    setForm(INITIAL_FORM);
-    setFormError("");
-    setSuccessMessage("");
-  };
+  setShowModal(false);
+  setEditingQuestionId(null);
+  setForm(INITIAL_FORM);
+  setFormError("");
+  setSuccessMessage("");
+};
 
   // ---------------------------------------------------
   // ADD QUESTION
   // ---------------------------------------------------
 
-  const handleAddQuestion = async (event) => {
-    event.preventDefault();
+ const handleAddQuestion = async (event) => {
+  event.preventDefault();
 
-    setFormError("");
-    setSuccessMessage("");
+  if (saving) return;
 
-    const questionText = form.questionText.trim();
-    const optionA = form.optionA.trim();
-    const optionB = form.optionB.trim();
-    const optionC = form.optionC.trim();
-    const optionD = form.optionD.trim();
+  setFormError("");
+  setSuccessMessage("");
 
-    const correctAnswer = Number(form.correctAnswer);
+  const cleanQuestionText = form.questionText.trim();
+  const cleanOptionA = form.optionA.trim();
+  const cleanOptionB = form.optionB.trim();
+  const cleanOptionC = form.optionC.trim();
+  const cleanOptionD = form.optionD.trim();
 
-    if (
-      !questionText ||
-      !optionA ||
-      !optionB ||
-      !optionC ||
-      !optionD
-    ) {
-      setFormError(
-        "Question and all four options are required."
-      );
-      return;
-    }
+  if (
+    !cleanQuestionText ||
+    !cleanOptionA ||
+    !cleanOptionB ||
+    !cleanOptionC ||
+    !cleanOptionD
+  ) {
+    setFormError(
+      "Question and all four English options are required."
+    );
+    return;
+  }
 
-    if (
-      !Number.isInteger(correctAnswer) ||
-      correctAnswer < 1 ||
-      correctAnswer > 4
-    ) {
-      setFormError(
-        "Please select the correct answer."
-      );
-      return;
-    }
+  const correctAnswer = Number(form.correctAnswer);
 
-    try {
-      setSaving(true);
+  if (
+    !Number.isInteger(correctAnswer) ||
+    correctAnswer < 1 ||
+    correctAnswer > 4
+  ) {
+    setFormError("Please select the correct answer.");
+    return;
+  }
 
-      const response = await fetch(
-        `${API_BASE}/api/admin/tests/${encodeURIComponent(
+  try {
+    setSaving(true);
+
+    const payload = {
+      questionText: cleanQuestionText,
+      optionA: cleanOptionA,
+      optionB: cleanOptionB,
+      optionC: cleanOptionC,
+      optionD: cleanOptionD,
+      correctAnswer,
+
+      questionTextHi: form.questionTextHi.trim(),
+      optionAHi: form.optionAHi.trim(),
+      optionBHi: form.optionBHi.trim(),
+      optionCHi: form.optionCHi.trim(),
+      optionDHi: form.optionDHi.trim(),
+    };
+
+    const isEditing = editingQuestionId !== null;
+
+    const url = isEditing
+      ? `${API_BASE}/api/admin/tests/${encodeURIComponent(
           testId
-        )}/questions`,
-        {
-          method: "POST",
+        )}/questions/${encodeURIComponent(
+          editingQuestionId
+        )}`
+      : `${API_BASE}/api/admin/tests/${encodeURIComponent(
+          testId
+        )}/questions`;
 
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-key": adminKey,
-          },
+    const response = await fetch(url, {
+      method: isEditing ? "PUT" : "POST",
 
-          body: JSON.stringify({
-            questionText,
-            optionA,
-            optionB,
-            optionC,
-            optionD,
-            correctAnswer,
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": adminKey,
+      },
 
-            questionTextHi:
-              form.questionTextHi.trim(),
+      body: JSON.stringify(payload),
+    });
 
-            optionAHi:
-              form.optionAHi.trim(),
+    const data = await response.json();
 
-            optionBHi:
-              form.optionBHi.trim(),
-
-            optionCHi:
-              form.optionCHi.trim(),
-
-            optionDHi:
-              form.optionDHi.trim(),
-          }),
-        }
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message ||
+          `Failed to ${
+            isEditing ? "update" : "add"
+          } question.`
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to add question."
-        );
-      }
-
-      setSuccessMessage(
-        "Question added successfully."
-      );
-
-      await fetchQuestions();
-
-      setTimeout(() => {
-        setShowModal(false);
-        setForm(INITIAL_FORM);
-        setSuccessMessage("");
-      }, 800);
-    } catch (err) {
-      console.error("Add question error:", err);
-
-      setFormError(
-        err.message || "Failed to add question."
-      );
-    } finally {
-      setSaving(false);
     }
-  };
+
+    await fetchQuestions();
+
+    setShowModal(false);
+    setEditingQuestionId(null);
+    setForm(INITIAL_FORM);
+    setFormError("");
+
+    setSuccessMessage(
+      isEditing
+        ? "Question updated successfully."
+        : "Question added successfully."
+    );
+  } catch (error) {
+    console.error(
+      "Save question error:",
+      error
+    );
+
+    setFormError(
+      error.message || "Failed to save question."
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
   // ---------------------------------------------------
   // PLACEHOLDERS FOR NEXT STEP
   // ---------------------------------------------------
+const handleEditQuestion = (question) => {
+  setEditingQuestionId(question.questionId);
 
-  const handleEditQuestion = (question) => {
-    alert(
-      `Edit Question ${question.questionId} will be added next.`
-    );
-  };
+  setForm({
+    questionText: question.questionText || "",
+    optionA: question.optionA || "",
+    optionB: question.optionB || "",
+    optionC: question.optionC || "",
+    optionD: question.optionD || "",
+    correctAnswer: String(question.correctAnswer || 1),
+
+    questionTextHi: question.questionTextHi || "",
+    optionAHi: question.optionAHi || "",
+    optionBHi: question.optionBHi || "",
+    optionCHi: question.optionCHi || "",
+    optionDHi: question.optionDHi || "",
+  });
+
+  setFormError("");
+  setSuccessMessage("");
+  setShowModal(true);
+};
 
   const handleDeleteQuestion = (question) => {
     alert(
@@ -587,9 +613,17 @@ function AdminQuestions() {
             <div className="admin-question-modal-header">
 
               <div>
-                <span>NEW QUESTION</span>
+                <span>
+  {editingQuestionId !== null
+    ? "EDIT QUESTION"
+    : "NEW QUESTION"}
+</span>
 
-                <h2>Add Question</h2>
+                <h2>
+  {editingQuestionId !== null
+    ? "Edit Question"
+    : "Add Question"}
+</h2>
 
                 <p>
                   {test?.title}
@@ -827,20 +861,13 @@ function AdminQuestions() {
                   className="admin-question-primary-btn"
                   disabled={saving}
                 >
-                  {saving ? (
-                    <>
-                      <RefreshCw
-                        size={17}
-                        className="admin-questions-spin"
-                      />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={17} />
-                      Save Question
-                    </>
-                  )}
+               {saving
+  ? editingQuestionId !== null
+    ? "Updating..."
+    : "Adding..."
+  : editingQuestionId !== null
+    ? "Save Changes"
+    : "Add Question"}
                 </button>
 
               </div>

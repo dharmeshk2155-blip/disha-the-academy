@@ -2697,7 +2697,7 @@ const newQuestionId =
       message: "Question added successfully.",
 
       question: {
-        questionId: nextQuestionId,
+        questionId: newQuestionId,
         testId,
         questionText: cleanQuestionText,
         optionA: cleanOptionA,
@@ -2722,6 +2722,255 @@ const newQuestionId =
     });
   }
 });
+
+// =====================================================
+// ADMIN - UPDATE QUESTION
+// =====================================================
+
+app.put(
+  "/api/admin/tests/:testId/questions/:questionId",
+  async (req, res) => {
+    try {
+      const adminKey = req.header("x-admin-key");
+
+      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const testId = String(req.params.testId || "").trim();
+      const questionId = Number(req.params.questionId);
+
+      const {
+        questionText,
+        optionA,
+        optionB,
+        optionC,
+        optionD,
+        correctAnswer,
+        questionTextHi,
+        optionAHi,
+        optionBHi,
+        optionCHi,
+        optionDHi,
+      } = req.body;
+
+      // -----------------------------
+      // CLEAN VALUES
+      // -----------------------------
+
+      const cleanQuestionText = String(questionText || "").trim();
+      const cleanOptionA = String(optionA || "").trim();
+      const cleanOptionB = String(optionB || "").trim();
+      const cleanOptionC = String(optionC || "").trim();
+      const cleanOptionD = String(optionD || "").trim();
+
+      const correctAnswerNumber = Number(correctAnswer);
+
+      // -----------------------------
+      // VALIDATION
+      // -----------------------------
+
+      if (!testId) {
+        return res.status(400).json({
+          success: false,
+          message: "Test ID is required.",
+        });
+      }
+
+      if (
+        !Number.isInteger(questionId) ||
+        questionId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Question ID.",
+        });
+      }
+
+      if (
+        !cleanQuestionText ||
+        !cleanOptionA ||
+        !cleanOptionB ||
+        !cleanOptionC ||
+        !cleanOptionD
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Question and all four options are required.",
+        });
+      }
+
+      if (
+        !Number.isInteger(correctAnswerNumber) ||
+        correctAnswerNumber < 1 ||
+        correctAnswerNumber > 4
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Correct answer must be between 1 and 4.",
+        });
+      }
+
+      const pool = await connectDB();
+
+      // -----------------------------
+      // CHECK QUESTION EXISTS
+      // -----------------------------
+
+      const existingQuestion = await pool
+        .request()
+        .input("QuestionId", sql.Int, questionId)
+        .input("TestId", sql.NVarChar, testId)
+        .query(`
+          SELECT TOP 1
+            QuestionId
+          FROM dbo.Questions
+          WHERE
+            QuestionId = @QuestionId
+            AND TestId = @TestId
+        `);
+
+      if (existingQuestion.recordset.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Question not found.",
+        });
+      }
+
+      // -----------------------------
+      // UPDATE QUESTION
+      // -----------------------------
+
+      await pool
+        .request()
+        .input("QuestionId", sql.Int, questionId)
+        .input("TestId", sql.NVarChar, testId)
+        .input(
+          "QuestionText",
+          sql.NVarChar,
+          cleanQuestionText
+        )
+        .input(
+          "OptionA",
+          sql.NVarChar,
+          cleanOptionA
+        )
+        .input(
+          "OptionB",
+          sql.NVarChar,
+          cleanOptionB
+        )
+        .input(
+          "OptionC",
+          sql.NVarChar,
+          cleanOptionC
+        )
+        .input(
+          "OptionD",
+          sql.NVarChar,
+          cleanOptionD
+        )
+        .input(
+          "CorrectAnswer",
+          sql.Int,
+          correctAnswerNumber
+        )
+        .input(
+          "QuestionTextHi",
+          sql.NVarChar,
+          String(questionTextHi || "").trim() || null
+        )
+        .input(
+          "OptionAHi",
+          sql.NVarChar,
+          String(optionAHi || "").trim() || null
+        )
+        .input(
+          "OptionBHi",
+          sql.NVarChar,
+          String(optionBHi || "").trim() || null
+        )
+        .input(
+          "OptionCHi",
+          sql.NVarChar,
+          String(optionCHi || "").trim() || null
+        )
+        .input(
+          "OptionDHi",
+          sql.NVarChar,
+          String(optionDHi || "").trim() || null
+        )
+        .query(`
+          UPDATE dbo.Questions
+          SET
+            QuestionText = @QuestionText,
+            OptionA = @OptionA,
+            OptionB = @OptionB,
+            OptionC = @OptionC,
+            OptionD = @OptionD,
+            CorrectAnswer = @CorrectAnswer,
+            QuestionTextHi = @QuestionTextHi,
+            OptionAHi = @OptionAHi,
+            OptionBHi = @OptionBHi,
+            OptionCHi = @OptionCHi,
+            OptionDHi = @OptionDHi
+          WHERE
+            QuestionId = @QuestionId
+            AND TestId = @TestId
+        `);
+
+      // -----------------------------
+      // SUCCESS
+      // -----------------------------
+
+      return res.json({
+        success: true,
+        message: "Question updated successfully.",
+
+        question: {
+          questionId,
+          testId,
+          questionText: cleanQuestionText,
+          optionA: cleanOptionA,
+          optionB: cleanOptionB,
+          optionC: cleanOptionC,
+          optionD: cleanOptionD,
+          correctAnswer: correctAnswerNumber,
+
+          questionTextHi:
+            String(questionTextHi || "").trim(),
+
+          optionAHi:
+            String(optionAHi || "").trim(),
+
+          optionBHi:
+            String(optionBHi || "").trim(),
+
+          optionCHi:
+            String(optionCHi || "").trim(),
+
+          optionDHi:
+            String(optionDHi || "").trim(),
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Admin update question error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update question.",
+      });
+    }
+  }
+);
 
 // ======================================================
 // 404 ROUTE
