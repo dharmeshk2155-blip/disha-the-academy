@@ -1793,11 +1793,15 @@ app.get("/api/admin/dashboard", async (req, res) => {
 
     // -----------------------------------
     // TEST COUNT
-    // We will connect real test count
-    // after dashboard base is working.
     // -----------------------------------
 
-    const totalTests = 0;
+    const testsResult = await pool.request().query(`
+      SELECT COUNT(*) AS totalTests
+      FROM dbo.Tests
+    `);
+
+    const totalTests =
+      Number(testsResult.recordset[0]?.totalTests) || 0;
 
     // -----------------------------------
     // RESPONSE
@@ -1843,6 +1847,174 @@ app.get("/api/admin/dashboard", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to load admin dashboard",
+    });
+  }
+});
+
+// ======================================================
+// ADMIN ORDERS API (full list, for the "View all" page)
+// ======================================================
+
+app.get("/api/admin/orders", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const pool = await connectDB();
+
+    const status = (req.query.status || "all").toLowerCase();
+    const search = (req.query.search || "").trim();
+
+    let whereClauses = [];
+
+    if (status === "paid") {
+      whereClauses.push("o.Paid = 1");
+    } else if (status === "unpaid") {
+      whereClauses.push("o.Paid = 0");
+    }
+
+    if (search) {
+      whereClauses.push(
+        "(u.Name LIKE @search OR u.Email LIKE @search OR o.Title LIKE @search OR o.OrderId LIKE @search)"
+      );
+    }
+
+    const whereSql =
+      whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(" AND ")}`
+        : "";
+
+    const request = pool.request();
+
+    if (search) {
+      request.input("search", sql.NVarChar, `%${search}%`);
+    }
+
+    const ordersResult = await request.query(`
+      SELECT
+        o.Id,
+        o.OrderId,
+        o.UserId,
+        o.NoteId,
+        o.Title,
+        o.Price,
+        o.Paid,
+        o.PaymentId,
+        o.CreatedAt,
+        o.VerifiedAt,
+        u.Name AS UserName,
+        u.Email AS UserEmail
+      FROM dbo.Orders o
+      LEFT JOIN dbo.Users u
+        ON o.UserId = u.Id
+      ${whereSql}
+      ORDER BY
+        COALESCE(o.VerifiedAt, o.CreatedAt) DESC
+    `);
+
+    return res.json({
+      success: true,
+
+      orders: ordersResult.recordset.map((order) => ({
+        id: order.Id,
+        orderId: order.OrderId,
+        userId: order.UserId,
+        userName: order.UserName || "Unknown User",
+        userEmail: order.UserEmail || "",
+        noteId: order.NoteId,
+        title: order.Title,
+        price: Number(order.Price) || 0,
+        paid: Boolean(order.Paid),
+        paymentId: order.PaymentId,
+        createdAt: order.CreatedAt,
+        verifiedAt: order.VerifiedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Admin orders error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load orders",
+    });
+  }
+});
+
+// =====================================================
+// ADMIN TESTS - GET ALL TESTS
+// =====================================================
+
+app.get("/api/admin/tests", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const pool = await connectDB();
+
+    const result = await pool.request().query(`
+      SELECT
+        t.TestId,
+        t.Category,
+        t.Title,
+        t.Subject,
+        t.Duration,
+        t.MarksPerCorrect,
+        t.NegativeMarking,
+        t.TopCategory,
+        t.SubExam,
+        COUNT(q.QuestionId) AS TotalQuestions
+      FROM dbo.Tests t
+      LEFT JOIN dbo.Questions q
+        ON t.TestId = q.TestId
+      GROUP BY
+        t.TestId,
+        t.Category,
+        t.Title,
+        t.Subject,
+        t.Duration,
+        t.MarksPerCorrect,
+        t.NegativeMarking,
+        t.TopCategory,
+        t.SubExam
+      ORDER BY t.Category, t.Title
+    `);
+
+    const tests = result.recordset.map((test) => ({
+      testId: test.TestId,
+      category: test.Category,
+      title: test.Title,
+      subject: test.Subject,
+      duration: Number(test.Duration) || 0,
+      marksPerCorrect: Number(test.MarksPerCorrect) || 0,
+      negativeMarking: Number(test.NegativeMarking) || 0,
+      topCategory: test.TopCategory,
+      subExam: test.SubExam,
+      totalQuestions: Number(test.TotalQuestions) || 0,
+    }));
+
+    return res.json({
+      success: true,
+      count: tests.length,
+      tests,
+    });
+  } catch (error) {
+    console.error("Admin tests error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load tests",
     });
   }
 });
