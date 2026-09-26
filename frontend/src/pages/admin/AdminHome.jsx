@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
+
 import {
   Users,
   BookOpen,
@@ -12,11 +14,146 @@ import {
   TrendingUp,
   CircleCheck,
   Clock3,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 
 import "./AdminLayout.css";
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "http://localhost:5000";
+
 export default function AdminHome() {
+  const { adminKey } = useOutletContext();
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalNotes: 0,
+    totalTests: 0,
+    paidOrders: 0,
+    totalRevenue: 0,
+  });
+
+  const [recentOrders, setRecentOrders] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  /* =====================================================
+     LOAD DASHBOARD DATA
+  ===================================================== */
+
+  async function loadDashboard() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/admin/dashboard`,
+        {
+          method: "GET",
+
+          headers: {
+            "x-admin-key": adminKey,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to load dashboard"
+        );
+      }
+
+      setStats({
+        totalUsers:
+          Number(data.stats?.totalUsers) || 0,
+
+        totalNotes:
+          Number(data.stats?.totalNotes) || 0,
+
+        totalTests:
+          Number(data.stats?.totalTests) || 0,
+
+        paidOrders:
+          Number(data.stats?.paidOrders) || 0,
+
+        totalRevenue:
+          Number(data.stats?.totalRevenue) || 0,
+      });
+
+      setRecentOrders(
+        Array.isArray(data.recentOrders)
+          ? data.recentOrders
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Dashboard load error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Dashboard data load nahi ho paya."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (adminKey) {
+      loadDashboard();
+    }
+  }, [adminKey]);
+
+  /* =====================================================
+     HELPERS
+  ===================================================== */
+
+  function formatMoney(value) {
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        maximumFractionDigits: 0,
+      }
+    ).format(Number(value) || 0);
+  }
+
+  function formatDate(value) {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
+  }
+
+  /* =====================================================
+     UI
+  ===================================================== */
+
   return (
     <div className="admin-dashboard">
 
@@ -36,20 +173,84 @@ export default function AdminHome() {
           </h2>
 
           <p>
-            Manage Disha The Academy from one place.
+            Manage Disha The Academy from
+            one place.
           </p>
         </div>
 
-        <Link
-          to="/"
-          target="_blank"
-          className="admin-dashboard-site-button"
+
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+          }}
         >
-          View Website
-          <ArrowRight size={16} />
-        </Link>
+
+          <button
+            type="button"
+            className="admin-dashboard-site-button"
+            onClick={loadDashboard}
+            disabled={loading}
+            style={{
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "admin-refresh-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+
+
+          <Link
+            to="/"
+            target="_blank"
+            className="admin-dashboard-site-button"
+          >
+            View Website
+
+            <ArrowRight size={16} />
+          </Link>
+
+        </div>
 
       </section>
+
+
+      {/* =====================================
+          ERROR
+      ====================================== */}
+
+      {error && (
+        <div className="admin-dashboard-error">
+
+          <AlertCircle size={18} />
+
+          <div>
+            <strong>
+              Dashboard data load nahi hua
+            </strong>
+
+            <span>
+              {error}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadDashboard}
+          >
+            Try Again
+          </button>
+
+        </div>
+      )}
 
 
       {/* =====================================
@@ -82,7 +283,9 @@ export default function AdminHome() {
             </span>
 
             <strong>
-              —
+              {loading
+                ? "—"
+                : stats.totalUsers}
             </strong>
 
             <small>
@@ -117,7 +320,9 @@ export default function AdminHome() {
             </span>
 
             <strong>
-              —
+              {loading
+                ? "—"
+                : stats.totalNotes}
             </strong>
 
             <small>
@@ -152,7 +357,9 @@ export default function AdminHome() {
             </span>
 
             <strong>
-              —
+              {loading
+                ? "—"
+                : stats.totalTests}
             </strong>
 
             <small>
@@ -187,7 +394,9 @@ export default function AdminHome() {
             </span>
 
             <strong>
-              —
+              {loading
+                ? "—"
+                : stats.paidOrders}
             </strong>
 
             <small>
@@ -222,7 +431,11 @@ export default function AdminHome() {
             </span>
 
             <strong>
-              ₹—
+              {loading
+                ? "₹—"
+                : `₹${formatMoney(
+                    stats.totalRevenue
+                  )}`}
             </strong>
 
             <small>
@@ -260,28 +473,153 @@ export default function AdminHome() {
 
             <Link to="/admin/orders">
               View all
+
               <ArrowRight size={14} />
             </Link>
 
           </div>
 
 
-          <div className="admin-empty-state">
+          {loading ? (
 
-            <div className="admin-empty-icon">
-              <ShoppingBag size={25} />
+            <div className="admin-empty-state">
+
+              <RefreshCw
+                size={24}
+                className="admin-refresh-spin"
+              />
+
+              <strong
+                style={{
+                  marginTop: "10px",
+                }}
+              >
+                Loading orders...
+              </strong>
+
             </div>
 
-            <strong>
-              Orders will appear here
-            </strong>
+          ) : recentOrders.length === 0 ? (
 
-            <p>
-              Recent paid orders will be shown once
-              dashboard data is connected.
-            </p>
+            <div className="admin-empty-state">
 
-          </div>
+              <div className="admin-empty-icon">
+                <ShoppingBag size={25} />
+              </div>
+
+              <strong>
+                No paid orders yet
+              </strong>
+
+              <p>
+                Student purchases will appear
+                here after successful payment.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="admin-orders-table-wrap">
+
+              <table className="admin-orders-table">
+
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Note</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {recentOrders.map(
+                    (order) => (
+
+                      <tr
+                        key={
+                          order.id ||
+                          order.orderId
+                        }
+                      >
+
+                        <td>
+
+                          <div className="admin-order-user">
+
+                            <div className="admin-order-avatar">
+                              {(
+                                order.userName ||
+                                "U"
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+
+                            <div>
+                              <strong>
+                                {order.userName ||
+                                  "Unknown User"}
+                              </strong>
+
+                              <span>
+                                {order.userEmail ||
+                                  "—"}
+                              </span>
+                            </div>
+
+                          </div>
+
+                        </td>
+
+
+                        <td>
+                          <strong className="admin-order-title">
+                            {order.title ||
+                              "Note"}
+                          </strong>
+                        </td>
+
+
+                        <td>
+                          <strong>
+                            ₹
+                            {formatMoney(
+                              order.price
+                            )}
+                          </strong>
+                        </td>
+
+
+                        <td>
+                          {formatDate(
+                            order.verifiedAt ||
+                              order.createdAt
+                          )}
+                        </td>
+
+
+                        <td>
+                          <span className="admin-paid-badge">
+                            Paid
+                          </span>
+                        </td>
+
+                      </tr>
+
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          )}
 
         </div>
 
@@ -311,6 +649,7 @@ export default function AdminHome() {
               to="/admin/notes"
               className="admin-quick-action"
             >
+
               <span className="admin-quick-icon">
                 <Plus size={18} />
               </span>
@@ -326,6 +665,7 @@ export default function AdminHome() {
               </span>
 
               <ArrowRight size={16} />
+
             </Link>
 
 
@@ -333,6 +673,7 @@ export default function AdminHome() {
               to="/admin/tests"
               className="admin-quick-action"
             >
+
               <span className="admin-quick-icon">
                 <ClipboardList size={18} />
               </span>
@@ -348,6 +689,7 @@ export default function AdminHome() {
               </span>
 
               <ArrowRight size={16} />
+
             </Link>
 
 
@@ -355,6 +697,7 @@ export default function AdminHome() {
               to="/admin/current-affairs"
               className="admin-quick-action"
             >
+
               <span className="admin-quick-icon">
                 <Newspaper size={18} />
               </span>
@@ -370,6 +713,7 @@ export default function AdminHome() {
               </span>
 
               <ArrowRight size={16} />
+
             </Link>
 
 
@@ -377,6 +721,7 @@ export default function AdminHome() {
               to="/admin/blog"
               className="admin-quick-action"
             >
+
               <span className="admin-quick-icon">
                 <PenLine size={18} />
               </span>
@@ -392,6 +737,7 @@ export default function AdminHome() {
               </span>
 
               <ArrowRight size={16} />
+
             </Link>
 
           </div>
@@ -542,12 +888,27 @@ export default function AdminHome() {
 
             <div>
               <span>
-                <Clock3 size={17} />
+                {error ? (
+                  <AlertCircle size={17} />
+                ) : (
+                  <CircleCheck size={17} />
+                )}
+
                 Dashboard Data
               </span>
 
-              <strong className="admin-system-pending">
-                Connecting
+              <strong
+                className={
+                  error
+                    ? "admin-system-pending"
+                    : "admin-system-online"
+                }
+              >
+                {loading
+                  ? "Loading"
+                  : error
+                  ? "Error"
+                  : "Connected"}
               </strong>
             </div>
 
