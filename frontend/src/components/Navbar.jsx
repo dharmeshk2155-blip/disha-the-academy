@@ -1,7 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import logoIcon from "../assets/logo-icon.png";
-import logoWordmark from "../assets/logo-wordmark.png";
 import {
   House,
   BookOpen,
@@ -22,6 +20,9 @@ import {
 } from "lucide-react";
 
 import "../pages/ExtraPages.css";
+
+import logoIcon from "../assets/logo-icon.png";
+import logoWordmark from "../assets/logo-wordmark.png";
 
 const SAMPLE_NOTIFICATIONS = [
   {
@@ -89,12 +90,6 @@ function Navbar() {
       {/* LEFT SIDEBAR */}
       <nav className={`navbar ${menuOpen ? "open" : ""}`}>
 
-        {/* LOGO */}
-        <div className="logo">
-  <img src={logoIcon} alt="Disha" className="logo-icon" />
-  <img src={logoWordmark} alt="Disha The Academy" className="logo-wordmark" />
-</div>
-
         {/* NAVIGATION */}
         <div className="nav-links">
 
@@ -108,7 +103,7 @@ function Navbar() {
             <span>Notes</span>
           </NavLink>
 
-          <NavLink to="/tests" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/take-mock-test" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <ClipboardList size={21} strokeWidth={1.8} />
             <span>Tests</span>
           </NavLink>
@@ -176,6 +171,16 @@ function Navbar() {
 
       {/* TOP HEADER BAR */}
       <div className="topbar-right">
+
+        {/* LOGO (real brand logo, moved here from the sidebar) */}
+        <Link to="/" className="topbar-logo">
+          <img src={logoIcon} alt="" className="topbar-logo-icon" />
+          <img
+            src={logoWordmark}
+            alt="Disha The Academy"
+            className="topbar-logo-wordmark"
+          />
+        </Link>
 
         {/* SEARCH (desktop) */}
         <form className="topbar-search-form" onSubmit={handleSearch}>

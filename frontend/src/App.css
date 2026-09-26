@@ -4,9 +4,9 @@
 ================================ */
 
 :root {
-  --navy: #0b1f4d;
-  --navy-dark: #071633;
-  --navy-light: #17356f;
+  --navy: #141522;
+  --navy-dark: #0a0b12;
+  --navy-light: #1f2133;
 
   --gold: #f4b942;
   --gold-dark: #d99a16;
@@ -22,14 +22,14 @@
 
   --header-height: 56px;
 
-  /* Sidebar theme — dark, Testbook-style */
-  --sidebar-bg: #141522;
-  --sidebar-section: #6b7280;
-  --sidebar-text: #c7cad6;
+  /* Sidebar theme — reverted to the original Navy Blue + Gold brand theme */
+  --sidebar-bg: #0b1f4d;
+  --sidebar-section: #9fb3d9;
+  --sidebar-text: #e4ecff;
   --sidebar-text-hover: #ffffff;
-  --sidebar-hover-bg: #1f2133;
-  --sidebar-active-bg: #f4b942;
-  --sidebar-active-text: #141522;
+  --sidebar-hover-bg: #17356f;
+  --sidebar-active-bg: var(--gold);
+  --sidebar-active-text: var(--navy);
 }
 
 /* ================================
@@ -74,24 +74,26 @@ body {
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.35);
 }
 
-/* Logo (inside sidebar) */
+/* Logo (now lives in the top header bar, before the search box) */
 
-.navbar .logo {
+.topbar-logo {
   display: flex;
-  align-items: top center;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.logo-icon {
-  height: 40px;
-  width: auto;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
+  text-decoration: none;
 }
 
-.logo-wordmark {
-  height: 40px;
+.topbar-logo-icon {
+  height: 36px;
   width: auto;
+  object-fit: contain;
+}
+
+.topbar-logo-wordmark {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* Nav links (vertical list inside sidebar) */
@@ -113,7 +115,8 @@ body {
   font-weight: 500;
   padding: 10px 12px;
   border-radius: 10px;
-  transition: background 0.2s ease, color 0.2s ease;
+  border: 2px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .navbar .nav-links a svg {
@@ -121,14 +124,17 @@ body {
   color: inherit;
 }
 
+/* Hover — highlight whichever item the cursor is over */
 .navbar .nav-links a:hover {
   background: var(--sidebar-hover-bg);
   color: var(--sidebar-text-hover);
 }
 
+/* Active / clicked — current page gets the gold fill + a border */
 .navbar .nav-links a.active {
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text);
+  border-color: var(--white);
   font-weight: 700;
 }
 
@@ -148,7 +154,7 @@ body {
   right: 0;
   height: var(--header-height);
   background: var(--white);
-  box-shadow: 0 2px 12px rgba(11, 31, 77, 0.08);
+  box-shadow: 0 2px 12px rgba(20, 21, 34, 0.08);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -360,7 +366,7 @@ body {
   height: auto;
   margin: 0 auto 28px;
   border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(11, 31, 77, 0.15);
+  box-shadow: 0 15px 40px rgba(20, 21, 34, 0.15);
 }
 
 /* Hero Heading */
@@ -500,7 +506,7 @@ body {
 
   border-radius: 14px;
 
-  box-shadow: 0 8px 25px rgba(11, 31, 77, 0.08);
+  box-shadow: 0 8px 25px rgba(20, 21, 34, 0.08);
 
   transition: 0.3s ease;
 }
@@ -510,7 +516,7 @@ body {
 
   border-color: var(--gold);
 
-  box-shadow: 0 12px 30px rgba(11, 31, 77, 0.13);
+  box-shadow: 0 12px 30px rgba(20, 21, 34, 0.13);
 }
 
 .feature-card h3 {
@@ -578,7 +584,7 @@ body {
     align-items: flex-start;
     gap: 0;
     padding: 70px 20px 20px;
-    box-shadow: 0 3px 15px rgba(7, 22, 51, 0.2);
+    box-shadow: 0 3px 15px rgba(10, 11, 18, 0.2);
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 240;
@@ -588,9 +594,11 @@ body {
     transform: translateX(0);
   }
 
-  .navbar .logo {
-    margin-bottom: 20px;
-    font-size: 18px;
+  /* Logo lives in the top bar on desktop; on mobile the top bar
+     shrinks to a small floating icon pill, so hide it there — the
+     hamburger button + drawer carries the branding instead. */
+  .topbar-logo {
+    display: none;
   }
 
   .navbar .nav-links {
@@ -886,7 +894,7 @@ body {
 .login-logo {
   font-size: 22px;
   font-weight: 700;
-  color: #0b1f4d;
+  color: #141522;
   margin-bottom: 18px;
 }
 
@@ -895,7 +903,7 @@ body {
 }
 
 .login-card h1 {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 26px;
   margin-bottom: 8px;
 }
@@ -914,7 +922,7 @@ body {
 
 .input-group label {
   display: block;
-  color: #0b1f4d;
+  color: #141522;
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 7px;
@@ -934,9 +942,9 @@ body {
 }
 
 .input-group input:focus {
-  border-color: #0b1f4d;
+  border-color: #141522;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(11, 31, 77, 0.08);
+  box-shadow: 0 0 0 4px rgba(20, 21, 34, 0.08);
 }
 
 /* Fix mobile browsers/autofill turning input text white/invisible */
@@ -978,7 +986,7 @@ body {
 .login-button {
   width: 100%;
   padding: 15px;
-  background: #0b1f4d;
+  background: #141522;
   color: #ffffff;
   border: none;
   border-radius: 9999px;
@@ -1085,7 +1093,7 @@ body {
 
 .notes-header h1 {
   font-size: 44px;
-  color: #0b1f4d;
+  color: #141522;
   margin-bottom: 12px;
 }
 
@@ -1115,12 +1123,12 @@ body {
   font-size: 16px;
   outline: none;
 
-  box-shadow: 0 5px 20px rgba(11, 31, 77, 0.06);
+  box-shadow: 0 5px 20px rgba(20, 21, 34, 0.06);
 }
 
 .notes-search input:focus {
-  border-color: #0b1f4d;
-  box-shadow: 0 0 0 3px rgba(11, 31, 77, 0.08);
+  border-color: #141522;
+  box-shadow: 0 0 0 3px rgba(20, 21, 34, 0.08);
 }
 
 /* Categories */
@@ -1148,7 +1156,7 @@ body {
 
   background: white;
 
-  color: #0b1f4d;
+  color: #141522;
 
   border-radius: 20px;
 
@@ -1168,11 +1176,11 @@ body {
 }
 
 .notes-categories .category-active {
-  background: #0b1f4d;
+  background: #141522;
 
   color: white;
 
-  border-color: #0b1f4d;
+  border-color: #141522;
 }
 
 /* All Notes */
@@ -1232,11 +1240,11 @@ body {
   background: white;
   padding: 45px;
   border-radius: 18px;
-  box-shadow: 0 10px 35px rgba(11, 31, 77, 0.10);
+  box-shadow: 0 10px 35px rgba(20, 21, 34, 0.10);
 }
 
 .back-link {
-  color: #0b1f4d;
+  color: #141522;
   text-decoration: none;
   font-weight: 600;
   display: inline-block;
@@ -1264,7 +1272,7 @@ body {
 .details-badge {
   display: inline-block;
 
-  background: #0b1f4d;
+  background: #141522;
   color: white;
 
   padding: 6px 12px;
@@ -1277,7 +1285,7 @@ body {
 }
 
 .details-card h1 {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 38px;
   margin: 5px 0 10px;
 }
@@ -1300,7 +1308,7 @@ body {
 }
 
 .details-content h2 {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 24px;
   margin-bottom: 18px;
 }
@@ -1337,14 +1345,14 @@ body {
 }
 
 .details-price {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 30px;
   font-weight: 800;
 }
 
 .buy-button {
   background: #d99a00;
-  color: #0b1f4d;
+  color: #141522;
 
   border: none;
   border-radius: 8px;
@@ -1360,7 +1368,7 @@ body {
 }
 
 .buy-button:hover {
-  background: #0b1f4d;
+  background: #141522;
   color: white;
 }
 
@@ -1403,7 +1411,7 @@ body {
 }
 
 .checkout-container h1 {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 40px;
   margin: 25px 0 5px;
 }
@@ -1425,12 +1433,12 @@ body {
   background: white;
   padding: 30px;
   border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(11, 31, 77, 0.08);
+  box-shadow: 0 8px 30px rgba(20, 21, 34, 0.08);
 }
 
 .checkout-form h2,
 .order-summary h2 {
-  color: #0b1f4d;
+  color: #141522;
   margin-top: 0;
   margin-bottom: 25px;
 }
@@ -1455,7 +1463,7 @@ body {
 }
 
 .checkout-form input:focus {
-  border-color: #0b1f4d;
+  border-color: #141522;
 }
 
 .continue-button {
@@ -1465,14 +1473,14 @@ body {
   border: none;
   border-radius: 8px;
   background: #d99a00;
-  color: #0b1f4d;
+  color: #141522;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .continue-button:hover {
-  background: #0b1f4d;
+  background: #141522;
   color: white;
 }
 
@@ -1493,7 +1501,7 @@ body {
 }
 
 .order-summary h3 {
-  color: #0b1f4d;
+  color: #141522;
   font-size: 22px;
   margin-bottom: 8px;
 }
@@ -1512,7 +1520,7 @@ body {
 }
 
 .summary-line strong {
-  color: #0b1f4d;
+  color: #141522;
 }
 
 .total-line {
