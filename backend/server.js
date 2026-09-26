@@ -3088,6 +3088,110 @@ app.delete(
   }
 );
 
+// =====================================================
+// ADMIN - DELETE TEST
+// =====================================================
+
+app.delete("/api/admin/tests/:testId", async (req, res) => {
+  let transaction;
+
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const testId = String(req.params.testId || "").trim();
+
+    if (!testId) {
+      return res.status(400).json({
+        success: false,
+        message: "Test ID is required.",
+      });
+    }
+
+    const pool = await connectDB();
+
+    // Check test exists
+    const testResult = await pool
+      .request()
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        SELECT TOP 1
+          TestId,
+          Title
+        FROM dbo.Tests
+        WHERE TestId = @TestId
+      `);
+
+    if (testResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found.",
+      });
+    }
+
+    transaction = new sql.Transaction(pool);
+
+    await transaction.begin();
+
+    // Delete questions first
+    const questionsDeleteResult = await new sql.Request(transaction)
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        DELETE FROM dbo.Questions
+        WHERE TestId = @TestId
+      `);
+
+    // Delete test
+    const testDeleteResult = await new sql.Request(transaction)
+      .input("TestId", sql.NVarChar, testId)
+      .query(`
+        DELETE FROM dbo.Tests
+        WHERE TestId = @TestId
+      `);
+
+    if (
+      !testDeleteResult.rowsAffected ||
+      testDeleteResult.rowsAffected[0] !== 1
+    ) {
+      throw new Error("Test could not be deleted.");
+    }
+
+    await transaction.commit();
+
+    return res.json({
+      success: true,
+      message: "Test deleted successfully.",
+      testId,
+      deletedQuestions:
+        questionsDeleteResult.rowsAffected?.[0] || 0,
+    });
+  } catch (error) {
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackError) {
+        console.error(
+          "Delete test rollback error:",
+          rollbackError
+        );
+      }
+    }
+
+    console.error("Admin delete test error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete test.",
+    });
+  }
+});
+
 // ======================================================
 // 404 ROUTE
 // ======================================================

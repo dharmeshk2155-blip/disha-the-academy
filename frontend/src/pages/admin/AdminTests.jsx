@@ -394,12 +394,64 @@ function AdminTests() {
   setSuccessMessage("");
   setShowAddModal(true);
 };
+const handleDeleteTest = async (test) => {
+  const totalQuestions = Number(test.totalQuestions) || 0;
 
-  const handleDelete = (test) => {
-    alert(
-      `Delete Test: ${test.title}\n\nDelete functionality next step mein connect karenge.`
+  const warningMessage =
+    totalQuestions > 0
+      ? `Are you sure you want to delete "${test.title}"?\n\nThis will also permanently delete ${totalQuestions} question${
+          totalQuestions === 1 ? "" : "s"
+        } from this test.\n\nThis action cannot be undone.`
+      : `Are you sure you want to delete "${test.title}"?\n\nThis action cannot be undone.`;
+
+  const confirmed = window.confirm(warningMessage);
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+
+    const response = await fetch(
+      `${API_BASE}/api/admin/tests/${encodeURIComponent(
+        test.testId
+      )}`,
+      {
+        method: "DELETE",
+        headers: {
+          "x-admin-key": adminKey,
+        },
+      }
     );
-  };
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Failed to delete test."
+      );
+    }
+
+    setTests((currentTests) =>
+      currentTests.filter(
+        (item) => item.testId !== test.testId
+      )
+    );
+
+    window.alert(
+      data.deletedQuestions > 0
+        ? `Test deleted successfully.\n${data.deletedQuestions} question(s) were also deleted.`
+        : "Test deleted successfully."
+    );
+  } catch (error) {
+    console.error("Delete test error:", error);
+
+    setError(
+      error.message || "Failed to delete test."
+    );
+  }
+};
 
   return (
     <div className="admin-tests-page">
@@ -656,7 +708,7 @@ function AdminTests() {
                           <button
                             type="button"
                             className="admin-test-icon-btn admin-test-delete-btn"
-                            onClick={() => handleDelete(test)}
+                           onClick={() => handleDeleteTest(test)}
                             title="Delete Test"
                           >
                             <Trash2 size={16} />
