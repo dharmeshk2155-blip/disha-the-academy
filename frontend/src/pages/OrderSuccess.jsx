@@ -1,16 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 
-// ======================================================
-// LIVE BACKEND
-// ======================================================
-
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://disha-the-academy.onrender.com";
-
-// ======================================================
-// NOTES
-// ======================================================
 
 const notes = {
   1: {
@@ -68,39 +60,26 @@ const notes = {
   },
 };
 
-// ======================================================
-// ORDER SUCCESS
-// ======================================================
-
 function OrderSuccess() {
   const { id } = useParams();
 
   const note = notes[id];
 
-  // ====================================================
-  // GET RAZORPAY ORDER ID FROM URL
-  // ====================================================
-
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
-
-  // ====================================================
-  // CREATE DOWNLOAD URL
-  // ====================================================
 
   const downloadUrl = orderId
     ? `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}`
     : null;
 
-  // ====================================================
-  // NOTE NOT FOUND
-  // ====================================================
-
   if (!note) {
     return (
       <main className="success-page">
         <div className="success-card">
-          <div className="success-icon">!</div>
+
+          <div className="success-icon">
+            !
+          </div>
 
           <h1>Order Not Found</h1>
 
@@ -108,63 +87,93 @@ function OrderSuccess() {
             We could not find this note.
           </p>
 
-          <Link to="/notes" className="success-button">
+          <Link
+            to="/notes"
+            className="success-shopping-button"
+          >
             ← Back to Notes
           </Link>
+
         </div>
       </main>
     );
   }
 
-  // ====================================================
-  // SUCCESS PAGE
-  // ====================================================
-
   return (
     <main className="success-page">
-      <div className="success-card">
 
-        {/* SUCCESS ICON */}
+      {/* CONFETTI */}
+
+      <span className="success-confetti confetti-1"></span>
+      <span className="success-confetti confetti-2"></span>
+      <span className="success-confetti confetti-3"></span>
+      <span className="success-confetti confetti-4"></span>
+      <span className="success-confetti confetti-5"></span>
+      <span className="success-confetti confetti-6"></span>
+      <span className="success-confetti confetti-7"></span>
+      <span className="success-confetti confetti-8"></span>
+
+      {/* SUCCESS CARD */}
+
+      <div className="success-card">
 
         <div className="success-icon">
           ✓
         </div>
 
-        <h1>Payment Successful!</h1>
+        <div className="success-verified">
+          ✓ Payment Verified
+        </div>
+
+        <h1>
+          Payment Successful!
+        </h1>
 
         <p className="success-message">
           Thank you for your purchase.
+          Your study material is ready.
         </p>
 
-        {/* NOTE INFORMATION */}
+        {/* PURCHASE INFORMATION */}
 
         <div className="success-note">
-          <h2>{note.title}</h2>
 
-          <p>{note.subject}</p>
+          <h2>
+            {note.title}
+          </h2>
+
+          <p>
+            {note.subject}
+          </p>
 
           <strong>
             ₹{note.price}
           </strong>
-        </div>
 
-        {/* PAYMENT MESSAGE */}
+        </div>
 
         <p className="success-info">
           Your payment has been successfully verified.
-          You can now download your purchased PDF.
+          You now have instant access to your purchased PDF.
         </p>
 
-        {/* DOWNLOAD BUTTON */}
+        {/* READY MESSAGE */}
+
+        <div className="success-ready">
+          🎉 Your PDF is ready to download
+        </div>
+
+        {/* DOWNLOAD */}
 
         {downloadUrl ? (
           <a
             href={downloadUrl}
-            className="success-button"
+            className="success-download-button"
             target="_blank"
             rel="noopener noreferrer"
           >
-            📥 Download Your PDF
+            <span>↓</span>
+            Download Your PDF
           </a>
         ) : (
           <p className="success-info">
@@ -172,18 +181,27 @@ function OrderSuccess() {
           </p>
         )}
 
-        <br />
-
         {/* CONTINUE SHOPPING */}
 
-        <Link
-          to="/notes"
-          className="success-button"
-        >
-          Continue Shopping
-        </Link>
+        <div>
+          <Link
+            to="/notes"
+            className="success-shopping-button"
+          >
+            ← Continue Shopping
+          </Link>
+        </div>
+
+        {/* SECURITY MESSAGE */}
+
+        <p className="success-security">
+          🔒 Secure Payment &nbsp;•&nbsp;
+          ✓ Payment Verified &nbsp;•&nbsp;
+          ⚡ Instant Access
+        </p>
 
       </div>
+
     </main>
   );
 }
