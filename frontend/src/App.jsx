@@ -10,100 +10,161 @@ import Account from "./pages/Account";
 import NoteDetails from "./pages/NoteDetails";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+
 import PopularExamsSub from "./pages/PopularExamsSub";
 import PopularExamsTests from "./pages/PopularExamsTests";
+
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
+
 import CurrentAffairs from "./pages/CurrentAffairs";
 import Blog from "./pages/Blog";
 import FAQ from "./pages/FAQ";
 import ContactUs from "./pages/ContactUs";
 import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
+
 import ProtectedRoute from "./pages/ProtectedRoute";
 import About from "./pages/About";
+
+import NoteCategory from "./pages/NoteCategory";
+import NoteSubcategory from "./pages/NoteSubcategory";
+
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import RefundPolicy from "./pages/RefundPolicy";
+
+/* =========================
+   ADMIN
+========================= */
+
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
-import NoteCategory from "./pages/NoteCategory";
-import NoteSubcategory from "./pages/NoteSubcategory";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsConditions from "./pages/TermsConditions";
-import RefundPolicy from "./pages/RefundPolicy";
 
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-<Route path="/terms" element={<TermsConditions />} />
-<Route path="/refund-policy" element={<RefundPolicy />} />
 
-        {/* Every route below renders inside Layout, which shows the
-            sidebar Navbar exactly once. No page needs its own <Navbar />. */}
+      <Routes>
+
+        {/* ==================================================
+            STANDALONE LEGAL PAGES
+        ================================================== */}
+
+        <Route
+          path="/privacy-policy"
+          element={<PrivacyPolicy />}
+        />
+
+        <Route
+          path="/terms"
+          element={<TermsConditions />}
+        />
+
+        <Route
+          path="/refund-policy"
+          element={<RefundPolicy />}
+        />
+
+
+        {/* ==================================================
+            PUBLIC WEBSITE
+            Navbar / Footer / Public Layout
+        ================================================== */}
+
         <Route element={<Layout />}>
 
           {/* HOME */}
-          <Route path="/" element={<Home />} />
+
+          <Route
+            path="/"
+            element={<Home />}
+          />
+
 
           {/* NOTES */}
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/notes/:categorySlug" element={<NoteCategory />} />
-          <Route path="/notes/:categorySlug/:subcategorySlug" element={<NoteSubcategory />} />
 
-          {/* LOGIN */}
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/notes"
+            element={<Notes />}
+          />
 
-          {/* FORGOT PASSWORD */}
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/notes/:categorySlug"
+            element={<NoteCategory />}
+          />
 
-          {/* REGISTER */}
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/notes/:categorySlug/:subcategorySlug"
+            element={<NoteSubcategory />}
+          />
 
-          {/* ACCOUNT */}
-          <Route path="/account" element={<Account />} />
+          <Route
+            path="/note/:id"
+            element={<NoteDetails />}
+          />
 
-          {/* NOTE DETAILS */}
-          <Route path="/note/:id" element={<NoteDetails />} />
+
+          {/* AUTH */}
+
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+
+          <Route
+            path="/register"
+            element={<Register />}
+          />
+
+          <Route
+            path="/account"
+            element={<Account />}
+          />
+
 
           {/* CHECKOUT */}
-          <Route path="/checkout/:id" element={<Checkout />} />
 
-          {/* PAYMENT */}
+          <Route
+            path="/checkout/:id"
+            element={<Checkout />}
+          />
+
 
           {/* ORDER SUCCESS */}
-          <Route path="/order-success/:id" element={<OrderSuccess />} />
+
+          <Route
+            path="/order-success/:id"
+            element={<OrderSuccess />}
+          />
+
 
           {/* ABOUT */}
-          <Route path="/about" element={<About />} />
 
-          {/* ADMIN DASHBOARD (shared unlock + sidebar, nested sections) */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminHome />} />
-            <Route path="current-affairs" element={<AdminCurrentAffairs />} />
-            <Route path="blog" element={<AdminComingSoon section="Blog" />} />
-            <Route path="faq" element={<AdminComingSoon section="FAQ" />} />
-            <Route
-              path="contact-submissions"
-              element={<AdminComingSoon section="Contact Us Messages" />}
-            />
-            <Route path="about" element={<AdminComingSoon section="About Page" />} />
-            <Route path="notes" element={<AdminComingSoon section="Notes" />} />
-            <Route
-              path="tests"
-              element={<AdminComingSoon section="Tests / Mock Tests" />}
-              
-            />
-          </Route>
+          <Route
+            path="/about"
+            element={<About />}
+          />
 
-          {/* DASHBOARD (LOGIN REQUIRED) */}
+
+          {/* ==================================================
+              USER DASHBOARD
+          ================================================== */}
+
           <Route
             path="/dashboard"
             element={
@@ -113,7 +174,9 @@ function App() {
             }
           />
 
-          {/* MY RESULTS (LOGIN REQUIRED) */}
+
+          {/* MY RESULTS */}
+
           <Route
             path="/my-results"
             element={
@@ -123,25 +186,59 @@ function App() {
             }
           />
 
+
           {/* LEADERBOARD */}
-          <Route path="/leaderboard" element={<Leaderboard />} />
+
+          <Route
+            path="/leaderboard"
+            element={<Leaderboard />}
+          />
+
 
           {/* CURRENT AFFAIRS */}
-          <Route path="/current-affairs" element={<CurrentAffairs />} />
+
+          <Route
+            path="/current-affairs"
+            element={<CurrentAffairs />}
+          />
+
 
           {/* BLOG */}
-          <Route path="/blog" element={<Blog />} />
+
+          <Route
+            path="/blog"
+            element={<Blog />}
+          />
+
 
           {/* FAQ */}
-          <Route path="/faq" element={<FAQ />} />
 
-          {/* CONTACT US */}
-          <Route path="/contact" element={<ContactUs />} />
+          <Route
+            path="/faq"
+            element={<FAQ />}
+          />
+
+
+          {/* CONTACT */}
+
+          <Route
+            path="/contact"
+            element={<ContactUs />}
+          />
+
 
           {/* SEARCH */}
-          <Route path="/search" element={<SearchResults />} />
 
-          {/* TAKE A MOCK TEST - level 1: exam groups (SSC, Banking, Railway...) */}
+          <Route
+            path="/search"
+            element={<SearchResults />}
+          />
+
+
+          {/* ==================================================
+              TAKE A MOCK TEST
+          ================================================== */}
+
           <Route
             path="/take-mock-test"
             element={
@@ -151,7 +248,6 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 2: sub-exams within a group (CGL, CHSL...) */}
           <Route
             path="/take-mock-test/:topSlug"
             element={
@@ -161,7 +257,6 @@ function App() {
             }
           />
 
-          {/* TAKE A MOCK TEST - level 3: actual mock tests for that sub-exam */}
           <Route
             path="/take-mock-test/:topSlug/:subSlug"
             element={
@@ -171,7 +266,9 @@ function App() {
             }
           />
 
-          {/* MOCK TEST ATTEMPT - actual test taking page (LOGIN REQUIRED) */}
+
+          {/* ACTUAL TEST ATTEMPT */}
+
           <Route
             path="/mock-test/:testId"
             element={
@@ -181,8 +278,12 @@ function App() {
             }
           />
 
-          {/* POPULAR EXAMS (Home page section) - completely independent
-              from the "Take a Mock Test" navbar flow above */}
+
+          {/* ==================================================
+              POPULAR EXAMS
+              Independent from Take a Mock Test
+          ================================================== */}
+
           <Route
             path="/popular-exams/:topSlug"
             element={
@@ -203,7 +304,127 @@ function App() {
 
         </Route>
 
+
+        {/* ==================================================
+            ADMIN PANEL
+            IMPORTANT:
+            PUBLIC <Layout /> KE BAHAR HAI
+        ================================================== */}
+
+        <Route
+          path="/admin"
+          element={<AdminLayout />}
+        >
+
+          {/* ADMIN DASHBOARD */}
+
+          <Route
+            index
+            element={<AdminHome />}
+          />
+
+
+          {/* NOTES */}
+
+          <Route
+            path="notes"
+            element={
+              <AdminComingSoon section="Notes" />
+            }
+          />
+
+
+          {/* TESTS */}
+
+          <Route
+            path="tests"
+            element={
+              <AdminComingSoon section="Tests / Mock Tests" />
+            }
+          />
+
+
+          {/* CURRENT AFFAIRS */}
+
+          <Route
+            path="current-affairs"
+            element={<AdminCurrentAffairs />}
+          />
+
+
+          {/* BLOG */}
+
+          <Route
+            path="blog"
+            element={
+              <AdminComingSoon section="Blog" />
+            }
+          />
+
+
+          {/* FAQ */}
+
+          <Route
+            path="faq"
+            element={
+              <AdminComingSoon section="FAQ" />
+            }
+          />
+
+
+          {/* USERS */}
+
+          <Route
+            path="users"
+            element={
+              <AdminComingSoon section="Users" />
+            }
+          />
+
+
+          {/* ORDERS */}
+
+          <Route
+            path="orders"
+            element={
+              <AdminComingSoon section="Orders" />
+            }
+          />
+
+
+          {/* CONTACT MESSAGES */}
+
+          <Route
+            path="contact-submissions"
+            element={
+              <AdminComingSoon section="Contact Messages" />
+            }
+          />
+
+
+          {/* PAGES */}
+
+          <Route
+            path="about"
+            element={
+              <AdminComingSoon section="Pages" />
+            }
+          />
+
+
+          {/* SETTINGS */}
+
+          <Route
+            path="settings"
+            element={
+              <AdminComingSoon section="Settings" />
+            }
+          />
+
+        </Route>
+
       </Routes>
+
     </BrowserRouter>
   );
 }
