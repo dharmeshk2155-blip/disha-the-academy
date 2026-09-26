@@ -3882,3 +3882,313 @@ and
   }
 
 }
+
+/* ======================================================
+   LOGIN PAGE — FIT COMPLETE CARD IN DESKTOP SCREEN
+   NO VERTICAL SCROLL
+====================================================== */
+
+@media (min-width: 769px) {
+
+  /* Whole available screen below navbar */
+
+  .premium-login-page {
+    height: calc(100vh - var(--header-height));
+    min-height: 0;
+
+    padding: 18px 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+  }
+
+
+  /* Horizontal card */
+
+  .premium-login-card {
+    width: 100%;
+    max-width: 920px;
+
+    max-height: calc(100vh - var(--header-height) - 36px);
+
+    padding: 26px 42px 24px;
+
+    grid-template-columns:
+      minmax(230px, 0.78fr)
+      minmax(360px, 1.22fr);
+
+    column-gap: 55px;
+
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+
+  /* Middle vertical divider */
+
+  .premium-login-card::after {
+    top: 25px;
+    bottom: 25px;
+  }
+
+
+  /* ==========================
+     LEFT SIDE
+  ========================== */
+
+  .premium-login-card .login-logo {
+    margin-bottom: 8px;
+
+    font-size: 20px;
+  }
+
+
+  .premium-login-card
+  .login-logo span {
+    font-size: 24px;
+  }
+
+
+  .premium-login-card
+  .login-welcome-icon {
+    width: 72px;
+    height: 72px;
+
+    margin: 0 auto 12px;
+
+    border-radius: 20px;
+
+    font-size: 32px;
+  }
+
+
+  /* Navy information box */
+
+  .premium-login-card::before {
+    margin-top: 0;
+
+    padding: 17px 18px;
+
+    border-radius: 15px;
+
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+
+  /* ==========================
+     RIGHT SIDE
+  ========================== */
+
+  .premium-login-card h1 {
+    font-size: 29px;
+
+    margin-bottom: 4px;
+  }
+
+
+  .premium-login-card
+  .login-subtitle {
+    font-size: 13px;
+
+    margin-bottom: 12px;
+  }
+
+
+  /* Google */
+
+  .premium-google-btn {
+    padding: 10px 14px;
+
+    font-size: 14px;
+  }
+
+
+  .premium-google-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+
+  /* OR */
+
+  .premium-login-card
+  .auth-divider {
+    margin: 11px 0;
+
+    font-size: 11px;
+  }
+
+
+  /* Form */
+
+  .premium-login-form
+  .input-group {
+    margin-bottom: 10px;
+  }
+
+
+  .premium-login-form
+  .input-group label {
+    margin-bottom: 5px;
+
+    font-size: 12px;
+  }
+
+
+  .premium-login-form
+  .premium-input-wrapper input {
+    padding-top: 11px;
+    padding-bottom: 11px;
+
+    font-size: 14px;
+
+    border-radius: 11px;
+  }
+
+
+  /* Remember / Forgot */
+
+  .premium-login-form
+  .login-options {
+    margin: 3px 0 12px;
+
+    font-size: 12px;
+  }
+
+
+  /* Login button */
+
+  .premium-login-button {
+    min-height: 0;
+
+    padding: 12px 16px;
+
+    font-size: 14px;
+  }
+
+
+  /* Register */
+
+  .premium-login-card
+  .register-text {
+    margin-top: 11px;
+
+    font-size: 12px;
+  }
+
+
+  /* Security line */
+
+  .premium-login-card
+  .login-security {
+    margin-top: 8px;
+
+    font-size: 10px;
+  }
+
+
+  /* Error / Success message */
+
+  .login-status {
+    margin-top: 8px;
+
+    padding: 7px 10px;
+
+    font-size: 11px;
+  }
+
+}
+
+
+/* ======================================================
+   SHORT LAPTOP SCREENS
+   Example: 1366 × 768
+====================================================== */
+
+@media
+(min-width: 769px)
+and
+(max-height: 750px) {
+
+  .premium-login-page {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+
+  .premium-login-card {
+    max-width: 900px;
+
+    padding:
+      20px 38px 18px;
+  }
+
+
+  .premium-login-card
+  .login-welcome-icon {
+    width: 62px;
+    height: 62px;
+
+    font-size: 28px;
+
+    margin-bottom: 8px;
+  }
+
+
+  .premium-login-card h1 {
+    font-size: 26px;
+  }
+
+
+  .premium-login-card
+  .login-subtitle {
+    margin-bottom: 9px;
+  }
+
+
+  .premium-google-btn {
+    padding: 9px 13px;
+  }
+
+
+  .premium-login-card
+  .auth-divider {
+    margin: 8px 0;
+  }
+
+
+  .premium-login-form
+  .input-group {
+    margin-bottom: 8px;
+  }
+
+
+  .premium-login-form
+  .premium-input-wrapper input {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+
+  .premium-login-button {
+    padding: 10px 15px;
+  }
+
+
+  .premium-login-card
+  .register-text {
+    margin-top: 8px;
+  }
+
+
+  .premium-login-card
+  .login-security {
+    margin-top: 5px;
+  }
+
+}
