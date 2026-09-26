@@ -3518,3 +3518,367 @@ input:focus {
   }
 
 }
+
+/* ======================================================
+   HORIZONTAL PREMIUM LOGIN CARD
+   Desktop = Horizontal
+   Mobile  = Vertical
+====================================================== */
+
+@media (min-width: 769px) {
+
+  .premium-login-page {
+    min-height: calc(100vh - var(--header-height));
+    padding: 45px 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+
+  /* MAIN WIDE CARD */
+
+  .premium-login-card {
+    width: 100%;
+    max-width: 950px;
+
+    padding: 45px 55px;
+
+    display: grid;
+
+    grid-template-columns:
+      minmax(260px, 0.8fr)
+      minmax(380px, 1.2fr);
+
+    column-gap: 65px;
+
+    align-items: center;
+
+    text-align: left;
+  }
+
+
+  /* Vertical divider */
+
+  .premium-login-card::after {
+    content: "";
+
+    position: absolute;
+
+    top: 45px;
+    bottom: 45px;
+
+    left: 40%;
+
+    width: 1px;
+
+    background:
+      linear-gradient(
+        to bottom,
+        transparent,
+        #e2e8f0 15%,
+        #e2e8f0 85%,
+        transparent
+      );
+  }
+
+
+  /* ====================================================
+     LEFT SIDE
+  ==================================================== */
+
+  .premium-login-card .login-logo {
+    grid-column: 1;
+    grid-row: 1;
+
+    align-self: end;
+
+    margin-bottom: 18px;
+
+    font-size: 22px;
+  }
+
+
+  .premium-login-card .login-welcome-icon {
+    grid-column: 1;
+    grid-row: 2;
+
+    width: 95px;
+    height: 95px;
+
+    margin:
+      5px auto 25px;
+
+    font-size: 44px;
+
+    border-radius: 26px;
+  }
+
+
+  /* Heading goes on right */
+
+  .premium-login-card h1 {
+    grid-column: 2;
+    grid-row: 1;
+
+    margin:
+      0 0 8px;
+
+    align-self: end;
+
+    font-size: 34px;
+  }
+
+
+  .premium-login-card
+  .login-subtitle {
+    grid-column: 2;
+    grid-row: 2;
+
+    align-self: start;
+
+    margin-bottom: 22px;
+  }
+
+
+  /* ====================================================
+     RIGHT SIDE
+  ==================================================== */
+
+  .premium-login-card
+  .google-login-wrapper {
+    grid-column: 2;
+    grid-row: 3;
+
+    width: 100%;
+  }
+
+
+  .premium-login-card
+  .auth-divider {
+    grid-column: 2;
+    grid-row: 4;
+
+    width: 100%;
+
+    margin:
+      18px 0;
+  }
+
+
+  .premium-login-form {
+    grid-column: 2;
+    grid-row: 5;
+
+    width: 100%;
+  }
+
+
+  .premium-login-card
+  .register-text {
+    grid-column: 2;
+    grid-row: 6;
+
+    text-align: center;
+
+    margin-top: 18px;
+  }
+
+
+  .premium-login-card
+  .login-security {
+    grid-column: 2;
+    grid-row: 7;
+
+    text-align: center;
+  }
+
+
+  /* ====================================================
+     LEFT SIDE BRAND MESSAGE
+  ==================================================== */
+
+  .premium-login-card::before {
+    content:
+      "Learn • Practice • Succeed\A\AYour complete learning journey starts here.";
+
+    white-space: pre-line;
+
+    grid-column: 1;
+    grid-row: 3 / span 5;
+
+    position: static;
+
+    width: auto;
+    height: auto;
+
+    transform: none;
+
+    align-self: start;
+
+    margin-top: 5px;
+
+    padding:
+      24px 20px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #0b1f4d,
+        #17356f
+      );
+
+    color: white;
+
+    border-radius: 18px;
+
+    font-size: 14px;
+    line-height: 1.7;
+
+    font-weight: 500;
+
+    box-shadow:
+      0 15px 35px
+      rgba(11, 31, 77, 0.16);
+  }
+
+
+  /* Re-create gold accent because ::before
+     was previously used for gold decoration */
+
+  .login-card-gold-line {
+    position: absolute;
+
+    top: 0;
+    left: 50%;
+
+    width: 150px;
+    height: 5px;
+
+    transform:
+      translateX(-50%);
+
+    border-radius:
+      0 0 10px 10px;
+
+    background:
+      linear-gradient(
+        90deg,
+        #d99a16,
+        #f4b942,
+        #ffd978
+      );
+  }
+
+
+  /* Inputs slightly tighter for horizontal layout */
+
+  .premium-login-form
+  .input-group {
+    margin-bottom: 14px;
+  }
+
+
+  .premium-login-form
+  .premium-input-wrapper input {
+    padding-top: 13px;
+    padding-bottom: 13px;
+  }
+
+
+  .premium-login-form
+  .login-options {
+    margin:
+      5px 0 18px;
+  }
+
+
+  .premium-login-button {
+    min-height: 50px;
+  }
+
+}
+
+
+/* ======================================================
+   TABLET
+====================================================== */
+
+@media
+(max-width: 950px)
+and
+(min-width: 769px) {
+
+  .premium-login-card {
+    max-width: 850px;
+
+    grid-template-columns:
+      240px 1fr;
+
+    column-gap: 45px;
+
+    padding:
+      40px 42px;
+  }
+
+
+  .premium-login-card::after {
+    left: 36%;
+  }
+
+}
+
+
+/* ======================================================
+   MOBILE — BACK TO VERTICAL CARD
+====================================================== */
+
+@media (max-width: 768px) {
+
+  .premium-login-card {
+    display: block;
+
+    width: 100%;
+    max-width: 460px;
+
+    text-align: center;
+  }
+
+
+  .premium-login-card::after {
+    display: none;
+  }
+
+
+  .premium-login-card::before {
+    display: none;
+  }
+
+
+  .premium-login-card
+  .login-logo {
+    text-align: center;
+  }
+
+
+  .premium-login-card
+  .login-welcome-icon {
+    margin:
+      0 auto 16px;
+  }
+
+
+  .premium-login-form {
+    text-align: left;
+  }
+
+
+  .premium-login-card
+  .register-text,
+  .premium-login-card
+  .login-security {
+    text-align: center;
+  }
+
+}
