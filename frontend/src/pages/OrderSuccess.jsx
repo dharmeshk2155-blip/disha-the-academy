@@ -1,5 +1,17 @@
 import { useParams, Link } from "react-router-dom";
 
+// ======================================================
+// LIVE BACKEND
+// ======================================================
+
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://disha-the-academy.onrender.com";
+
+// ======================================================
+// NOTES
+// ======================================================
+
 const notes = {
   1: {
     title: "HP General Knowledge",
@@ -56,18 +68,33 @@ const notes = {
   },
 };
 
+// ======================================================
+// ORDER SUCCESS
+// ======================================================
+
 function OrderSuccess() {
   const { id } = useParams();
 
   const note = notes[id];
 
-  // Razorpay Order ID
+  // ====================================================
+  // GET RAZORPAY ORDER ID FROM URL
+  // ====================================================
+
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
 
-  // -----------------------------
+  // ====================================================
+  // CREATE DOWNLOAD URL
+  // ====================================================
+
+  const downloadUrl = orderId
+    ? `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}`
+    : null;
+
+  // ====================================================
   // NOTE NOT FOUND
-  // -----------------------------
+  // ====================================================
 
   if (!note) {
     return (
@@ -89,13 +116,15 @@ function OrderSuccess() {
     );
   }
 
-  // -----------------------------
+  // ====================================================
   // SUCCESS PAGE
-  // -----------------------------
+  // ====================================================
 
   return (
     <main className="success-page">
       <div className="success-card">
+
+        {/* SUCCESS ICON */}
 
         <div className="success-icon">
           ✓
@@ -110,7 +139,6 @@ function OrderSuccess() {
         {/* NOTE INFORMATION */}
 
         <div className="success-note">
-
           <h2>{note.title}</h2>
 
           <p>{note.subject}</p>
@@ -118,7 +146,6 @@ function OrderSuccess() {
           <strong>
             ₹{note.price}
           </strong>
-
         </div>
 
         {/* PAYMENT MESSAGE */}
@@ -128,13 +155,11 @@ function OrderSuccess() {
           You can now download your purchased PDF.
         </p>
 
-        {/* DOWNLOAD */}
+        {/* DOWNLOAD BUTTON */}
 
-        {orderId ? (
+        {downloadUrl ? (
           <a
-            href={`http://localhost:5000/api/pdf/download/${encodeURIComponent(
-  orderId
-)}`}
+            href={downloadUrl}
             className="success-button"
             target="_blank"
             rel="noopener noreferrer"
@@ -149,7 +174,7 @@ function OrderSuccess() {
 
         <br />
 
-        {/* BACK TO NOTES */}
+        {/* CONTINUE SHOPPING */}
 
         <Link
           to="/notes"
