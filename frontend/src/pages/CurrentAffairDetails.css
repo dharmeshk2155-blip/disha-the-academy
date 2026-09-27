@@ -1,0 +1,576 @@
+/* =========================================================
+   DISHA THE ACADEMY
+   CURRENT AFFAIR DETAILS
+========================================================= */
+
+.cad-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 25px 42px 60px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(
+      circle at 95% 5%,
+      rgba(247, 184, 49, 0.1),
+      transparent 22%
+    ),
+    #f6f8fc;
+}
+
+.cad-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1180px;
+  margin: 0 auto 17px;
+}
+
+.cad-topbar > span {
+  color: #929cad;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cad-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #31557e;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cad-back-link:hover {
+  color: #b47700;
+}
+
+/* ================= ARTICLE ================= */
+
+.cad-article {
+  overflow: hidden;
+  max-width: 1180px;
+  margin: 0 auto;
+  border: 1px solid #e1e6ed;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 15px 45px rgba(14, 37, 70, 0.07);
+}
+
+/* ================= HEADER ================= */
+
+.cad-header {
+  padding: 43px 60px 34px;
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(245, 181, 48, 0.1),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #ffffff, #fbfcff);
+}
+
+.cad-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 15px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff4d9;
+  color: #a76a00;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.cad-header h1 {
+  max-width: 900px;
+  margin: 0 auto;
+  color: #082653;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.18;
+  letter-spacing: -0.7px;
+}
+
+.cad-summary {
+  max-width: 820px;
+  margin: 17px auto 20px;
+  color: #657389;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.cad-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 19px;
+  color: #8792a3;
+  font-size: 10px;
+}
+
+.cad-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ================= IMAGE ================= */
+
+.cad-featured-image {
+  position: relative;
+  width: calc(100% - 80px);
+  height: 470px;
+  margin: 0 40px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #e9edf3;
+}
+
+.cad-featured-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cad-featured-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 65%,
+    rgba(4, 25, 56, 0.35)
+  );
+}
+
+.cad-image-label {
+  position: absolute;
+  z-index: 2;
+  left: 18px;
+  bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(7, 37, 80, 0.9);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+/* ================= LAYOUT ================= */
+
+.cad-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 245px;
+  gap: 38px;
+  padding: 42px 50px 50px;
+}
+
+.cad-main-content {
+  min-width: 0;
+}
+
+.cad-content-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.cad-content-heading > span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #0b2d60;
+  color: #ffc13e;
+}
+
+.cad-content-heading small {
+  display: block;
+  color: #b1780a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.cad-content-heading h2 {
+  margin: 2px 0 0;
+  color: #122e55;
+  font-size: 19px;
+}
+
+/* ================= ARTICLE TEXT ================= */
+
+.cad-article-text {
+  color: #3f4d61;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.cad-article-text p {
+  margin: 0 0 18px;
+}
+
+/* ================= KEY POINTS ================= */
+
+.cad-keypoints {
+  margin-top: 31px;
+  padding: 24px;
+  border: 1px solid #f1d58d;
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 247, 224, 0.95),
+      rgba(255, 252, 243, 0.95)
+    );
+}
+
+.cad-keypoints-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 18px;
+}
+
+.cad-keypoints-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #ffc13e;
+  color: #0b2b5b;
+}
+
+.cad-keypoints-title small {
+  display: block;
+  color: #aa730a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.cad-keypoints-title h2 {
+  margin: 2px 0 0;
+  color: #17345b;
+  font-size: 18px;
+}
+
+.cad-keypoints-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cad-keypoint {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid rgba(226, 190, 103, 0.45);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.cad-keypoint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #b87905;
+}
+
+.cad-keypoint p {
+  margin: 0;
+  color: #4b5667;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ================= END NOTE ================= */
+
+.cad-end-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 17px;
+  border-radius: 12px;
+  background: #f2f6fb;
+}
+
+.cad-end-note > div:first-child {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #dce8f7;
+  color: #174b86;
+}
+
+.cad-end-note strong {
+  color: #17345a;
+  font-size: 12px;
+}
+
+.cad-end-note p {
+  margin: 4px 0 0;
+  color: #778396;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* ================= SIDEBAR ================= */
+
+.cad-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cad-sidebar-card,
+.cad-exam-card {
+  padding: 19px;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #fafcff;
+}
+
+.cad-sidebar-label {
+  display: block;
+  margin-bottom: 14px;
+  color: #a26d08;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+
+.cad-detail-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.cad-detail-row:last-child {
+  border-bottom: 0;
+}
+
+.cad-detail-row span {
+  display: block;
+  margin-bottom: 3px;
+  color: #909bab;
+  font-size: 9px;
+}
+
+.cad-detail-row strong {
+  display: block;
+  color: #213b60;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.cad-exam-card {
+  background: linear-gradient(145deg, #092755, #10427c);
+  color: #ffffff;
+}
+
+.cad-exam-icon {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  margin-bottom: 12px;
+  border-radius: 11px;
+  background: #ffc13e;
+  color: #0b2b5b;
+}
+
+.cad-exam-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.cad-exam-card p {
+  margin: 7px 0 0;
+  color: #cad8e9;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.cad-sidebar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  border: 1px solid #d9e1eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #234c7e;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* ================= STATES ================= */
+
+.cad-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 900px;
+  min-height: 400px;
+  margin: 30px auto;
+  padding: 40px;
+  border: 1px solid #e1e6ed;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #778396;
+  text-align: center;
+}
+
+.cad-state h2 {
+  margin: 14px 0 6px;
+  color: #15345f;
+}
+
+.cad-state p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.cad-loader {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #e3e9f1;
+  border-top-color: #0b2b5c;
+  border-radius: 50%;
+  animation: cad-spin 0.7s linear infinite;
+}
+
+@keyframes cad-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cad-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  margin-top: 18px;
+  padding: 0 16px;
+  border-radius: 9px;
+  background: #0b2b5c;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1050px) {
+  .cad-page {
+    padding: 22px 25px 50px;
+  }
+
+  .cad-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cad-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cad-sidebar-back {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 750px) {
+  .cad-page {
+    padding: 15px 12px 35px;
+  }
+
+  .cad-article {
+    border-radius: 16px;
+  }
+
+  .cad-header {
+    padding: 30px 20px 25px;
+  }
+
+  .cad-header h1 {
+    font-size: 27px;
+  }
+
+  .cad-summary {
+    font-size: 12px;
+  }
+
+  .cad-featured-image {
+    width: calc(100% - 24px);
+    height: 280px;
+    margin: 0 12px;
+    border-radius: 13px;
+  }
+
+  .cad-layout {
+    padding: 27px 20px 35px;
+  }
+
+  .cad-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .cad-sidebar-back {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .cad-topbar > span {
+    display: none;
+  }
+
+  .cad-header h1 {
+    font-size: 24px;
+  }
+
+  .cad-featured-image {
+    height: 220px;
+  }
+
+  .cad-meta {
+    gap: 10px;
+  }
+
+  .cad-layout {
+    padding: 24px 16px 30px;
+  }
+
+  .cad-keypoints {
+    padding: 18px;
+  }
+}
