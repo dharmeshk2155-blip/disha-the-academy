@@ -16,6 +16,7 @@ const { sql, connectDB } = require("./db");
 const app = express();
 const statsRoutes = require("./routes/stats");
 const currentAffairsRoutes = require("./routes/currentAffairs");
+const blogRoutes = require("./routes/blog");
 
 // ======================================================
 // BASIC SETUP
@@ -29,7 +30,15 @@ app.use("/api/contact", contactRouter);
 app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
 app.use("/api", passwordRouter);
+app.get("/api/blog-test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Blog test route is working",
+  });
+});
 
+app.use("/api/blog", blogRoutes);
+app.use("/api/blog", blogRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================

@@ -24,7 +24,10 @@ import Leaderboard from "./pages/Leaderboard";
 
 import CurrentAffairs from "./pages/CurrentAffairs";
 import CurrentAffairDetails from "./pages/CurrentAffairDetails";
+
 import Blog from "./pages/Blog";
+import BlogDetails from "./pages/BlogDetails";
+
 import FAQ from "./pages/FAQ";
 import ContactUs from "./pages/ContactUs";
 import SearchResults from "./pages/SearchResults";
@@ -39,7 +42,6 @@ import NoteSubcategory from "./pages/NoteSubcategory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
-import AdminTests from "./pages/admin/AdminTests";
 
 /* =========================
    ADMIN
@@ -47,22 +49,21 @@ import AdminTests from "./pages/admin/AdminTests";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
+import AdminNotes from "./pages/admin/AdminNotes";
+import AdminTests from "./pages/admin/AdminTests";
+import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
+import AdminBlog from "./pages/admin/AdminBlog";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
-import AdminQuestions from "./pages/admin/AdminQuestions";
-import AdminNotes from "./pages/admin/AdminNotes";
-import AdminBlog from "./pages/admin/AdminBlog";
 
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
-
         {/* ==================================================
             STANDALONE LEGAL PAGES
         ================================================== */}
@@ -82,14 +83,12 @@ function App() {
           element={<RefundPolicy />}
         />
 
-
         {/* ==================================================
             PUBLIC WEBSITE
             Navbar / Footer / Public Layout
         ================================================== */}
 
         <Route element={<Layout />}>
-
           {/* HOME */}
 
           <Route
@@ -97,8 +96,9 @@ function App() {
             element={<Home />}
           />
 
-
-          {/* NOTES */}
+          {/* ==================================================
+              NOTES
+          ================================================== */}
 
           <Route
             path="/notes"
@@ -120,8 +120,9 @@ function App() {
             element={<NoteDetails />}
           />
 
-
-          {/* AUTH */}
+          {/* ==================================================
+              AUTH
+          ================================================== */}
 
           <Route
             path="/login"
@@ -143,30 +144,32 @@ function App() {
             element={<Account />}
           />
 
-
-          {/* CHECKOUT */}
+          {/* ==================================================
+              CHECKOUT
+          ================================================== */}
 
           <Route
             path="/checkout/:id"
             element={<Checkout />}
           />
 
-
-          {/* ORDER SUCCESS */}
+          {/* ==================================================
+              ORDER SUCCESS
+          ================================================== */}
 
           <Route
             path="/order-success/:id"
             element={<OrderSuccess />}
           />
 
-
-          {/* ABOUT */}
+          {/* ==================================================
+              ABOUT
+          ================================================== */}
 
           <Route
             path="/about"
             element={<About />}
           />
-
 
           {/* ==================================================
               USER DASHBOARD
@@ -181,8 +184,9 @@ function App() {
             }
           />
 
-
-          {/* MY RESULTS */}
+          {/* ==================================================
+              MY RESULTS
+          ================================================== */}
 
           <Route
             path="/my-results"
@@ -193,63 +197,69 @@ function App() {
             }
           />
 
-
-          {/* LEADERBOARD */}
+          {/* ==================================================
+              LEADERBOARD
+          ================================================== */}
 
           <Route
             path="/leaderboard"
             element={<Leaderboard />}
           />
 
-
-          {/* CURRENT AFFAIRS */}
+          {/* ==================================================
+              CURRENT AFFAIRS
+          ================================================== */}
 
           <Route
             path="/current-affairs"
             element={<CurrentAffairs />}
           />
+
           <Route
-  path="/current-affairs"
-  element={<CurrentAffairs />}
-/>
+            path="/current-affairs/:id"
+            element={<CurrentAffairDetails />}
+          />
 
-<Route
-  path="/current-affairs/:id"
-  element={<CurrentAffairDetails />}
-/>
-
-
-          {/* BLOG */}
+          {/* ==================================================
+              BLOG
+          ================================================== */}
 
           <Route
             path="/blog"
             element={<Blog />}
           />
 
+          <Route
+            path="/blog/:id"
+            element={<BlogDetails />}
+          />
 
-          {/* FAQ */}
+          {/* ==================================================
+              FAQ
+          ================================================== */}
 
           <Route
             path="/faq"
             element={<FAQ />}
           />
 
-
-          {/* CONTACT */}
+          {/* ==================================================
+              CONTACT
+          ================================================== */}
 
           <Route
             path="/contact"
             element={<ContactUs />}
           />
 
-
-          {/* SEARCH */}
+          {/* ==================================================
+              SEARCH
+          ================================================== */}
 
           <Route
             path="/search"
             element={<SearchResults />}
           />
-
 
           {/* ==================================================
               TAKE A MOCK TEST
@@ -282,8 +292,9 @@ function App() {
             }
           />
 
-
-          {/* ACTUAL TEST ATTEMPT */}
+          {/* ==================================================
+              ACTUAL TEST ATTEMPT
+          ================================================== */}
 
           <Route
             path="/mock-test/:testId"
@@ -293,7 +304,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
 
           {/* ==================================================
               POPULAR EXAMS
@@ -317,28 +327,23 @@ function App() {
               </ProtectedRoute>
             }
           />
-
         </Route>
-
 
         {/* ==================================================
             ADMIN PANEL
-            IMPORTANT:
-            PUBLIC <Layout /> KE BAHAR HAI
+            Public Layout ke bahar
         ================================================== */}
 
         <Route
           path="/admin"
           element={<AdminLayout />}
         >
-
           {/* ADMIN DASHBOARD */}
 
           <Route
             index
             element={<AdminHome />}
           />
-
 
           {/* NOTES */}
 
@@ -347,21 +352,17 @@ function App() {
             element={<AdminNotes />}
           />
 
-
           {/* TESTS */}
 
-          {/* TESTS */}
+          <Route
+            path="tests"
+            element={<AdminTests />}
+          />
 
-            <Route
-               path="tests"
-               element={<AdminTests />}
-             />
-
-             <Route
-  path="tests/:testId/questions"
-  element={<AdminQuestions />}
-/>
-
+          <Route
+            path="tests/:testId/questions"
+            element={<AdminQuestions />}
+          />
 
           {/* CURRENT AFFAIRS */}
 
@@ -369,13 +370,13 @@ function App() {
             path="current-affairs"
             element={<AdminCurrentAffairs />}
           />
-        
-
 
           {/* BLOG */}
 
-          <Route path="blog" element={<AdminBlog />} />
-
+          <Route
+            path="blog"
+            element={<AdminBlog />}
+          />
 
           {/* FAQ */}
 
@@ -386,7 +387,6 @@ function App() {
             }
           />
 
-
           {/* USERS */}
 
           <Route
@@ -396,7 +396,6 @@ function App() {
             }
           />
 
-
           {/* ORDERS */}
 
           <Route
@@ -404,14 +403,12 @@ function App() {
             element={<AdminOrders />}
           />
 
-
           {/* CONTACT MESSAGES */}
 
           <Route
             path="contact-submissions"
             element={<AdminContactSubmissions />}
           />
-
 
           {/* PAGES */}
 
@@ -422,7 +419,6 @@ function App() {
             }
           />
 
-
           {/* SETTINGS */}
 
           <Route
@@ -431,11 +427,8 @@ function App() {
               <AdminComingSoon section="Settings" />
             }
           />
-
         </Route>
-
       </Routes>
-
     </BrowserRouter>
   );
 }
