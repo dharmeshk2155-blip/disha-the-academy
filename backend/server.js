@@ -22,6 +22,7 @@ const faqRoutes = require("./routes/faq");
 const adminUsersRoutes = require("./routes/adminUsers");
 const aboutRoutes = require("./routes/about");
 const settingsRoutes = require("./routes/settings");
+const adminNotesRoutes = require("./routes/adminNotes");
 
 
 // ======================================================
@@ -42,6 +43,7 @@ app.use("/api/blog", blogRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/admin/notes",adminNotesRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================
@@ -153,38 +155,291 @@ app.get("/api/test", (req, res) => {
 // ======================================================
 // NOTES API
 // ======================================================
+// ======================================================
+// PUBLIC NOTES API - ACTIVE NOTES
+// ======================================================
 
-app.get("/api/notes", (req, res) => {
+app.get("/api/notes", async (req, res) => {
+  try {
+    const pool = await connectDB();
 
-  res.json(notes);
+    const result = await pool.request().query(`
+      SELECT
+        Id,
+        CategorySlug,
+        CategoryTitle,
+        SubcategorySlug,
+        SubcategoryTitle,
+        Title,
+        Price,
+        Pdf,
+        IsActive
+      FROM dbo.Notes
+      WHERE IsActive = 1
+      ORDER BY Id ASC
+    `);
 
+    const notes = result.recordset.map((note) => ({
+      id: note.Id,
+      title: note.Title,
+      subject: note.SubcategoryTitle,
+      price: Number(note.Price) || 0,
+      pdf: note.Pdf || null,
+
+      categorySlug: note.CategorySlug,
+      categoryTitle: note.CategoryTitle,
+      subcategorySlug: note.SubcategorySlug,
+      subcategoryTitle: note.SubcategoryTitle,
+
+      isActive: Boolean(note.IsActive),
+    }));
+
+    return res.json(notes);
+  } catch (error) {
+    console.error(
+      "Public notes fetch error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load notes",
+    });
+  }
+});
+
+// ======================================================
+// PUBLIC SINGLE NOTE API
+// ======================================================
+
+app.get("/api/notes/:id", async (req, res) => {
+  try {
+    const noteId = Number(req.params.id);
+
+    if (
+      !Number.isInteger(noteId) ||
+      noteId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid note ID",
+      });
+    }
+
+    const pool = await connectDB();
+
+    const result = await pool
+      .request()
+      .input(
+        "Id",
+        sql.Int,
+        noteId
+      )
+      .query(`
+        SELECT
+          Id,
+          CategorySlug,
+          CategoryTitle,
+          SubcategorySlug,
+          SubcategoryTitle,
+          Title,
+          Price,
+          Pdf,
+          IsActive
+        FROM dbo.Notes
+        WHERE
+          Id = @Id
+          AND IsActive = 1
+      `);
+
+    if (
+      result.recordset.length === 0
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Note not found",
+      });
+    }
+
+    const note =
+      result.recordset[0];
+
+    return res.json({
+      id: note.Id,
+      title: note.Title,
+      subject: note.SubcategoryTitle,
+      price: Number(note.Price) || 0,
+      pdf: note.Pdf || null,
+
+      categorySlug:
+        note.CategorySlug,
+      categoryTitle:
+        note.CategoryTitle,
+      subcategorySlug:
+        note.SubcategorySlug,
+      subcategoryTitle:
+        note.SubcategoryTitle,
+
+      isActive:
+        Boolean(note.IsActive),
+    });
+  } catch (error) {
+    console.error(
+      "Public note fetch error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load note",
+    });
+  }
 });
 
 // ======================================================
 // SINGLE NOTE
 // ======================================================
 
-app.get("/api/notes/:id", (req, res) => {
+// ======================================================
+// PUBLIC NOTES API - ACTIVE NOTES
+// ======================================================
 
-  const noteId = Number(req.params.id);
+app.get("/api/notes", async (req, res) => {
+  try {
+    const pool = await connectDB();
 
-  const note = notes.find(
-    (item) => item.id === noteId
-  );
+    const result = await pool.request().query(`
+      SELECT
+        Id,
+        CategorySlug,
+        CategoryTitle,
+        SubcategorySlug,
+        SubcategoryTitle,
+        Title,
+        Price,
+        Pdf,
+        IsActive
+      FROM dbo.Notes
+      WHERE IsActive = 1
+      ORDER BY Id ASC
+    `);
 
-  if (!note) {
+    const notes = result.recordset.map((note) => ({
+      id: note.Id,
+      title: note.Title,
+      subject: note.SubcategoryTitle,
+      price: Number(note.Price) || 0,
+      pdf: note.Pdf || null,
 
-    return res.status(404).json({
+      categorySlug: note.CategorySlug,
+      categoryTitle: note.CategoryTitle,
+      subcategorySlug: note.SubcategorySlug,
+      subcategoryTitle: note.SubcategoryTitle,
+
+      isActive: Boolean(note.IsActive),
+    }));
+
+    return res.json(notes);
+  } catch (error) {
+    console.error(
+      "Public notes fetch error:",
+      error
+    );
+
+    return res.status(500).json({
       success: false,
-      error: "Note not found",
+      message: "Failed to load notes",
     });
-
   }
-
-  res.json(note);
-
 });
 
+// ======================================================
+// PUBLIC SINGLE NOTE API
+// ======================================================
+
+app.get("/api/notes/:id", async (req, res) => {
+  try {
+    const noteId = Number(req.params.id);
+
+    if (
+      !Number.isInteger(noteId) ||
+      noteId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid note ID",
+      });
+    }
+
+    const pool = await connectDB();
+
+    const result = await pool
+      .request()
+      .input(
+        "Id",
+        sql.Int,
+        noteId
+      )
+      .query(`
+        SELECT
+          Id,
+          CategorySlug,
+          CategoryTitle,
+          SubcategorySlug,
+          SubcategoryTitle,
+          Title,
+          Price,
+          Pdf,
+          IsActive
+        FROM dbo.Notes
+        WHERE
+          Id = @Id
+          AND IsActive = 1
+      `);
+
+    if (
+      result.recordset.length === 0
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Note not found",
+      });
+    }
+
+    const note =
+      result.recordset[0];
+
+    return res.json({
+      id: note.Id,
+      title: note.Title,
+      subject: note.SubcategoryTitle,
+      price: Number(note.Price) || 0,
+      pdf: note.Pdf || null,
+
+      categorySlug:
+        note.CategorySlug,
+      categoryTitle:
+        note.CategoryTitle,
+      subcategorySlug:
+        note.SubcategorySlug,
+      subcategoryTitle:
+        note.SubcategoryTitle,
+
+      isActive:
+        Boolean(note.IsActive),
+    });
+  } catch (error) {
+    console.error(
+      "Public note fetch error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load note",
+    });
+  }
+});
 
 // ======================================================
 // GOOGLE LOGIN

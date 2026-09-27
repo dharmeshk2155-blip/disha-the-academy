@@ -62,6 +62,7 @@ import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminAbout from "./pages/admin/AdminAbout";
 import AdminSettings from "./pages/admin/AdminSettings";
 
+
 import "./App.css";
 
 function App() {
@@ -357,10 +358,10 @@ function App() {
               NOTES
           ================================================== */}
 
-          <Route
-            path="notes"
-            element={<AdminNotes />}
-          />
+        <Route
+  path="notes"
+  element={<AdminNotes />}
+/>
 
           {/* ==================================================
               TESTS
