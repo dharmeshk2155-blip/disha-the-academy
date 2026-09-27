@@ -1463,6 +1463,45 @@ app.get(
       );
 
       // -----------------------------
+      // AUTH CHECK — only the user who
+      // placed this order can download it
+      // -----------------------------
+
+      const authHeader = req.headers.authorization;
+      const headerToken =
+        authHeader && authHeader.startsWith("Bearer ")
+          ? authHeader.slice(7)
+          : null;
+      const token = headerToken || req.query.token;
+
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error: "Please log in to download this file",
+        });
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({
+          success: false,
+          error: "Your session has expired. Please log in again",
+        });
+      }
+
+      if (
+        !order.UserId ||
+        Number(decoded.userId) !== Number(order.UserId)
+      ) {
+        return res.status(403).json({
+          success: false,
+          error: "You are not authorized to download this file",
+        });
+      }
+
+      // -----------------------------
       // PAYMENT CHECK
       // -----------------------------
 

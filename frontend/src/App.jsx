@@ -23,7 +23,7 @@ import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
 
 import CurrentAffairs from "./pages/CurrentAffairs";
-
+import CurrentAffairDetails from "./pages/CurrentAffairDetails";
 import Blog from "./pages/Blog";
 import FAQ from "./pages/FAQ";
 import ContactUs from "./pages/ContactUs";
@@ -207,6 +207,15 @@ function App() {
             path="/current-affairs"
             element={<CurrentAffairs />}
           />
+          <Route
+  path="/current-affairs"
+  element={<CurrentAffairs />}
+/>
+
+<Route
+  path="/current-affairs/:id"
+  element={<CurrentAffairDetails />}
+/>
 
 
           {/* BLOG */}

@@ -68,8 +68,15 @@ function OrderSuccess() {
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
 
+  // Login token — sent along so the backend can confirm THIS user
+  // owns the order before allowing the PDF download (a shared link
+  // by itself should not let anyone else download it)
+  const authToken = localStorage.getItem("dishaToken");
+
   const downloadUrl = orderId
-    ? `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}`
+    ? `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}${
+        authToken ? `?token=${encodeURIComponent(authToken)}` : ""
+      }`
     : null;
 
   if (!note) {
