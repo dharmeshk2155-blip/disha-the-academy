@@ -1099,45 +1099,70 @@ app.post(
       // FIND NOTE
       // -----------------------------
 
-      const note =
-        notes.find(
-          (item) =>
-            item.id ===
-            Number(noteId)
-        );
+      // =====================================================
+// LOAD NOTE FROM SQL DATABASE
+// =====================================================
 
-      if (!note) {
+const pool = await connectDB();
 
-        return res.status(404).json({
+const noteResult = await pool
+  .request()
+  .input(
+    "NoteId",
+    sql.Int,
+    Number(noteId)
+  )
+  .query(`
+    SELECT TOP 1
+      Id,
+      Title,
+      Price,
+      Pdf,
+      IsActive
+    FROM dbo.Notes
+    WHERE Id = @NoteId
+  `);
 
-          success: false,
+if (
+  noteResult.recordset.length === 0
+) {
+  return res.status(404).json({
+    success: false,
+    error: "Note not found",
+  });
+}
 
-          error:
-            "Note not found",
+const dbNote =
+  noteResult.recordset[0];
 
-        });
+if (!dbNote.IsActive) {
+  return res.status(403).json({
+    success: false,
+    error:
+      "This note is currently unavailable.",
+  });
+}
 
-      }
+if (!dbNote.Pdf) {
+  return res.status(400).json({
+    success: false,
+    error:
+      "This note is not available for purchase yet",
+  });
+}
 
-      if (!note.pdf) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          error:
-            "This note is not available for purchase yet",
-
-        });
-
-      }
+const note = {
+  id: dbNote.Id,
+  title: dbNote.Title,
+  price:
+    Number(dbNote.Price) || 0,
+  pdf: dbNote.Pdf,
+};
 
       // -----------------------------
       // CHECK USER IN SQL
       // -----------------------------
 
-      const pool =
-        await connectDB();
         // =====================================================
 // CHECK WHETHER NOTE SALES ARE ENABLED
 // =====================================================
@@ -2120,7 +2145,13 @@ app.get("/api/admin/dashboard", async (req, res) => {
     // server.js array, not SQL database.
     // -----------------------------------
 
-    const totalNotes = notes.length;
+  const notesResult = await pool.request().query(`
+  SELECT COUNT(*) AS totalNotes
+  FROM dbo.Notes
+`);
+
+const totalNotes =
+  Number(notesResult.recordset[0]?.totalNotes) || 0;
 
     // -----------------------------------
     // TEST COUNT
