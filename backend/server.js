@@ -1905,6 +1905,75 @@ app.get("/api/admin/dashboard", async (req, res) => {
 // ======================================================
 // ADMIN ORDERS API (full list, for the "View all" page)
 // ======================================================
+// =====================================================
+// ADMIN ORDER SUMMARY
+// =====================================================
+
+app.get("/api/admin/orders-summary", async (req, res) => {
+  try {
+    const adminKey = req.header("x-admin-key");
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const pool = await connectDB();
+
+    const result = await pool.request().query(`
+      SELECT
+        COUNT(*) AS TotalOrders,
+
+        SUM(
+          CASE
+            WHEN Paid = 1 THEN 1
+            ELSE 0
+          END
+        ) AS PaidOrders,
+
+        SUM(
+          CASE
+            WHEN Paid = 0 THEN 1
+            ELSE 0
+          END
+        ) AS PendingOrders,
+
+        ISNULL(
+          SUM(
+            CASE
+              WHEN Paid = 1 THEN Price
+              ELSE 0
+            END
+          ),
+          0
+        ) AS TotalRevenue
+
+      FROM dbo.Orders
+    `);
+
+    const stats = result.recordset[0];
+
+    return res.json({
+      success: true,
+
+      summary: {
+        totalOrders: Number(stats.TotalOrders) || 0,
+        paidOrders: Number(stats.PaidOrders) || 0,
+        pendingOrders: Number(stats.PendingOrders) || 0,
+        totalRevenue: Number(stats.TotalRevenue) || 0,
+      },
+    });
+  } catch (error) {
+    console.error("Admin order summary error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load order summary",
+    });
+  }
+});
 
 app.get("/api/admin/orders", async (req, res) => {
   try {
