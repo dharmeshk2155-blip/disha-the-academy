@@ -20,6 +20,7 @@ const blogRoutes = require("./routes/blog");
 const faqRoutes = require("./routes/faq");
 const adminUsersRoutes = require("./routes/adminUsers");
 const aboutRoutes = require("./routes/about");
+const settingsRoutes = require("./routes/settings");
 
 
 // ======================================================
@@ -45,6 +46,7 @@ app.get("/api/blog-test", (req, res) => {
 app.use("/api/blog", blogRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/about", aboutRoutes);
+app.use("/api/settings", settingsRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================
@@ -886,6 +888,30 @@ app.post(
 
       const pool =
         await connectDB();
+        // =====================================================
+// CHECK WHETHER NOTE SALES ARE ENABLED
+// =====================================================
+
+const settingsResult = await pool.request().query(`
+  SELECT TOP 1
+    NotesSalesEnabled
+  FROM dbo.SiteSettings
+  ORDER BY Id DESC
+`);
+
+const notesSalesEnabled =
+  settingsResult.recordset.length === 0
+    ? true
+    : Boolean(settingsResult.recordset[0].NotesSalesEnabled);
+
+if (!notesSalesEnabled) {
+  return res.status(403).json({
+    success: false,
+    error:
+      "Notes purchasing is temporarily unavailable. Please try again later.",
+    code: "NOTES_SALES_DISABLED",
+  });
+}
 
       const userResult =
   await pool

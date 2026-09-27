@@ -42,6 +42,7 @@ import NoteSubcategory from "./pages/NoteSubcategory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import MaintenanceGuard from "./pages/MaintenanceGuard";
 
 /* =========================
    ADMIN
@@ -58,8 +59,8 @@ import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
-import AdminComingSoon from "./pages/admin/AdminComingSoon";
 import AdminAbout from "./pages/admin/AdminAbout";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 import "./App.css";
 
@@ -92,7 +93,8 @@ function App() {
             Navbar + Footer + Public Layout
         ================================================== */}
 
-        <Route element={<Layout />}>
+       <Route element={<MaintenanceGuard />}>
+  <Route element={<Layout />}>
 
           {/* HOME */}
 
@@ -332,6 +334,7 @@ function App() {
           />
 
         </Route>
+        </Route>
 
         {/* ==================================================
             ADMIN PANEL
@@ -436,12 +439,7 @@ function App() {
               SETTINGS
           ================================================== */}
 
-          <Route
-            path="settings"
-            element={
-              <AdminComingSoon section="Settings" />
-            }
-          />
+         <Route path="settings" element={<AdminSettings />} />
 
         </Route>
 
