@@ -53,6 +53,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminNotes from "./pages/admin/AdminNotes";
+import AdminBlog from "./pages/admin/AdminBlog";
 
 import "./App.css";
 
@@ -373,12 +374,7 @@ function App() {
 
           {/* BLOG */}
 
-          <Route
-            path="blog"
-            element={
-              <AdminComingSoon section="Blog" />
-            }
-          />
+          <Route path="blog" element={<AdminBlog />} />
 
 
           {/* FAQ */}
