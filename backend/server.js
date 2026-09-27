@@ -17,6 +17,7 @@ const app = express();
 const statsRoutes = require("./routes/stats");
 const currentAffairsRoutes = require("./routes/currentAffairs");
 const blogRoutes = require("./routes/blog");
+const faqRoutes = require("./routes/faq");
 
 // ======================================================
 // BASIC SETUP
@@ -38,7 +39,7 @@ app.get("/api/blog-test", (req, res) => {
 });
 
 app.use("/api/blog", blogRoutes);
-app.use("/api/blog", blogRoutes);
+app.use("/api/faq", faqRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================
