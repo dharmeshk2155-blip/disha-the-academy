@@ -54,10 +54,11 @@ import AdminTests from "./pages/admin/AdminTests";
 import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminBlog from "./pages/admin/AdminBlog";
-import AdminComingSoon from "./pages/admin/AdminComingSoon";
+import AdminFAQ from "./pages/admin/AdminFAQ";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
-import AdminFAQ from "./pages/admin/AdminFAQ";
+import AdminComingSoon from "./pages/admin/AdminComingSoon";
 
 import "./App.css";
 
@@ -65,6 +66,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* ==================================================
             STANDALONE LEGAL PAGES
         ================================================== */}
@@ -86,10 +88,11 @@ function App() {
 
         {/* ==================================================
             PUBLIC WEBSITE
-            Navbar / Footer / Public Layout
+            Navbar + Footer + Public Layout
         ================================================== */}
 
         <Route element={<Layout />}>
+
           {/* HOME */}
 
           <Route
@@ -185,9 +188,7 @@ function App() {
             }
           />
 
-          {/* ==================================================
-              MY RESULTS
-          ================================================== */}
+          {/* MY RESULTS */}
 
           <Route
             path="/my-results"
@@ -328,6 +329,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
         </Route>
 
         {/* ==================================================
@@ -339,6 +341,7 @@ function App() {
           path="/admin"
           element={<AdminLayout />}
         >
+
           {/* ADMIN DASHBOARD */}
 
           <Route
@@ -346,14 +349,18 @@ function App() {
             element={<AdminHome />}
           />
 
-          {/* NOTES */}
+          {/* ==================================================
+              NOTES
+          ================================================== */}
 
           <Route
             path="notes"
             element={<AdminNotes />}
           />
 
-          {/* TESTS */}
+          {/* ==================================================
+              TESTS
+          ================================================== */}
 
           <Route
             path="tests"
@@ -365,48 +372,63 @@ function App() {
             element={<AdminQuestions />}
           />
 
-          {/* CURRENT AFFAIRS */}
+          {/* ==================================================
+              CURRENT AFFAIRS
+          ================================================== */}
 
           <Route
             path="current-affairs"
             element={<AdminCurrentAffairs />}
           />
 
-          {/* BLOG */}
+          {/* ==================================================
+              BLOG
+          ================================================== */}
 
           <Route
             path="blog"
             element={<AdminBlog />}
           />
 
-          {/* FAQ */}
+          {/* ==================================================
+              FAQ
+          ================================================== */}
 
-          <Route path="faq" element={<AdminFAQ />} />
+          <Route
+            path="faq"
+            element={<AdminFAQ />}
+          />
 
-          {/* USERS */}
+          {/* ==================================================
+              USERS
+          ================================================== */}
 
           <Route
             path="users"
-            element={
-              <AdminComingSoon section="Users" />
-            }
+            element={<AdminUsers />}
           />
 
-          {/* ORDERS */}
+          {/* ==================================================
+              ORDERS
+          ================================================== */}
 
           <Route
             path="orders"
             element={<AdminOrders />}
           />
 
-          {/* CONTACT MESSAGES */}
+          {/* ==================================================
+              CONTACT MESSAGES
+          ================================================== */}
 
           <Route
             path="contact-submissions"
             element={<AdminContactSubmissions />}
           />
 
-          {/* PAGES */}
+          {/* ==================================================
+              PAGES
+          ================================================== */}
 
           <Route
             path="about"
@@ -415,7 +437,9 @@ function App() {
             }
           />
 
-          {/* SETTINGS */}
+          {/* ==================================================
+              SETTINGS
+          ================================================== */}
 
           <Route
             path="settings"
@@ -423,7 +447,9 @@ function App() {
               <AdminComingSoon section="Settings" />
             }
           />
+
         </Route>
+
       </Routes>
     </BrowserRouter>
   );

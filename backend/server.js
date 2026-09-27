@@ -18,6 +18,7 @@ const statsRoutes = require("./routes/stats");
 const currentAffairsRoutes = require("./routes/currentAffairs");
 const blogRoutes = require("./routes/blog");
 const faqRoutes = require("./routes/faq");
+const adminUsersRoutes = require("./routes/adminUsers");
 
 // ======================================================
 // BASIC SETUP
@@ -31,6 +32,7 @@ app.use("/api/contact", contactRouter);
 app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
 app.use("/api", passwordRouter);
+app.use("/api/admin/users", adminUsersRoutes);
 app.get("/api/blog-test", (req, res) => {
   res.json({
     success: true,
