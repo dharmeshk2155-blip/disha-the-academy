@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 const API_BASE =
@@ -68,16 +69,49 @@ function OrderSuccess() {
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
 
-  // Login token — sent along so the backend can confirm THIS user
-  // owns the order before allowing the PDF download (a shared link
-  // by itself should not let anyone else download it)
+  // Login token — sent as an Authorization header (never placed in the
+  // URL) so a copied/forwarded link can't be reused by anyone else to
+  // download the same file.
   const authToken = localStorage.getItem("dishaToken");
 
-  const downloadUrl = orderId
-    ? `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}${
-        authToken ? `?token=${encodeURIComponent(authToken)}` : ""
-      }`
-    : null;
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  const handleDownload = async () => {
+    if (!orderId) return;
+
+    setDownloading(true);
+    setDownloadError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}`,
+        {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Unable to download this file.");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${note?.title || "note"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      setDownloadError(error.message || "Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (!note) {
     return (
@@ -172,16 +206,23 @@ function OrderSuccess() {
 
         {/* DOWNLOAD */}
 
-        {downloadUrl ? (
-          <a
-            href={downloadUrl}
-            className="success-download-button"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span>↓</span>
-            Download Your PDF
-          </a>
+        {orderId ? (
+          <>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="success-download-button"
+              disabled={downloading}
+            >
+              <span>↓</span>
+              {downloading ? "Preparing..." : "Download Your PDF"}
+            </button>
+            {downloadError && (
+              <p className="success-info" style={{ color: "red" }}>
+                {downloadError}
+              </p>
+            )}
+          </>
         ) : (
           <p className="success-info">
             Download link is not available.
