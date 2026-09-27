@@ -793,3 +793,233 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   CURRENT AFFAIRS - DESKTOP SINGLE SCREEN EDITOR
+===================================================== */
+
+@media (min-width: 901px) {
+  .admin-ca-page {
+    padding: 16px 20px;
+  }
+
+  /* Compact top heading */
+  .admin-ca-hero {
+    min-height: 0;
+    padding: 14px 20px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-ca-eyebrow {
+    margin-bottom: 3px;
+    font-size: 10px;
+  }
+
+  .admin-ca-hero h1 {
+    font-size: 23px;
+  }
+
+  .admin-ca-hero > div:first-child > p {
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .admin-ca-hero-stat {
+    min-width: 160px;
+    padding: 9px 13px;
+  }
+
+  .admin-ca-hero-stat strong {
+    font-size: 19px;
+  }
+
+  /* Main editor */
+  .admin-ca-editor {
+    padding: 15px 18px;
+    margin-bottom: 18px;
+    border-radius: 15px;
+  }
+
+  .admin-ca-editor-heading {
+    gap: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .admin-ca-editor-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .admin-ca-editor-heading h2 {
+    font-size: 17px;
+  }
+
+  .admin-ca-editor-heading p {
+    margin-top: 1px;
+    font-size: 10px;
+  }
+
+  /* More horizontal space */
+  .admin-ca-form-grid {
+    grid-template-columns:
+      minmax(0, 1.2fr)
+      minmax(0, 1.2fr)
+      260px;
+    gap: 15px;
+  }
+
+  /*
+    Turn the existing main column into two columns:
+    title spans full width.
+  */
+  .admin-ca-form-main {
+    grid-column: 1 / 3;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    align-content: start;
+  }
+
+  .admin-ca-form-main > .admin-ca-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-ca-two-fields {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* Summary */
+  .admin-ca-form-main > .admin-ca-field:nth-of-type(2) {
+    grid-column: 1;
+  }
+
+  /* Full article */
+  .admin-ca-form-main > .admin-ca-field:nth-of-type(3) {
+    grid-column: 2;
+  }
+
+  /* Key points */
+  .admin-ca-form-main > .admin-ca-field:nth-of-type(4) {
+    grid-column: 1 / -1;
+  }
+
+  .admin-ca-field {
+    gap: 4px;
+    margin-bottom: 9px;
+  }
+
+  .admin-ca-field > span {
+    font-size: 11px;
+  }
+
+  .admin-ca-field input,
+  .admin-ca-field select {
+    min-height: 35px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .admin-ca-field textarea {
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .admin-ca-field small {
+    font-size: 9px;
+  }
+
+  /* Override textarea rows visually */
+  .admin-ca-form-main textarea {
+    min-height: 70px;
+    height: 70px;
+  }
+
+  .admin-ca-content-input {
+    min-height: 70px !important;
+    height: 70px;
+  }
+
+  /* Image section */
+  .admin-ca-form-side {
+    grid-column: 3;
+    position: static;
+  }
+
+  .admin-ca-image-panel {
+    padding: 11px;
+    border-radius: 11px;
+  }
+
+  .admin-ca-image-heading {
+    margin-bottom: 8px;
+  }
+
+  .admin-ca-image-heading strong {
+    font-size: 11px;
+  }
+
+  .admin-ca-image-heading span {
+    font-size: 9px;
+  }
+
+  .admin-ca-image-drop {
+    min-height: 135px;
+    padding: 12px;
+  }
+
+  .admin-ca-upload-circle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-ca-image-drop strong {
+    font-size: 11px;
+  }
+
+  .admin-ca-image-drop span {
+    font-size: 9px;
+  }
+
+  .admin-ca-image-preview {
+    aspect-ratio: 16 / 9;
+  }
+
+  .admin-ca-change-image {
+    min-height: 32px;
+    margin-top: 7px;
+    font-size: 10px;
+  }
+
+  /* Hide tip card on desktop editor to save height */
+  .admin-ca-tips {
+    display: none;
+  }
+
+  /* Bottom buttons */
+  .admin-ca-form-actions {
+    gap: 8px;
+    padding-top: 10px;
+    margin-top: 0;
+  }
+
+  .admin-ca-save-btn,
+  .admin-ca-cancel-btn {
+    min-height: 35px;
+    padding: 0 14px;
+    font-size: 11px;
+  }
+
+  .admin-ca-submit-error {
+    margin-top: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
