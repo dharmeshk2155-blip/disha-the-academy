@@ -19,6 +19,8 @@ const currentAffairsRoutes = require("./routes/currentAffairs");
 const blogRoutes = require("./routes/blog");
 const faqRoutes = require("./routes/faq");
 const adminUsersRoutes = require("./routes/adminUsers");
+const aboutRoutes = require("./routes/about");
+
 
 // ======================================================
 // BASIC SETUP
@@ -42,6 +44,7 @@ app.get("/api/blog-test", (req, res) => {
 
 app.use("/api/blog", blogRoutes);
 app.use("/api/faq", faqRoutes);
+app.use("/api/about", aboutRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================

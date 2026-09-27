@@ -59,6 +59,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminComingSoon from "./pages/admin/AdminComingSoon";
+import AdminAbout from "./pages/admin/AdminAbout";
 
 import "./App.css";
 
@@ -429,13 +430,7 @@ function App() {
           {/* ==================================================
               PAGES
           ================================================== */}
-
-          <Route
-            path="about"
-            element={
-              <AdminComingSoon section="Pages" />
-            }
-          />
+<Route path="about" element={<AdminAbout />} />
 
           {/* ==================================================
               SETTINGS

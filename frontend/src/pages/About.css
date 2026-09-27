@@ -199,3 +199,13 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* Dynamic About content */
+
+.about-main-content {
+  max-width: 100%;
+}
+
+.about-content-text {
+  white-space: pre-line;
+  line-height: 1.8;
+}
