@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import {
   NavLink,
   Outlet,
@@ -26,6 +27,11 @@ import {
 } from "lucide-react";
 
 import "./AdminLayout.css";
+
+const API_BASE = import.meta.env.DEV
+  ? "http://127.0.0.1:5000"
+  : import.meta.env.VITE_API_BASE ||
+    "https://disha-the-academy.onrender.com";
 
 const SECTIONS = [
   {
@@ -127,41 +133,195 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [adminKey, setAdminKey] = useState(
-    () => sessionStorage.getItem("adminKey") || ""
-  );
+  const storedAdminKey =
+    sessionStorage.getItem("adminKey") || "";
 
-  const [unlocked, setUnlocked] = useState(
-    () => !!sessionStorage.getItem("adminKey")
-  );
+  const [adminKey, setAdminKey] =
+    useState(storedAdminKey);
 
-  const [keyInput, setKeyInput] = useState("");
+  const [unlocked, setUnlocked] =
+    useState(false);
+
+  const [checkingSession, setCheckingSession] =
+    useState(Boolean(storedAdminKey));
+
+  const [keyInput, setKeyInput] =
+    useState("");
 
   const [sidebarOpen, setSidebarOpen] =
     useState(false);
+
+  const [verifying, setVerifying] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
   const currentPageTitle =
     PAGE_TITLES[location.pathname] ||
     "Admin Dashboard";
 
-  function handleUnlock(e) {
+  // =========================================
+  // VERIFY SAVED ADMIN SESSION
+  // =========================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function verifySavedSession() {
+      const savedKey =
+        sessionStorage.getItem("adminKey");
+
+      if (!savedKey) {
+        if (!cancelled) {
+          setAdminKey("");
+          setUnlocked(false);
+          setCheckingSession(false);
+        }
+
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE}/api/admin/verify-key`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "x-admin-key": savedKey,
+            },
+          }
+        );
+
+        const data = await response
+          .json()
+          .catch(() => ({}));
+
+        if (cancelled) {
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          sessionStorage.removeItem(
+            "adminKey"
+          );
+
+          setAdminKey("");
+          setUnlocked(false);
+          setCheckingSession(false);
+
+          return;
+        }
+
+        setAdminKey(savedKey);
+        setUnlocked(true);
+        setCheckingSession(false);
+      } catch (err) {
+        console.error(
+          "Saved admin session verification error:",
+          err
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        sessionStorage.removeItem(
+          "adminKey"
+        );
+
+        setAdminKey("");
+        setUnlocked(false);
+        setCheckingSession(false);
+      }
+    }
+
+    verifySavedSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // =========================================
+  // UNLOCK ADMIN
+  // =========================================
+
+  async function handleUnlock(e) {
     e.preventDefault();
 
     const key = keyInput.trim();
 
     if (!key) {
+      setError(
+        "Please enter your admin key."
+      );
       return;
     }
 
-    sessionStorage.setItem(
-      "adminKey",
-      key
-    );
+    try {
+      setVerifying(true);
+      setError("");
 
-    setAdminKey(key);
-    setUnlocked(true);
-    setKeyInput("");
+      const response = await fetch(
+        `${API_BASE}/api/admin/verify-key`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "x-admin-key": key,
+          },
+        }
+      );
+
+      const data = await response
+        .json()
+        .catch(() => ({}));
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        setError(
+          data.message ||
+            "Invalid admin key."
+        );
+
+        return;
+      }
+
+      sessionStorage.setItem(
+        "adminKey",
+        key
+      );
+
+      setAdminKey(key);
+      setUnlocked(true);
+      setKeyInput("");
+      setError("");
+    } catch (err) {
+      console.error(
+        "Admin verification error:",
+        err
+      );
+
+      setError(
+        "Unable to verify admin key. Please check the server and try again."
+      );
+    } finally {
+      setVerifying(false);
+    }
   }
+
+  // =========================================
+  // LOCK ADMIN
+  // =========================================
 
   function handleLogout() {
     sessionStorage.removeItem(
@@ -171,6 +331,7 @@ export default function AdminLayout() {
     setAdminKey("");
     setUnlocked(false);
     setKeyInput("");
+    setError("");
     setSidebarOpen(false);
 
     navigate("/admin");
@@ -180,14 +341,50 @@ export default function AdminLayout() {
     setSidebarOpen(false);
   }
 
-  /* ==========================
-     ADMIN LOCK SCREEN
-  ========================== */
+  // =========================================
+  // SESSION CHECK SCREEN
+  // =========================================
+
+  if (checkingSession) {
+    return (
+      <div className="admin-lock-page">
+        <div className="admin-lock-glow admin-lock-glow-one"></div>
+        <div className="admin-lock-glow admin-lock-glow-two"></div>
+
+        <div className="admin-lock-card">
+          <div className="admin-lock-icon">
+            <ShieldCheck size={34} />
+          </div>
+
+          <div className="admin-lock-brand">
+            <span>D</span>isha The Academy
+          </div>
+
+          <h2>
+            Verifying Admin Session
+          </h2>
+
+          <p>
+            Please wait while we verify
+            your secure session.
+          </p>
+
+          <div className="admin-lock-security">
+            🔒 Secure administrator
+            verification
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================
+  // ADMIN LOCK SCREEN
+  // =========================================
 
   if (!unlocked) {
     return (
       <div className="admin-lock-page">
-
         <div className="admin-lock-glow admin-lock-glow-one"></div>
         <div className="admin-lock-glow admin-lock-glow-two"></div>
 
@@ -195,7 +392,6 @@ export default function AdminLayout() {
           className="admin-lock-card"
           onSubmit={handleUnlock}
         >
-
           <div className="admin-lock-icon">
             <ShieldCheck size={34} />
           </div>
@@ -209,7 +405,8 @@ export default function AdminLayout() {
           </h2>
 
           <p>
-            Enter your admin key to continue.
+            Enter your admin key to
+            continue.
           </p>
 
           <label htmlFor="adminKey">
@@ -221,38 +418,62 @@ export default function AdminLayout() {
             type="password"
             placeholder="Enter admin key"
             value={keyInput}
-            onChange={(e) =>
+            onChange={(e) => {
               setKeyInput(
                 e.target.value
-              )
-            }
+              );
+
+              if (error) {
+                setError("");
+              }
+            }}
             autoComplete="off"
+            disabled={verifying}
             required
           />
 
-          <button type="submit">
+          {error && (
+            <div
+              style={{
+                marginTop: "10px",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                background:
+                  "rgba(220, 38, 38, 0.10)",
+                color: "#dc2626",
+                fontSize: "14px",
+                lineHeight: "1.4",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={verifying}
+          >
             <ShieldCheck size={18} />
 
-            Unlock Dashboard
+            {verifying
+              ? "Verifying..."
+              : "Unlock Dashboard"}
           </button>
 
           <div className="admin-lock-security">
             🔒 Secure administrator access
           </div>
-
         </form>
-
       </div>
     );
   }
 
-  /* ==========================
-     ADMIN PANEL
-  ========================== */
+  // =========================================
+  // ADMIN PANEL
+  // =========================================
 
   return (
     <div className="admin-shell">
-
       {/* MOBILE OVERLAY */}
 
       {sidebarOpen && (
@@ -273,13 +494,10 @@ export default function AdminLayout() {
             : ""
         }`}
       >
-
         {/* LOGO */}
 
         <div className="admin-sidebar-header">
-
           <div className="admin-brand">
-
             <div className="admin-brand-icon">
               D
             </div>
@@ -293,7 +511,6 @@ export default function AdminLayout() {
                 Control Panel
               </span>
             </div>
-
           </div>
 
           <button
@@ -304,28 +521,23 @@ export default function AdminLayout() {
           >
             <X size={22} />
           </button>
-
         </div>
 
         {/* NAVIGATION */}
 
         <nav className="admin-navigation">
-
           {SECTIONS.map(
             (section) => (
-
               <div
                 className="admin-nav-section"
                 key={section.title}
               >
-
                 <p className="admin-nav-title">
                   {section.title}
                 </p>
 
                 {section.items.map(
                   (item) => {
-
                     const Icon =
                       item.icon;
 
@@ -347,31 +559,28 @@ export default function AdminLayout() {
                           }`
                         }
                       >
-
                         <Icon
                           size={19}
-                          strokeWidth={1.8}
+                          strokeWidth={
+                            1.8
+                          }
                         />
 
                         <span>
                           {item.label}
                         </span>
-
                       </NavLink>
                     );
                   }
                 )}
-
               </div>
             )
           )}
-
         </nav>
 
         {/* SIDEBAR BOTTOM */}
 
         <div className="admin-sidebar-footer">
-
           <a
             href="/"
             target="_blank"
@@ -394,21 +603,16 @@ export default function AdminLayout() {
 
             Lock Dashboard
           </button>
-
         </div>
-
       </aside>
 
       {/* RIGHT SIDE */}
 
       <div className="admin-content-area">
-
         {/* ADMIN TOP HEADER */}
 
         <header className="admin-top-header">
-
           <div className="admin-header-left">
-
             <button
               type="button"
               className="admin-menu-button"
@@ -421,7 +625,6 @@ export default function AdminLayout() {
             </button>
 
             <div>
-
               <h1>
                 {currentPageTitle}
               </h1>
@@ -429,13 +632,10 @@ export default function AdminLayout() {
               <p>
                 Disha The Academy
               </p>
-
             </div>
-
           </div>
 
           <div className="admin-header-right">
-
             <div className="admin-status">
               <span></span>
               Admin
@@ -444,25 +644,19 @@ export default function AdminLayout() {
             <div className="admin-avatar">
               A
             </div>
-
           </div>
-
         </header>
 
         {/* PAGE CONTENT */}
 
         <main className="admin-main">
-
           <Outlet
             context={{
               adminKey,
             }}
           />
-
         </main>
-
       </div>
-
     </div>
   );
 }

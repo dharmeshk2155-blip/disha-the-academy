@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 require("dotenv").config();
 const testsRouter = require("./routes/tests");
@@ -36,12 +37,6 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
 app.use("/api", passwordRouter);
 app.use("/api/admin/users", adminUsersRoutes);
-app.get("/api/blog-test", (req, res) => {
-  res.json({
-    success: true,
-    message: "Blog test route is working",
-  });
-});
 
 app.use("/api/blog", blogRoutes);
 app.use("/api/faq", faqRoutes);
@@ -1790,6 +1785,7 @@ app.get(
 
 app.get("/api/admin/dashboard", async (req, res) => {
   try {
+  
     // -----------------------------------
     // ADMIN KEY CHECK
     // -----------------------------------
@@ -3340,6 +3336,43 @@ app.delete("/api/admin/tests/:testId", async (req, res) => {
     });
   }
 });
+const adminVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many admin login attempts. Please try again after 15 minutes.",
+  },
+});
+
+
+
+// =====================================================
+// ADMIN KEY VERIFY
+// =====================================================
+
+app.post(
+  "/api/admin/verify-key",
+  adminVerifyLimiter,
+  (req, res) => {
+    const adminKey = req.headers["x-admin-key"];
+
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin key",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin key verified",
+    });
+  }
+);
 
 // ======================================================
 // 404 ROUTE
