@@ -51,6 +51,7 @@ import AdminComingSoon from "./pages/admin/AdminComingSoon";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminQuestions from "./pages/admin/AdminQuestions";
+import AdminNotes from "./pages/admin/AdminNotes";
 
 import "./App.css";
 
@@ -332,9 +333,7 @@ function App() {
 
           <Route
             path="notes"
-            element={
-              <AdminComingSoon section="Notes" />
-            }
+            element={<AdminNotes />}
           />
 
 
