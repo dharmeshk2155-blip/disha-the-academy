@@ -7,7 +7,11 @@ export default function Layout() {
     <>
       <Navbar />
 
-      <main>
+      <main
+        style={{
+          minHeight: "100vh",
+        }}
+      >
         <Outlet />
       </main>
 
