@@ -4,9 +4,9 @@ import {
 } from "react";
 
 import {
+  Link,
   useNavigate,
   useParams,
-  Link,
 } from "react-router-dom";
 
 const API_BASE = import.meta.env.DEV
@@ -47,7 +47,7 @@ function Checkout() {
   }
 
   // =====================================================
-  // NOTE
+  // NOTE STATE
   // =====================================================
 
   const [
@@ -94,7 +94,7 @@ function Checkout() {
   );
 
   // =====================================================
-  // PAYMENT
+  // PAYMENT STATE
   // =====================================================
 
   const [
@@ -113,7 +113,7 @@ function Checkout() {
   ] = useState(true);
 
   // =====================================================
-  // LOAD NOTE
+  // LOAD NOTE FROM BACKEND
   // =====================================================
 
   useEffect(() => {
@@ -122,10 +122,7 @@ function Checkout() {
 
     async function loadNote() {
       try {
-        setNoteLoading(
-          true
-        );
-
+        setNoteLoading(true);
         setNoteError("");
 
         const response =
@@ -149,6 +146,7 @@ function Checkout() {
         if (!response.ok) {
           throw new Error(
             data.message ||
+              data.error ||
               "Note not found."
           );
         }
@@ -188,298 +186,482 @@ function Checkout() {
   }, [id]);
 
   // =====================================================
-  // WEBSITE SETTINGS
+  // LOAD SITE SETTINGS
   // =====================================================
 
   useEffect(() => {
-    const loadSettings =
-      async () => {
-        try {
-          const response =
-            await fetch(
-              `${API_BASE}/api/settings`
-            );
-
-          if (!response.ok) {
-            throw new Error(
-              "Unable to load website settings"
-            );
-          }
-
-          const data =
-            await response.json();
-
-          if (
-            data.success &&
-            data.settings
-          ) {
-            setNotesSalesEnabled(
-              Boolean(
-                data.settings
-                  .notesSalesEnabled
-              )
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Checkout settings error:",
-            error
-          );
-
-          // Backend still performs
-          // the final security check.
-          setNotesSalesEnabled(
-            true
-          );
-        } finally {
-          setSettingsLoading(
-            false
-          );
-        }
-      };
-
-    loadSettings();
-  }, []);
-
-  // =====================================================
-  // LOAD RAZORPAY
-  // =====================================================
-
-  const loadRazorpay =
-    () => {
-      return new Promise(
-        (resolve) => {
-          if (
-            window.Razorpay
-          ) {
-            resolve(true);
-            return;
-          }
-
-          const script =
-            document.createElement(
-              "script"
-            );
-
-          script.src =
-            "https://checkout.razorpay.com/v1/checkout.js";
-
-          script.onload =
-            () =>
-              resolve(true);
-
-          script.onerror =
-            () =>
-              resolve(false);
-
-          document.body.appendChild(
-            script
-          );
-        }
-      );
-    };
-
-  // =====================================================
-  // VERIFY PAYMENT
-  // =====================================================
-
-  const verifyPayment =
-    async (
-      paymentResponse
-    ) => {
+    async function loadSettings() {
       try {
         const response =
           await fetch(
-            `${API_BASE}/api/payment/verify`,
-            {
-              method:
-                "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body:
-                JSON.stringify({
-                  razorpay_order_id:
-                    paymentResponse
-                      .razorpay_order_id,
-
-                  razorpay_payment_id:
-                    paymentResponse
-                      .razorpay_payment_id,
-
-                  razorpay_signature:
-                    paymentResponse
-                      .razorpay_signature,
-                }),
-            }
+            `${API_BASE}/api/settings`
           );
+
+        if (!response.ok) {
+          throw new Error(
+            "Unable to load settings"
+          );
+        }
 
         const data =
           await response.json();
 
         if (
-          !response.ok ||
-          !data.success
+          data.success &&
+          data.settings
         ) {
-          throw new Error(
-            data.error ||
-              "Payment verification failed"
+          setNotesSalesEnabled(
+            Boolean(
+              data.settings
+                .notesSalesEnabled
+            )
           );
         }
-
-        return data;
       } catch (error) {
         console.error(
-          "Verification error:",
+          "Checkout settings error:",
           error
         );
 
-        alert(
-          error.message ||
-            "Payment verification failed."
+        // Backend final check karega
+        setNotesSalesEnabled(
+          true
         );
-
-        setLoading(false);
-
-        return null;
+      } finally {
+        setSettingsLoading(
+          false
+        );
       }
-    };
+    }
+
+    loadSettings();
+  }, []);
 
   // =====================================================
-  // PROCEED TO PAYMENT
+  // LOAD RAZORPAY CHECKOUT SCRIPT
   // =====================================================
 
-  const handleProceedToPay =
-    async () => {
-      if (!note) {
-        alert(
-          "Note information is not available."
-        );
-
-        return;
-      }
-
-      // NEW CONTENT SYSTEM
-      if (!note.hasContent) {
-        alert(
-          "This note is not available for purchase yet."
-        );
-
-        return;
-      }
-
-      if (
-        !notesSalesEnabled
-      ) {
-        alert(
-          "Notes purchasing is temporarily unavailable. Please try again later."
-        );
-
-        return;
-      }
-
-      if (
-        !loggedInUser?.id
-      ) {
-        alert(
-          "Please log in before purchasing notes."
-        );
-
-        navigate(
-          "/login"
-        );
-
-        return;
-      }
-
-      if (
-        !fullName.trim() ||
-        !email.trim() ||
-        !mobile.trim()
-      ) {
-        alert(
-          "Please fill in your name, email and mobile number"
-        );
-
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        const razorpayLoaded =
-          await loadRazorpay();
-
+  function loadRazorpay() {
+    return new Promise(
+      (resolve) => {
         if (
-          !razorpayLoaded
+          window.Razorpay
         ) {
-          alert(
-            "Razorpay failed to load. Please check your internet connection."
+          resolve(true);
+          return;
+        }
+
+        const existingScript =
+          document.querySelector(
+            'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
           );
 
-          setLoading(false);
+        if (
+          existingScript
+        ) {
+          existingScript.addEventListener(
+            "load",
+            () =>
+              resolve(
+                Boolean(
+                  window.Razorpay
+                )
+              ),
+            {
+              once: true,
+            }
+          );
+
+          existingScript.addEventListener(
+            "error",
+            () =>
+              resolve(false),
+            {
+              once: true,
+            }
+          );
 
           return;
         }
 
-        const response =
-          await fetch(
-            `${API_BASE}/api/payment/create-order`,
-            {
-              method:
-                "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body:
-                JSON.stringify({
-                  noteId:
-                    Number(
-                      note.id
-                    ),
-
-                  userId:
-                    loggedInUser.id,
-                }),
-            }
+        const script =
+          document.createElement(
+            "script"
           );
 
-        const order =
-          await response
-            .json()
-            .catch(
-              () => ({})
-            );
+        script.src =
+          "https://checkout.razorpay.com/v1/checkout.js";
 
-        if (
-          !response.ok ||
-          !order.success
-        ) {
-          if (
-            order.code ===
-            "NOTES_SALES_DISABLED"
-          ) {
-            setNotesSalesEnabled(
-              false
+        script.async = true;
+
+        script.onload =
+          () => {
+            resolve(
+              Boolean(
+                window.Razorpay
+              )
             );
+          };
+
+        script.onerror =
+          () => {
+            resolve(false);
+          };
+
+        document.body.appendChild(
+          script
+        );
+      }
+    );
+  }
+
+  // =====================================================
+  // VERIFY PAYMENT
+  // =====================================================
+
+  async function verifyPayment(
+    paymentResponse
+  ) {
+    try {
+      const response =
+        await fetch(
+          `${API_BASE}/api/payment/verify`,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                razorpay_order_id:
+                  paymentResponse
+                    .razorpay_order_id,
+
+                razorpay_payment_id:
+                  paymentResponse
+                    .razorpay_payment_id,
+
+                razorpay_signature:
+                  paymentResponse
+                    .razorpay_signature,
+              }),
           }
+        );
 
-          throw new Error(
-            order.error ||
-              "Failed to create payment order"
+      const data =
+        await response
+          .json()
+          .catch(
+            () => ({})
+          );
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.error ||
+            data.message ||
+            "Payment verification failed"
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error(
+        "Payment verification error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Payment verification failed."
+      );
+
+      return null;
+    }
+  }
+
+  // =====================================================
+  // START PAYMENT
+  // =====================================================
+
+  async function handleProceedToPay() {
+    if (!note) {
+      alert(
+        "Note information is not available."
+      );
+
+      return;
+    }
+
+    // IMPORTANT:
+    // Article availability Content se check hogi,
+    // PDF se nahi.
+    if (!note.hasContent) {
+      alert(
+        "This note is not available for purchase yet."
+      );
+
+      return;
+    }
+
+    if (
+      !notesSalesEnabled
+    ) {
+      alert(
+        "Notes purchasing is temporarily unavailable. Please try again later."
+      );
+
+      return;
+    }
+
+    if (
+      !loggedInUser?.id
+    ) {
+      alert(
+        "Please log in before purchasing notes."
+      );
+
+      navigate(
+        "/login"
+      );
+
+      return;
+    }
+
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !mobile.trim()
+    ) {
+      alert(
+        "Please fill in your name, email and mobile number."
+      );
+
+      return;
+    }
+
+    const token =
+      localStorage.getItem(
+        "dishaToken"
+      );
+
+    try {
+      setLoading(true);
+
+      // -----------------------------------------------
+      // LOAD RAZORPAY SCRIPT
+      // -----------------------------------------------
+
+      const razorpayLoaded =
+        await loadRazorpay();
+
+      if (
+        !razorpayLoaded ||
+        !window.Razorpay
+      ) {
+        throw new Error(
+          "Razorpay failed to load. Please check your internet connection."
+        );
+      }
+
+      // -----------------------------------------------
+      // CREATE RAZORPAY ORDER
+      // -----------------------------------------------
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/payment/create-order`,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              ...(token
+                ? {
+                    Authorization:
+                      `Bearer ${token}`,
+                  }
+                : {}),
+            },
+
+            body:
+              JSON.stringify({
+                noteId:
+                  Number(
+                    note.id
+                  ),
+
+                // Current backend compatibility.
+                // Later backend ko JWT-only karenge.
+                userId:
+                  loggedInUser.id,
+              }),
+          }
+        );
+
+      const order =
+        await response
+          .json()
+          .catch(
+            () => ({})
+          );
+
+      console.log(
+        "CREATE ORDER RESPONSE:",
+        order
+      );
+
+      if (
+        !response.ok ||
+        !order.success
+      ) {
+        if (
+          order.code ===
+          "NOTES_SALES_DISABLED"
+        ) {
+          setNotesSalesEnabled(
+            false
           );
         }
 
-        const options = {
-          key:
-            import.meta.env
-              .VITE_RAZORPAY_KEY_ID,
+        throw new Error(
+          order.error ||
+            order.message ||
+            "Failed to create payment order"
+        );
+      }
+
+      // -----------------------------------------------
+      // RAZORPAY KEY
+      // -----------------------------------------------
+
+      const razorpayKey =
+        order.keyId ||
+        import.meta.env
+          .VITE_RAZORPAY_KEY_ID;
+
+      if (!razorpayKey) {
+        throw new Error(
+          "Razorpay Key ID is missing."
+        );
+      }
+
+      if (!order.id) {
+        throw new Error(
+          "Razorpay Order ID is missing."
+        );
+      }
+
+      if (!order.amount) {
+        throw new Error(
+          "Payment amount is missing."
+        );
+      }
+
+      // -----------------------------------------------
+      // RAZORPAY OPTIONS
+      // -----------------------------------------------
+
+      const options = {
+        key:
+          razorpayKey,
+
+        amount:
+          order.amount,
+
+        currency:
+          order.currency ||
+          "INR",
+
+        name:
+          "Disha The Academy",
+
+        description:
+          note.title,
+
+        order_id:
+          order.id,
+
+        prefill: {
+          name:
+            fullName.trim(),
+
+          email:
+            email.trim(),
+
+          contact:
+            mobile.trim(),
+        },
+
+        notes: {
+          noteId:
+            String(
+              note.id
+            ),
+
+          noteTitle:
+            note.title,
+        },
+
+        theme: {
+          color:
+            "#071a49",
+        },
+
+        handler:
+          async function (
+            paymentResponse
+          ) {
+            console.log(
+              "RAZORPAY PAYMENT RESPONSE:",
+              paymentResponse
+            );
+
+            const result =
+              await verifyPayment(
+                paymentResponse
+              );
+
+            if (
+              result?.success
+            ) {
+              navigate(
+                `/order-success/${note.id}?orderId=${encodeURIComponent(
+                  paymentResponse
+                    .razorpay_order_id
+                )}`
+              );
+            } else {
+              setLoading(
+                false
+              );
+            }
+          },
+
+        modal: {
+          ondismiss:
+            function () {
+              setLoading(
+                false
+              );
+            },
+        },
+      };
+
+      console.log(
+        "OPENING RAZORPAY:",
+        {
+          orderId:
+            order.id,
 
           amount:
             order.amount,
@@ -487,112 +669,69 @@ function Checkout() {
           currency:
             order.currency,
 
-          name:
-            "Disha The Academy",
+          hasKey:
+            Boolean(
+              razorpayKey
+            ),
+        }
+      );
 
-          description:
-            note.title,
+      // -----------------------------------------------
+      // OPEN RAZORPAY
+      // -----------------------------------------------
 
-          order_id:
-            order.id,
+      const razorpay =
+        new window.Razorpay(
+          options
+        );
 
-          prefill: {
-            name:
-              fullName,
-
-            email:
-              email,
-
-            contact:
-              mobile,
-          },
-
-          theme: {
-            color:
-              "#2563eb",
-          },
-
-          handler:
-            async function (
-              paymentResponse
-            ) {
-              const result =
-                await verifyPayment(
-                  paymentResponse
-                );
-
-              if (
-                result &&
-                result.success
-              ) {
-                navigate(
-                  `/order-success/${note.id}?orderId=${paymentResponse.razorpay_order_id}`
-                );
-              }
-            },
-
-          modal: {
-            ondismiss:
-              function () {
-                setLoading(
-                  false
-                );
-              },
-          },
-        };
-
-        const razorpay =
-          new window.Razorpay(
-            options
+      razorpay.on(
+        "payment.failed",
+        function (
+          response
+        ) {
+          console.error(
+            "RAZORPAY PAYMENT FAILED:",
+            response.error
           );
 
-        razorpay.on(
-          "payment.failed",
-          function (
-            response
-          ) {
-            console.error(
-              "PAYMENT FAILED:",
-              response.error
-            );
+          alert(
+            response.error
+              ?.description ||
+              "Payment failed. Please try again."
+          );
 
-            alert(
-              response.error
-                ?.description ||
-                "Payment failed. Please try again."
-            );
+          setLoading(
+            false
+          );
+        }
+      );
 
-            setLoading(
-              false
-            );
-          }
-        );
+      razorpay.open();
 
-        razorpay.open();
-      } catch (error) {
-        console.error(
-          "Payment error:",
-          error
-        );
+    } catch (error) {
+      console.error(
+        "Payment error:",
+        error
+      );
 
-        alert(
-          error.message ||
-            "Unable to start payment."
-        );
+      alert(
+        error.message ||
+          "Unable to start payment."
+      );
 
-        setLoading(false);
-      }
-    };
+      setLoading(false);
+    }
+  }
 
   // =====================================================
-  // LOADING
+  // NOTE LOADING
   // =====================================================
 
   if (noteLoading) {
     return (
       <div className="checkout-page">
         <div className="checkout-card">
-
           <h1>
             Loading Checkout...
           </h1>
@@ -601,14 +740,13 @@ function Checkout() {
             Please wait while we
             load your note.
           </p>
-
         </div>
       </div>
     );
   }
 
   // =====================================================
-  // NOTE NOT FOUND
+  // NOTE ERROR
   // =====================================================
 
   if (
@@ -618,7 +756,6 @@ function Checkout() {
     return (
       <div className="checkout-page">
         <div className="checkout-card">
-
           <h1>
             Note Not Found
           </h1>
@@ -634,16 +771,10 @@ function Checkout() {
           >
             ← Back to Notes
           </Link>
-
         </div>
       </div>
     );
   }
-
-  const available =
-    Boolean(
-      note.hasContent
-    );
 
   // =====================================================
   // PAGE
@@ -651,7 +782,6 @@ function Checkout() {
 
   return (
     <div className="checkout-page">
-
       <div className="checkout-container">
 
         <Link
@@ -666,15 +796,14 @@ function Checkout() {
         </h1>
 
         <p className="checkout-subtitle">
-          Complete your details to
-          continue
+          Complete your details
+          to continue
         </p>
 
         {/* SALES DISABLED */}
 
         {!settingsLoading &&
           !notesSalesEnabled && (
-
             <div
               style={{
                 marginBottom:
@@ -696,7 +825,6 @@ function Checkout() {
                   "#7c5b08",
               }}
             >
-
               <strong
                 style={{
                   display:
@@ -709,7 +837,8 @@ function Checkout() {
                     "16px",
                 }}
               >
-                Purchasing Temporarily Unavailable
+                Purchasing Temporarily
+                Unavailable
               </strong>
 
               <span
@@ -721,17 +850,17 @@ function Checkout() {
                     "1.6",
                 }}
               >
-                Notes purchasing is currently paused.
-                Please check back later.
+                Notes purchasing is
+                currently paused.
+                Please check back
+                later.
               </span>
-
             </div>
           )}
 
-        {/* CONTENT NOT AVAILABLE */}
+        {/* ARTICLE NOT AVAILABLE */}
 
-        {!available && (
-
+        {!note.hasContent && (
           <div
             style={{
               marginBottom:
@@ -753,7 +882,6 @@ function Checkout() {
                 "#475467",
             }}
           >
-
             <strong
               style={{
                 display:
@@ -766,15 +894,15 @@ function Checkout() {
               Note Coming Soon
             </strong>
 
-            This study note does not
+            This note does not
             currently have content
             available for purchase.
-
           </div>
-
         )}
 
         <div className="checkout-grid">
+
+          {/* YOUR DETAILS */}
 
           <div className="checkout-form">
 
@@ -789,12 +917,8 @@ function Checkout() {
             <input
               type="text"
               placeholder="Enter your full name"
-              value={
-                fullName
-              }
-              onChange={(
-                e
-              ) =>
+              value={fullName}
+              onChange={(e) =>
                 setFullName(
                   e.target.value
                 )
@@ -808,12 +932,8 @@ function Checkout() {
             <input
               type="email"
               placeholder="Enter your email"
-              value={
-                email
-              }
-              onChange={(
-                e
-              ) =>
+              value={email}
+              onChange={(e) =>
                 setEmail(
                   e.target.value
                 )
@@ -827,12 +947,8 @@ function Checkout() {
             <input
               type="tel"
               placeholder="Enter your mobile number"
-              value={
-                mobile
-              }
-              onChange={(
-                e
-              ) =>
+              value={mobile}
+              onChange={(e) =>
                 setMobile(
                   e.target.value
                 )
@@ -849,21 +965,23 @@ function Checkout() {
                 loading ||
                 settingsLoading ||
                 !notesSalesEnabled ||
-                !available
+                !note.hasContent
               }
             >
               {settingsLoading
                 ? "Checking availability..."
                 : !notesSalesEnabled
                 ? "Purchasing Unavailable"
-                : !available
+                : !note.hasContent
                 ? "Coming Soon"
                 : loading
-                ? "Processing..."
+                ? "Opening Razorpay..."
                 : `Proceed to Pay ₹${note.price}`}
             </button>
 
           </div>
+
+          {/* ORDER SUMMARY */}
 
           <div className="order-summary">
 
@@ -872,7 +990,7 @@ function Checkout() {
             </h2>
 
             <div className="order-icon">
-              📖
+              📚
             </div>
 
             <h3>
@@ -888,7 +1006,6 @@ function Checkout() {
             </p>
 
             <div className="summary-line">
-
               <span>
                 Format
               </span>
@@ -896,11 +1013,9 @@ function Checkout() {
               <strong>
                 Online Notes
               </strong>
-
             </div>
 
             <div className="summary-line">
-
               <span>
                 Price
               </span>
@@ -908,11 +1023,9 @@ function Checkout() {
               <strong>
                 ₹{note.price}
               </strong>
-
             </div>
 
             <div className="summary-line total-line">
-
               <span>
                 Total
               </span>
@@ -920,7 +1033,6 @@ function Checkout() {
               <strong>
                 ₹{note.price}
               </strong>
-
             </div>
 
           </div>
@@ -928,7 +1040,6 @@ function Checkout() {
         </div>
 
       </div>
-
     </div>
   );
 }

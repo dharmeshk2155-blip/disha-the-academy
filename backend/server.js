@@ -1260,13 +1260,14 @@ await pool
       // RESPONSE
       // -----------------------------
 
-      return res.json({
+     return res.json({
+  success: true,
 
-        success: true,
+  keyId:
+    process.env.RAZORPAY_KEY_ID,
 
-        ...razorpayOrder,
-
-      });
+  ...razorpayOrder,
+});
 
     } catch (error) {
 
