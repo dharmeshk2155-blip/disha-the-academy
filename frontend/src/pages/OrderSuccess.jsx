@@ -1,131 +1,280 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://disha-the-academy.onrender.com";
+import {
+  Link,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 
-const notes = {
-  1: {
-    title: "HP General Knowledge",
-    subject: "Himachal Pradesh GK",
-    price: 49,
-  },
-
-  2: {
-    title: "HP Police Constable",
-    subject: "Complete Exam Preparation",
-    price: 99,
-  },
-
-  3: {
-    title: "Mathematics Notes",
-    subject: "Quantitative Aptitude",
-    price: 49,
-  },
-
-  4: {
-    title: "Reasoning Notes",
-    subject: "Verbal & Non-Verbal Reasoning",
-    price: 49,
-  },
-
-  5: {
-    title: "General Science",
-    subject: "Physics, Chemistry & Biology",
-    price: 59,
-  },
-
-  6: {
-    title: "English Notes",
-    subject: "Grammar & Vocabulary",
-    price: 49,
-  },
-
-  7: {
-    title: "Indian Polity",
-    subject: "Constitution & Government",
-    price: 59,
-  },
-
-  8: {
-    title: "Current Affairs",
-    subject: "Important Current Affairs",
-    price: 39,
-  },
-
-  9: {
-    title: "General Hindi",
-    subject: "Hindi Grammar & Vocabulary",
-    price: 49,
-  },
-};
+const API_BASE = import.meta.env.DEV
+  ? "http://127.0.0.1:5000"
+  : import.meta.env.VITE_API_BASE ||
+    "https://disha-the-academy.onrender.com";
 
 function OrderSuccess() {
-  const { id } = useParams();
+  const { id } =
+    useParams();
 
-  const note = notes[id];
+  const [searchParams] =
+    useSearchParams();
 
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get("orderId");
+  const orderId =
+    searchParams.get(
+      "orderId"
+    );
 
-  // Login token — sent as an Authorization header (never placed in the
-  // URL) so a copied/forwarded link can't be reused by anyone else to
-  // download the same file.
-  const authToken = localStorage.getItem("dishaToken");
+  const [
+    note,
+    setNote,
+  ] = useState(null);
 
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState("");
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const handleDownload = async () => {
-    if (!orderId) return;
+  const [
+    error,
+    setError,
+  ] = useState("");
 
-    setDownloading(true);
-    setDownloadError("");
+  const [
+    downloading,
+    setDownloading,
+  ] = useState(false);
 
-    try {
-      const response = await fetch(
-        `${API_BASE}/api/pdf/download/${encodeURIComponent(orderId)}`,
-        {
-          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+  const [
+    downloadError,
+    setDownloadError,
+  ] = useState("");
+
+  // =====================================================
+  // LOAD NOTE INFORMATION
+  // =====================================================
+
+  useEffect(() => {
+    const controller =
+      new AbortController();
+
+    async function loadNote() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response =
+          await fetch(
+            `${API_BASE}/api/notes/${encodeURIComponent(
+              id
+            )}`,
+            {
+              signal:
+                controller.signal,
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to load purchased note."
+          );
         }
+
+        setNote(data);
+      } catch (err) {
+        if (
+          err.name ===
+          "AbortError"
+        ) {
+          return;
+        }
+
+        console.error(
+          "Order success note error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Unable to load note information."
+        );
+
+        setNote(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadNote();
+
+    return () => {
+      controller.abort();
+    };
+  }, [id]);
+
+  // =====================================================
+  // LEGACY PDF DOWNLOAD
+  // Only for old notes that still have PDFs
+  // =====================================================
+
+  async function handleDownload() {
+    if (
+      !orderId ||
+      !note?.pdf
+    ) {
+      return;
+    }
+
+    const authToken =
+      localStorage.getItem(
+        "dishaToken"
       );
 
+    if (!authToken) {
+      setDownloadError(
+        "Please log in again to download this PDF."
+      );
+
+      return;
+    }
+
+    try {
+      setDownloading(true);
+
+      setDownloadError("");
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/pdf/download/${encodeURIComponent(
+            orderId
+          )}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${authToken}`,
+            },
+          }
+        );
+
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Unable to download this file.");
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        throw new Error(
+          data.error ||
+            "Unable to download this file."
+        );
       }
 
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+      const blob =
+        await response.blob();
 
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `${note?.title || "note"}.pdf`;
-      document.body.appendChild(link);
+      const blobUrl =
+        window.URL.createObjectURL(
+          blob
+        );
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        blobUrl;
+
+      link.download =
+        `${note.title || "note"}.pdf`;
+
+      document.body.appendChild(
+        link
+      );
+
       link.click();
+
       link.remove();
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      setDownloadError(error.message || "Download failed. Please try again.");
+
+      window.URL.revokeObjectURL(
+        blobUrl
+      );
+    } catch (err) {
+      console.error(
+        "PDF download error:",
+        err
+      );
+
+      setDownloadError(
+        err.message ||
+          "Download failed. Please try again."
+      );
     } finally {
       setDownloading(false);
     }
-  };
+  }
 
-  if (!note) {
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
     return (
       <main className="success-page">
+
+        <div className="success-card">
+
+          <div className="success-icon">
+            ✓
+          </div>
+
+          <h1>
+            Loading Purchase...
+          </h1>
+
+          <p className="success-info">
+            Please wait while we
+            prepare your study
+            material.
+          </p>
+
+        </div>
+
+      </main>
+    );
+  }
+
+  // =====================================================
+  // NOTE ERROR
+  // =====================================================
+
+  if (
+    error ||
+    !note
+  ) {
+    return (
+      <main className="success-page">
+
         <div className="success-card">
 
           <div className="success-icon">
             !
           </div>
 
-          <h1>Order Not Found</h1>
+          <h1>
+            Order Information
+            Unavailable
+          </h1>
 
           <p className="success-info">
-            We could not find this note.
+            {error ||
+              "We could not find this note."}
           </p>
 
           <Link
@@ -136,6 +285,7 @@ function OrderSuccess() {
           </Link>
 
         </div>
+
       </main>
     );
   }
@@ -145,18 +295,18 @@ function OrderSuccess() {
 
       {/* CONFETTI */}
 
-      <span className="success-confetti confetti-1"></span>
-      <span className="success-confetti confetti-2"></span>
-      <span className="success-confetti confetti-3"></span>
-      <span className="success-confetti confetti-4"></span>
-      <span className="success-confetti confetti-5"></span>
-      <span className="success-confetti confetti-6"></span>
-      <span className="success-confetti confetti-7"></span>
-      <span className="success-confetti confetti-8"></span>
-
-      {/* SUCCESS CARD */}
+      <span className="success-confetti confetti-1" />
+      <span className="success-confetti confetti-2" />
+      <span className="success-confetti confetti-3" />
+      <span className="success-confetti confetti-4" />
+      <span className="success-confetti confetti-5" />
+      <span className="success-confetti confetti-6" />
+      <span className="success-confetti confetti-7" />
+      <span className="success-confetti confetti-8" />
 
       <div className="success-card">
+
+        {/* SUCCESS ICON */}
 
         <div className="success-icon">
           ✓
@@ -172,10 +322,11 @@ function OrderSuccess() {
 
         <p className="success-message">
           Thank you for your purchase.
-          Your study material is ready.
+          Your study material is now
+          available.
         </p>
 
-        {/* PURCHASE INFORMATION */}
+        {/* NOTE INFORMATION */}
 
         <div className="success-note">
 
@@ -184,7 +335,11 @@ function OrderSuccess() {
           </h2>
 
           <p>
-            {note.subject}
+            {note.categoryTitle}
+
+            {note.subcategoryTitle
+              ? ` · ${note.subcategoryTitle}`
+              : ""}
           </p>
 
           <strong>
@@ -193,45 +348,140 @@ function OrderSuccess() {
 
         </div>
 
-        <p className="success-info">
-          Your payment has been successfully verified.
-          You now have instant access to your purchased PDF.
-        </p>
-
-        {/* READY MESSAGE */}
-
-        <div className="success-ready">
-          🎉 Your PDF is ready to download
-        </div>
-
-        {/* DOWNLOAD */}
-
-        {orderId ? (
-          <>
-            <button
-              type="button"
-              onClick={handleDownload}
-              className="success-download-button"
-              disabled={downloading}
-            >
-              <span>↓</span>
-              {downloading ? "Preparing..." : "Download Your PDF"}
-            </button>
-            {downloadError && (
-              <p className="success-info" style={{ color: "red" }}>
-                {downloadError}
-              </p>
-            )}
-          </>
-        ) : (
+        {orderId && (
           <p className="success-info">
-            Download link is not available.
+            Order ID:{" "}
+            <strong>
+              {orderId}
+            </strong>
           </p>
         )}
 
-        {/* CONTINUE SHOPPING */}
+        {/* =================================================
+            NEW ARTICLE NOTE
+        ================================================= */}
 
-        <div>
+        {note.hasContent &&
+          orderId && (
+
+            <>
+              <div className="success-ready">
+                📖 Your online study
+                note is ready
+              </div>
+
+              <Link
+                to={`/read-note/${note.id}?orderId=${encodeURIComponent(
+                  orderId
+                )}`}
+                className="success-download-button"
+                style={{
+                  textDecoration:
+                    "none",
+
+                  display:
+                    "flex",
+
+                  alignItems:
+                    "center",
+
+                  justifyContent:
+                    "center",
+
+                  gap:
+                    "8px",
+                }}
+              >
+                <span>
+                  📖
+                </span>
+
+                Read Your Note
+              </Link>
+
+              <p className="success-info">
+                Open the note online.
+                You can also print it
+                or save it as PDF from
+                the reader.
+              </p>
+            </>
+
+          )}
+
+        {/* =================================================
+            LEGACY PDF SUPPORT
+        ================================================= */}
+
+        {note.pdf &&
+          orderId && (
+
+            <>
+              <button
+                type="button"
+                onClick={
+                  handleDownload
+                }
+                className="success-shopping-button"
+                disabled={
+                  downloading
+                }
+                style={{
+                  marginTop:
+                    "10px",
+
+                  cursor:
+                    downloading
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                {downloading
+                  ? "Preparing PDF..."
+                  : "↓ Download Original PDF"}
+              </button>
+
+              {downloadError && (
+                <p
+                  className="success-info"
+                  style={{
+                    color:
+                      "#b42318",
+                  }}
+                >
+                  {downloadError}
+                </p>
+              )}
+            </>
+
+          )}
+
+        {/* NO ORDER ID */}
+
+        {!orderId && (
+
+          <p
+            className="success-info"
+            style={{
+              color:
+                "#b42318",
+            }}
+          >
+            Order ID is missing.
+            Please open this purchase
+            from your account.
+          </p>
+
+        )}
+
+        {/* CONTINUE */}
+
+        <div
+          style={{
+            marginTop:
+              "18px",
+          }}
+        >
           <Link
             to="/notes"
             className="success-shopping-button"
@@ -240,11 +490,13 @@ function OrderSuccess() {
           </Link>
         </div>
 
-        {/* SECURITY MESSAGE */}
+        {/* SECURITY */}
 
         <p className="success-security">
-          🔒 Secure Payment &nbsp;•&nbsp;
-          ✓ Payment Verified &nbsp;•&nbsp;
+          🔒 Secure Payment
+          &nbsp;•&nbsp;
+          ✓ Payment Verified
+          &nbsp;•&nbsp;
           ⚡ Instant Access
         </p>
 

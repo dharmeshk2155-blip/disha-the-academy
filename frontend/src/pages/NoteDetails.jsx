@@ -39,19 +39,21 @@ function NoteDetails() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_BASE}/api/notes/${encodeURIComponent(
-            id
-          )}`,
-          {
-            signal:
-              controller.signal,
-          }
-        );
+        const response =
+          await fetch(
+            `${API_BASE}/api/notes/${encodeURIComponent(
+              id
+            )}`,
+            {
+              signal:
+                controller.signal,
+            }
+          );
 
-        const data = await response
-          .json()
-          .catch(() => ({}));
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
 
         if (
           response.status === 404
@@ -104,8 +106,6 @@ function NoteDetails() {
     };
   }, [id]);
 
-  // Use old category metadata only
-  // for description text.
   const categoryMetadata =
     useMemo(() => {
       if (!note) {
@@ -174,11 +174,15 @@ function NoteDetails() {
   const description =
     categoryMetadata
       ?.description ||
-    `Study material for ${note.categoryTitle || "competitive exam preparation"}.`;
+    `Study material for ${
+      note.categoryTitle ||
+      "competitive exam preparation"
+    }.`;
 
   return (
     <div className="note-details-page">
       <div className="details-card">
+
         <Link
           to={`/notes/${note.categorySlug}/${note.subcategorySlug}`}
           className="back-link"
@@ -189,11 +193,11 @@ function NoteDetails() {
         </Link>
 
         <div className="details-icon">
-          📚
+          📖
         </div>
 
         <span className="details-badge">
-          PDF Notes
+          Online Study Notes
         </span>
 
         <h1>
@@ -212,8 +216,9 @@ function NoteDetails() {
           {description}
         </p>
 
-        {note.pdf ? (
+        {note.hasContent ? (
           <div className="purchase-box">
+
             <div>
               <span className="price-label">
                 Price
@@ -230,9 +235,11 @@ function NoteDetails() {
             >
               Buy Now
             </Link>
+
           </div>
         ) : (
           <div className="purchase-box">
+
             <div>
               <span className="price-label">
                 Status
@@ -247,8 +254,10 @@ function NoteDetails() {
                 Coming Soon
               </div>
             </div>
+
           </div>
         )}
+
       </div>
     </div>
   );

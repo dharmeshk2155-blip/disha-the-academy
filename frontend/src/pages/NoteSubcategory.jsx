@@ -44,17 +44,19 @@ export default function NoteSubcategory() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_BASE}/api/notes`,
-          {
-            signal:
-              controller.signal,
-          }
-        );
+        const response =
+          await fetch(
+            `${API_BASE}/api/notes`,
+            {
+              signal:
+                controller.signal,
+            }
+          );
 
-        const data = await response
-          .json()
-          .catch(() => []);
+        const data =
+          await response
+            .json()
+            .catch(() => []);
 
         if (!response.ok) {
           throw new Error(
@@ -117,7 +119,9 @@ export default function NoteSubcategory() {
 
       return {
         category: {
-          slug: categorySlug,
+          slug:
+            categorySlug,
+
           title:
             filteredNotes[0]
               ?.categoryTitle ||
@@ -125,14 +129,17 @@ export default function NoteSubcategory() {
         },
 
         subcategory: {
-          slug: subcategorySlug,
+          slug:
+            subcategorySlug,
+
           title:
             filteredNotes[0]
               ?.subcategoryTitle ||
             "Study Notes",
         },
 
-        topics: filteredNotes,
+        topics:
+          filteredNotes,
       };
     }, [
       notes,
@@ -143,6 +150,7 @@ export default function NoteSubcategory() {
   if (loading) {
     return (
       <div className="nf-page">
+
         <Link
           to="/notes"
           className="nf-back-link"
@@ -153,6 +161,7 @@ export default function NoteSubcategory() {
         <div className="nf-status">
           Loading notes...
         </div>
+
       </div>
     );
   }
@@ -160,6 +169,7 @@ export default function NoteSubcategory() {
   if (error) {
     return (
       <div className="nf-page">
+
         <Link
           to="/notes"
           className="nf-back-link"
@@ -170,6 +180,7 @@ export default function NoteSubcategory() {
         <div className="nf-status">
           {error}
         </div>
+
       </div>
     );
   }
@@ -177,6 +188,7 @@ export default function NoteSubcategory() {
   if (!pageData) {
     return (
       <div className="nf-page">
+
         <Link
           to="/notes"
           className="nf-back-link"
@@ -187,6 +199,7 @@ export default function NoteSubcategory() {
         <div className="nf-status">
           Notes not found.
         </div>
+
       </div>
     );
   }
@@ -199,7 +212,9 @@ export default function NoteSubcategory() {
 
   return (
     <div className="nf-page">
+
       <button
+        type="button"
         className="nf-back-link"
         onClick={() =>
           navigate(
@@ -212,6 +227,7 @@ export default function NoteSubcategory() {
       </button>
 
       <div className="nf-header">
+
         <h1>
           {subcategory.title}
         </h1>
@@ -219,57 +235,87 @@ export default function NoteSubcategory() {
         <p>
           {category.title}
         </p>
+
       </div>
 
       <div className="nf-topic-list">
-        {topics.map(
-          (topic) => (
-            <div
-              key={topic.id}
-              className="nf-topic-row"
-            >
-              <div className="nf-topic-icon">
-                📚
-              </div>
 
-              <div className="nf-topic-info">
-                <div className="nf-topic-title">
-                  {topic.title}
+        {topics.map(
+          (topic) => {
+
+            const available =
+              Boolean(
+                topic.hasContent
+              );
+
+            return (
+              <div
+                key={topic.id}
+                className="nf-topic-row"
+              >
+
+                <div className="nf-topic-icon">
+                  📖
                 </div>
 
-                {!topic.pdf && (
-                  <span className="nf-coming-soon-tag">
-                    Coming soon
-                  </span>
-                )}
-              </div>
+                <div className="nf-topic-info">
 
-              {topic.pdf ? (
-                <>
-                  <div className="nf-topic-price">
-                    ₹{topic.price}
+                  <div className="nf-topic-title">
+                    {topic.title}
                   </div>
 
-                  <Link
-                    to={`/note/${topic.id}`}
-                    className="nf-topic-btn"
+                  {!available && (
+                    <span className="nf-coming-soon-tag">
+                      Coming soon
+                    </span>
+                  )}
+
+                  {available && (
+                    <span
+                      className="nf-coming-soon-tag"
+                      style={{
+                        background:
+                          "#eaf8ef",
+                        color:
+                          "#16713a",
+                      }}
+                    >
+                      Available
+                    </span>
+                  )}
+
+                </div>
+
+                {available ? (
+                  <>
+                    <div className="nf-topic-price">
+                      ₹{topic.price}
+                    </div>
+
+                    <Link
+                      to={`/note/${topic.id}`}
+                      className="nf-topic-btn"
+                    >
+                      View Notes →
+                    </Link>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="nf-topic-btn disabled"
+                    disabled
                   >
-                    View Notes →
-                  </Link>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="nf-topic-btn disabled"
-                  disabled
-                >
-                  Not available yet
-                </button>
-              )}
-            </div>
-          )
+                    Not available yet
+                  </button>
+                )}
+
+              </div>
+            );
+          }
         )}
+
       </div>
+
     </div>
   );
 }

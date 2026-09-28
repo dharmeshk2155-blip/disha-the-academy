@@ -43,6 +43,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
 import MaintenanceGuard from "./pages/MaintenanceGuard";
+import ReadNote from "./pages/ReadNote";
 
 /* =========================
    ADMIN
@@ -127,6 +128,10 @@ function App() {
             path="/note/:id"
             element={<NoteDetails />}
           />
+          <Route
+  path="/read-note/:id"
+  element={<ReadNote />}
+/>
 
           {/* ==================================================
               AUTH

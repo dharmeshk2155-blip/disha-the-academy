@@ -65,70 +65,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ======================================================
-// NOTES
-// ======================================================
 
-// ======================================================
-// NOTES (flat list of all topics — must stay in sync with
-// frontend/src/data/notesContent.js, same ids/prices/pdf names)
-// ======================================================
-
-const notes = [
-  { id: 1, title: "HP History Notes", subject: "Himachal Pradesh History", price: 49, pdf: "HP High Court Process Server Syllabus.pdf" },
-  { id: 2, title: "HP Geography Notes", subject: "Himachal Pradesh Geography", price: 49, pdf: null },
-  { id: 3, title: "HP Polity Notes", subject: "HP Polity", price: 49, pdf: null },
-  { id: 4, title: "HP Current Affairs Notes", subject: "HP Current Affairs", price: 49, pdf: null },
-  { id: 5, title: "HP GK Important MCQs", subject: "Important MCQs", price: 49, pdf: null },
-
-  { id: 6, title: "GK for HP Police Constable", subject: "General Knowledge", price: 99, pdf: "All One Word Substitution asked in SSC Exam 2025(P).pdf" },
-  { id: 7, title: "Science for HP Police Constable", subject: "General Science", price: 99, pdf: null },
-  { id: 8, title: "Maths for HP Police Constable", subject: "Mathematics", price: 99, pdf: null },
-  { id: 9, title: "Reasoning for HP Police Constable", subject: "Reasoning", price: 99, pdf: null },
-  { id: 10, title: "Current Affairs for HP Police Constable", subject: "Current Affairs", price: 99, pdf: null },
-
-  { id: 11, title: "Percentage Notes", subject: "Percentage", price: 49, pdf: "Formula Cheat-Sheet(P).pdf" },
-  { id: 12, title: "Profit & Loss Notes", subject: "Profit & Loss", price: 49, pdf: null },
-  { id: 13, title: "Ratio & Proportion Notes", subject: "Ratio & Proportion", price: 49, pdf: null },
-  { id: 14, title: "Average Notes", subject: "Average", price: 49, pdf: null },
-  { id: 15, title: "Time & Work Notes", subject: "Time & Work", price: 49, pdf: null },
-
-  { id: 16, title: "Analogy Notes", subject: "Analogy", price: 49, pdf: "Adverbs & Adjectives Revision Notes.pdf" },
-  { id: 17, title: "Series Notes", subject: "Series", price: 49, pdf: null },
-  { id: 18, title: "Coding-Decoding Notes", subject: "Coding-Decoding", price: 49, pdf: null },
-  { id: 19, title: "Blood Relations Notes", subject: "Blood Relations", price: 49, pdf: null },
-  { id: 20, title: "Direction Test Notes", subject: "Direction Test", price: 49, pdf: null },
-
-  { id: 21, title: "Physics Notes", subject: "Physics", price: 59, pdf: "May 2026 current affairs_compressed.pdf" },
-  { id: 22, title: "Chemistry Notes", subject: "Chemistry", price: 59, pdf: null },
-  { id: 23, title: "Biology Notes", subject: "Biology", price: 59, pdf: null },
-  { id: 24, title: "Human Body Notes", subject: "Human Body", price: 59, pdf: null },
-  { id: 25, title: "Science Important MCQs", subject: "Important Science MCQs", price: 59, pdf: null },
-
-  { id: 26, title: "Parts of Speech Notes", subject: "Parts of Speech", price: 49, pdf: "1000+ Idioms and Phrases Notes(P).pdf" },
-  { id: 27, title: "Tenses Notes", subject: "Tenses", price: 49, pdf: null },
-  { id: 28, title: "Articles Notes", subject: "Articles", price: 49, pdf: null },
-  { id: 29, title: "Prepositions Notes", subject: "Prepositions", price: 49, pdf: null },
-  { id: 30, title: "Vocabulary Notes", subject: "Vocabulary", price: 49, pdf: null },
-
-  { id: 31, title: "Indian Constitution Notes", subject: "Indian Constitution", price: 59, pdf: "January CA class-compressed.pdf" },
-  { id: 32, title: "Fundamental Rights Notes", subject: "Fundamental Rights", price: 59, pdf: null },
-  { id: 33, title: "Parliament Notes", subject: "Parliament", price: 59, pdf: null },
-  { id: 34, title: "President Notes", subject: "President", price: 59, pdf: null },
-  { id: 35, title: "Supreme Court Notes", subject: "Supreme Court", price: 59, pdf: null },
-
-  { id: 36, title: "National Affairs Notes", subject: "National Affairs", price: 39, pdf: "March+April CA_compressed.pdf" },
-  { id: 37, title: "International Affairs Notes", subject: "International Affairs", price: 39, pdf: null },
-  { id: 38, title: "Sports Notes", subject: "Sports", price: 39, pdf: null },
-  { id: 39, title: "Awards Notes", subject: "Awards", price: 39, pdf: null },
-  { id: 40, title: "Important Events Notes", subject: "Important Events", price: 39, pdf: null },
-
-  { id: 41, title: "संधि Notes", subject: "संधि", price: 49, pdf: "Hindi_TESTBOOK NEWS BULLETIN_08 Jul testbook_pass.pdf" },
-  { id: 42, title: "समास Notes", subject: "समास", price: 49, pdf: null },
-  { id: 43, title: "पर्यायवाची शब्द Notes", subject: "पर्यायवाची शब्द", price: 49, pdf: null },
-  { id: 44, title: "विलोम शब्द Notes", subject: "विलोम शब्द", price: 49, pdf: null },
-  { id: 45, title: "मुहावरे Notes", subject: "मुहावरे", price: 49, pdf: null },
-];
 // ======================================================
 // HOME
 // ======================================================
@@ -151,153 +88,10 @@ app.get("/api/test", (req, res) => {
   });
 
 });
-
 // ======================================================
 // NOTES API
-// ======================================================
-// ======================================================
-// PUBLIC NOTES API - ACTIVE NOTES
-// ======================================================
-
-app.get("/api/notes", async (req, res) => {
-  try {
-    const pool = await connectDB();
-
-    const result = await pool.request().query(`
-      SELECT
-        Id,
-        CategorySlug,
-        CategoryTitle,
-        SubcategorySlug,
-        SubcategoryTitle,
-        Title,
-        Price,
-        Pdf,
-        IsActive
-      FROM dbo.Notes
-      WHERE IsActive = 1
-      ORDER BY Id ASC
-    `);
-
-    const notes = result.recordset.map((note) => ({
-      id: note.Id,
-      title: note.Title,
-      subject: note.SubcategoryTitle,
-      price: Number(note.Price) || 0,
-      pdf: note.Pdf || null,
-
-      categorySlug: note.CategorySlug,
-      categoryTitle: note.CategoryTitle,
-      subcategorySlug: note.SubcategorySlug,
-      subcategoryTitle: note.SubcategoryTitle,
-
-      isActive: Boolean(note.IsActive),
-    }));
-
-    return res.json(notes);
-  } catch (error) {
-    console.error(
-      "Public notes fetch error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load notes",
-    });
-  }
-});
-
-// ======================================================
-// PUBLIC SINGLE NOTE API
-// ======================================================
-
-app.get("/api/notes/:id", async (req, res) => {
-  try {
-    const noteId = Number(req.params.id);
-
-    if (
-      !Number.isInteger(noteId) ||
-      noteId <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid note ID",
-      });
-    }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input(
-        "Id",
-        sql.Int,
-        noteId
-      )
-      .query(`
-        SELECT
-          Id,
-          CategorySlug,
-          CategoryTitle,
-          SubcategorySlug,
-          SubcategoryTitle,
-          Title,
-          Price,
-          Pdf,
-          IsActive
-        FROM dbo.Notes
-        WHERE
-          Id = @Id
-          AND IsActive = 1
-      `);
-
-    if (
-      result.recordset.length === 0
-    ) {
-      return res.status(404).json({
-        success: false,
-        message: "Note not found",
-      });
-    }
-
-    const note =
-      result.recordset[0];
-
-    return res.json({
-      id: note.Id,
-      title: note.Title,
-      subject: note.SubcategoryTitle,
-      price: Number(note.Price) || 0,
-      pdf: note.Pdf || null,
-
-      categorySlug:
-        note.CategorySlug,
-      categoryTitle:
-        note.CategoryTitle,
-      subcategorySlug:
-        note.SubcategorySlug,
-      subcategoryTitle:
-        note.SubcategoryTitle,
-
-      isActive:
-        Boolean(note.IsActive),
-    });
-  } catch (error) {
-    console.error(
-      "Public note fetch error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load note",
-    });
-  }
-});
-
-// ======================================================
-// SINGLE NOTE
+// Public endpoints return metadata only.
+// Full paid Content is never exposed here.
 // ======================================================
 
 // ======================================================
@@ -318,29 +112,67 @@ app.get("/api/notes", async (req, res) => {
         Title,
         Price,
         Pdf,
+
+        CASE
+          WHEN Content IS NOT NULL
+            AND LTRIM(RTRIM(Content)) <> ''
+          THEN CAST(1 AS BIT)
+          ELSE CAST(0 AS BIT)
+        END AS HasContent,
+
         IsActive
+
       FROM dbo.Notes
+
       WHERE IsActive = 1
+
       ORDER BY Id ASC
     `);
 
-    const notes = result.recordset.map((note) => ({
-      id: note.Id,
-      title: note.Title,
-      subject: note.SubcategoryTitle,
-      price: Number(note.Price) || 0,
-      pdf: note.Pdf || null,
+    const notes = result.recordset.map(
+      (note) => ({
+        id: note.Id,
 
-      categorySlug: note.CategorySlug,
-      categoryTitle: note.CategoryTitle,
-      subcategorySlug: note.SubcategorySlug,
-      subcategoryTitle: note.SubcategoryTitle,
+        title:
+          note.Title,
 
-      isActive: Boolean(note.IsActive),
-    }));
+        subject:
+          note.SubcategoryTitle,
+
+        price:
+          Number(note.Price) || 0,
+
+        pdf:
+          note.Pdf || null,
+
+        hasContent:
+          Boolean(
+            note.HasContent
+          ),
+
+        categorySlug:
+          note.CategorySlug,
+
+        categoryTitle:
+          note.CategoryTitle,
+
+        subcategorySlug:
+          note.SubcategorySlug,
+
+        subcategoryTitle:
+          note.SubcategoryTitle,
+
+        isActive:
+          Boolean(
+            note.IsActive
+          ),
+      })
+    );
 
     return res.json(notes);
+
   } catch (error) {
+
     console.error(
       "Public notes fetch error:",
       error
@@ -348,7 +180,8 @@ app.get("/api/notes", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to load notes",
+      message:
+        "Failed to load notes",
     });
   }
 });
@@ -357,89 +190,141 @@ app.get("/api/notes", async (req, res) => {
 // PUBLIC SINGLE NOTE API
 // ======================================================
 
-app.get("/api/notes/:id", async (req, res) => {
-  try {
-    const noteId = Number(req.params.id);
+app.get(
+  "/api/notes/:id",
+  async (req, res) => {
 
-    if (
-      !Number.isInteger(noteId) ||
-      noteId <= 0
-    ) {
-      return res.status(400).json({
+    try {
+
+      const noteId =
+        Number(
+          req.params.id
+        );
+
+      if (
+        !Number.isInteger(
+          noteId
+        ) ||
+        noteId <= 0
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid note ID",
+        });
+      }
+
+      const pool =
+        await connectDB();
+
+      const result =
+        await pool
+          .request()
+
+          .input(
+            "Id",
+            sql.Int,
+            noteId
+          )
+
+          .query(`
+            SELECT
+              Id,
+              CategorySlug,
+              CategoryTitle,
+              SubcategorySlug,
+              SubcategoryTitle,
+              Title,
+              Price,
+              Pdf,
+
+              CASE
+                WHEN Content IS NOT NULL
+                  AND LTRIM(RTRIM(Content)) <> ''
+                THEN CAST(1 AS BIT)
+                ELSE CAST(0 AS BIT)
+              END AS HasContent,
+
+              IsActive
+
+            FROM dbo.Notes
+
+            WHERE
+              Id = @Id
+              AND IsActive = 1
+          `);
+
+      if (
+        result.recordset.length === 0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Note not found",
+        });
+      }
+
+      const note =
+        result.recordset[0];
+
+      return res.json({
+        id:
+          note.Id,
+
+        title:
+          note.Title,
+
+        subject:
+          note.SubcategoryTitle,
+
+        price:
+          Number(
+            note.Price
+          ) || 0,
+
+        pdf:
+          note.Pdf || null,
+
+        hasContent:
+          Boolean(
+            note.HasContent
+          ),
+
+        categorySlug:
+          note.CategorySlug,
+
+        categoryTitle:
+          note.CategoryTitle,
+
+        subcategorySlug:
+          note.SubcategorySlug,
+
+        subcategoryTitle:
+          note.SubcategoryTitle,
+
+        isActive:
+          Boolean(
+            note.IsActive
+          ),
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Public note fetch error:",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: "Invalid note ID",
+        message:
+          "Failed to load note",
       });
     }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input(
-        "Id",
-        sql.Int,
-        noteId
-      )
-      .query(`
-        SELECT
-          Id,
-          CategorySlug,
-          CategoryTitle,
-          SubcategorySlug,
-          SubcategoryTitle,
-          Title,
-          Price,
-          Pdf,
-          IsActive
-        FROM dbo.Notes
-        WHERE
-          Id = @Id
-          AND IsActive = 1
-      `);
-
-    if (
-      result.recordset.length === 0
-    ) {
-      return res.status(404).json({
-        success: false,
-        message: "Note not found",
-      });
-    }
-
-    const note =
-      result.recordset[0];
-
-    return res.json({
-      id: note.Id,
-      title: note.Title,
-      subject: note.SubcategoryTitle,
-      price: Number(note.Price) || 0,
-      pdf: note.Pdf || null,
-
-      categorySlug:
-        note.CategorySlug,
-      categoryTitle:
-        note.CategoryTitle,
-      subcategorySlug:
-        note.SubcategorySlug,
-      subcategoryTitle:
-        note.SubcategoryTitle,
-
-      isActive:
-        Boolean(note.IsActive),
-    });
-  } catch (error) {
-    console.error(
-      "Public note fetch error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load note",
-    });
   }
-});
+);
 
 // ======================================================
 // GOOGLE LOGIN
@@ -1114,13 +999,22 @@ const noteResult = await pool
   )
   .query(`
     SELECT TOP 1
-      Id,
-      Title,
-      Price,
-      Pdf,
-      IsActive
-    FROM dbo.Notes
-    WHERE Id = @NoteId
+  Id,
+  Title,
+  Price,
+  Pdf,
+
+  CASE
+    WHEN Content IS NOT NULL
+      AND LTRIM(RTRIM(Content)) <> ''
+    THEN CAST(1 AS BIT)
+    ELSE CAST(0 AS BIT)
+  END AS HasContent,
+
+  IsActive
+
+FROM dbo.Notes
+WHERE Id = @NoteId
   `);
 
 if (
@@ -1143,7 +1037,7 @@ if (!dbNote.IsActive) {
   });
 }
 
-if (!dbNote.Pdf) {
+if (!dbNote.HasContent) {
   return res.status(400).json({
     success: false,
     error:
@@ -1153,10 +1047,18 @@ if (!dbNote.Pdf) {
 
 const note = {
   id: dbNote.Id,
-  title: dbNote.Title,
+
+  title:
+    dbNote.Title,
+
   price:
-    Number(dbNote.Price) || 0,
-  pdf: dbNote.Pdf,
+    Number(
+      dbNote.Price
+    ) || 0,
+
+  // old orders compatibility
+  pdf:
+    dbNote.Pdf || null,
 };
 
       // -----------------------------
@@ -1651,6 +1553,10 @@ app.post(
 
         noteId:
           order.NoteId,
+          readUrl:
+  `/read-note/${order.NoteId}?orderId=${encodeURIComponent(
+    razorpay_order_id
+  )}`,
 
         downloadUrl:
           `/api/pdf/download/${encodeURIComponent(
@@ -1677,6 +1583,579 @@ app.post(
 
     }
 
+  }
+);
+// ======================================================
+// MY PURCHASED NOTES
+// Logged-in user ke sirf paid notes
+// ======================================================
+
+app.get(
+  "/api/my-notes",
+  async (req, res) => {
+    try {
+      // -----------------------------------------------
+      // JWT TOKEN
+      // -----------------------------------------------
+
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.slice(7)
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Please log in to view your notes",
+        });
+      }
+
+      // -----------------------------------------------
+      // VERIFY TOKEN
+      // -----------------------------------------------
+
+      let decoded;
+
+      try {
+        decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        );
+      } catch (error) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Your session has expired. Please log in again.",
+        });
+      }
+
+      if (!decoded?.userId) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Invalid login session",
+        });
+      }
+
+      // -----------------------------------------------
+      // DATABASE
+      // -----------------------------------------------
+
+      const pool =
+        await connectDB();
+
+      const result =
+        await pool
+          .request()
+
+          .input(
+            "UserId",
+            sql.Int,
+            Number(decoded.userId)
+          )
+
+          .query(`
+            SELECT
+              o.OrderId,
+              o.NoteId,
+              o.Title,
+              o.Price,
+              o.PaymentId,
+              o.CreatedAt,
+              o.VerifiedAt,
+
+              n.CategoryTitle,
+              n.SubcategoryTitle,
+
+              CASE
+                WHEN n.Content IS NOT NULL
+                  AND LTRIM(RTRIM(n.Content)) <> ''
+                THEN CAST(1 AS BIT)
+                ELSE CAST(0 AS BIT)
+              END AS HasContent
+
+            FROM dbo.Orders o
+
+            INNER JOIN dbo.Notes n
+              ON n.Id = o.NoteId
+
+            WHERE
+              o.UserId = @UserId
+              AND o.Paid = 1
+
+            ORDER BY
+              COALESCE(
+                o.VerifiedAt,
+                o.CreatedAt
+              ) DESC
+          `);
+
+      const notes =
+        result.recordset.map(
+          (item) => ({
+            orderId:
+              item.OrderId,
+
+            noteId:
+              item.NoteId,
+
+            title:
+              item.Title,
+
+            price:
+              Number(
+                item.Price
+              ) || 0,
+
+            categoryTitle:
+              item.CategoryTitle,
+
+            subcategoryTitle:
+              item.SubcategoryTitle,
+
+            hasContent:
+              Boolean(
+                item.HasContent
+              ),
+
+            paymentId:
+              item.PaymentId,
+
+            purchasedAt:
+              item.VerifiedAt ||
+              item.CreatedAt,
+
+            readUrl:
+              `/read-note/${item.NoteId}?orderId=${encodeURIComponent(
+                item.OrderId
+              )}`,
+          })
+        );
+
+      return res.json({
+        success: true,
+        count:
+          notes.length,
+        notes,
+      });
+
+    } catch (error) {
+      console.error(
+        "My purchased notes error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        error:
+          "Unable to load purchased notes",
+      });
+    }
+  }
+);
+// ======================================================
+// MY PURCHASED NOTES
+// Logged-in user ke sirf paid notes
+// ======================================================
+
+app.get(
+  "/api/my-notes",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // AUTHORIZATION HEADER
+      // ===============================================
+
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.slice(7)
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Please log in to view your notes",
+        });
+      }
+
+      // ===============================================
+      // VERIFY JWT
+      // ===============================================
+
+      let decoded;
+
+      try {
+        decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        );
+      } catch (error) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Your session has expired. Please log in again.",
+        });
+      }
+
+      if (!decoded?.userId) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Invalid login session",
+        });
+      }
+
+      // ===============================================
+      // DATABASE
+      // ===============================================
+
+      const pool =
+        await connectDB();
+
+      const result =
+        await pool
+          .request()
+
+          .input(
+            "UserId",
+            sql.Int,
+            Number(decoded.userId)
+          )
+
+          .query(`
+            SELECT
+              o.OrderId,
+              o.NoteId,
+              o.Title,
+              o.Price,
+              o.PaymentId,
+              o.CreatedAt,
+              o.VerifiedAt,
+
+              n.CategoryTitle,
+              n.SubcategoryTitle,
+
+              CASE
+                WHEN n.Content IS NOT NULL
+                  AND LTRIM(RTRIM(n.Content)) <> ''
+                THEN CAST(1 AS BIT)
+                ELSE CAST(0 AS BIT)
+              END AS HasContent
+
+            FROM dbo.Orders o
+
+            INNER JOIN dbo.Notes n
+              ON n.Id = o.NoteId
+
+            WHERE
+              o.UserId = @UserId
+              AND o.Paid = 1
+
+            ORDER BY
+              COALESCE(
+                o.VerifiedAt,
+                o.CreatedAt
+              ) DESC
+          `);
+
+      // ===============================================
+      // FORMAT RESPONSE
+      // ===============================================
+
+      const notes =
+        result.recordset.map(
+          (item) => ({
+            orderId:
+              item.OrderId,
+
+            noteId:
+              item.NoteId,
+
+            title:
+              item.Title,
+
+            price:
+              Number(
+                item.Price
+              ) || 0,
+
+            categoryTitle:
+              item.CategoryTitle,
+
+            subcategoryTitle:
+              item.SubcategoryTitle,
+
+            hasContent:
+              Boolean(
+                item.HasContent
+              ),
+
+            paymentId:
+              item.PaymentId,
+
+            purchasedAt:
+              item.VerifiedAt ||
+              item.CreatedAt,
+
+            readUrl:
+              `/read-note/${item.NoteId}?orderId=${encodeURIComponent(
+                item.OrderId
+              )}`,
+          })
+        );
+
+      return res.json({
+        success: true,
+        count:
+          notes.length,
+        notes,
+      });
+
+    } catch (error) {
+      console.error(
+        "My purchased notes error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        error:
+          "Unable to load purchased notes",
+      });
+    }
+  }
+);
+// ======================================================
+// PAID NOTE CONTENT
+// Only the user who purchased the note can read it
+// ======================================================
+
+app.get(
+  "/api/orders/:orderId/note-content",
+  async (req, res) => {
+    try {
+      const orderId =
+        String(
+          req.params.orderId || ""
+        ).trim();
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Order ID is required",
+        });
+      }
+
+      // =================================================
+      // AUTH TOKEN
+      // =================================================
+
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith(
+          "Bearer "
+        )
+          ? authHeader.slice(7)
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Please log in to read this note",
+        });
+      }
+
+      // =================================================
+      // VERIFY JWT
+      // =================================================
+
+      let decoded;
+
+      try {
+        decoded =
+          jwt.verify(
+            token,
+            process.env.JWT_SECRET
+          );
+      } catch (error) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Your session has expired. Please log in again.",
+        });
+      }
+
+      if (!decoded?.userId) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Invalid login session",
+        });
+      }
+
+      // =================================================
+      // DATABASE
+      // =================================================
+
+      const pool =
+        await connectDB();
+
+      const result =
+        await pool
+          .request()
+
+          .input(
+            "OrderId",
+            sql.NVarChar(100),
+            orderId
+          )
+
+          .query(`
+            SELECT
+              o.OrderId,
+              o.UserId,
+              o.NoteId,
+              o.Paid,
+              o.PaymentId,
+              o.VerifiedAt,
+
+              n.Title,
+              n.CategoryTitle,
+              n.SubcategoryTitle,
+              n.Content
+
+            FROM dbo.Orders o
+
+            INNER JOIN dbo.Notes n
+              ON n.Id = o.NoteId
+
+            WHERE
+              o.OrderId = @OrderId
+          `);
+
+      // =================================================
+      // ORDER NOT FOUND
+      // =================================================
+
+      if (
+        result.recordset.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Order not found",
+        });
+      }
+
+      const order =
+        result.recordset[0];
+
+      // =================================================
+      // ORDER OWNER CHECK
+      // =================================================
+
+      if (
+        Number(order.UserId) !==
+        Number(decoded.userId)
+      ) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "You are not authorized to read this note",
+        });
+      }
+
+      // =================================================
+      // PAYMENT CHECK
+      // =================================================
+
+      if (!order.Paid) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "Payment is required before reading this note",
+        });
+      }
+
+      // =================================================
+      // CONTENT CHECK
+      // =================================================
+
+      const content =
+        String(
+          order.Content || ""
+        ).trim();
+
+      if (!content) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Note content is not available",
+        });
+      }
+
+      // =================================================
+      // SUCCESS
+      // =================================================
+
+      return res.json({
+        success: true,
+
+        note: {
+          id:
+            order.NoteId,
+
+          title:
+            order.Title,
+
+          categoryTitle:
+            order.CategoryTitle,
+
+          subcategoryTitle:
+            order.SubcategoryTitle,
+
+          content,
+        },
+
+        order: {
+          orderId:
+            order.OrderId,
+
+          paymentId:
+            order.PaymentId,
+
+          verifiedAt:
+            order.VerifiedAt,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Paid note content error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        error:
+          "Unable to load note content",
+      });
+    }
   }
 );
 
