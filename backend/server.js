@@ -915,381 +915,403 @@ app.post("/api/login", async (req, res) => {
   }
 
 });
-// ======================================================
-// CREATE RAZORPAY ORDER
+
+
+     // ======================================================
+// CREATE RAZORPAY ORDER - JWT SECURED
 // ======================================================
 
 app.post(
   "/api/payment/create-order",
   async (req, res) => {
-
     try {
+      // =================================================
+      // AUTH TOKEN
+      // =================================================
 
-      const {
-        noteId,
-        userId,
-      } = req.body;
+      const authHeader =
+        req.headers.authorization;
 
-      console.log("");
-      console.log(
-        "================================="
-      );
-      console.log(
-        "CREATE ORDER REQUEST"
-      );
-      console.log(
-        "Note ID:",
-        noteId
-      );
-      console.log(
-        "User ID:",
-        userId
-      );
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.slice(7)
+          : null;
 
-      // -----------------------------
-      // CHECK NOTE ID
-      // -----------------------------
-
-      if (!noteId) {
-
-        return res.status(400).json({
-
+      if (!token) {
+        return res.status(401).json({
           success: false,
-
           error:
-            "Note ID is required",
-
+            "Please log in before purchasing notes",
         });
-
       }
 
-      // -----------------------------
-      // CHECK USER ID
-      // -----------------------------
+      // =================================================
+      // VERIFY JWT
+      // =================================================
 
-      if (!userId) {
+      let decoded;
 
-        return res.status(400).json({
-
+      try {
+        decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        );
+      } catch (error) {
+        return res.status(401).json({
           success: false,
-
           error:
-            "User ID is required",
-
+            "Your session has expired. Please log in again.",
         });
-
       }
 
-      // -----------------------------
-      // FIND NOTE
-      // -----------------------------
-
-      // =====================================================
-// LOAD NOTE FROM SQL DATABASE
-// =====================================================
-
-const pool = await connectDB();
-
-const noteResult = await pool
-  .request()
-  .input(
-    "NoteId",
-    sql.Int,
-    Number(noteId)
-  )
-  .query(`
-    SELECT TOP 1
-  Id,
-  Title,
-  Price,
-  Pdf,
-
-  CASE
-    WHEN Content IS NOT NULL
-      AND LTRIM(RTRIM(Content)) <> ''
-    THEN CAST(1 AS BIT)
-    ELSE CAST(0 AS BIT)
-  END AS HasContent,
-
-  IsActive
-
-FROM dbo.Notes
-WHERE Id = @NoteId
-  `);
-
-if (
-  noteResult.recordset.length === 0
-) {
-  return res.status(404).json({
-    success: false,
-    error: "Note not found",
-  });
-}
-
-const dbNote =
-  noteResult.recordset[0];
-
-if (!dbNote.IsActive) {
-  return res.status(403).json({
-    success: false,
-    error:
-      "This note is currently unavailable.",
-  });
-}
-
-if (!dbNote.HasContent) {
-  return res.status(400).json({
-    success: false,
-    error:
-      "This note is not available for purchase yet",
-  });
-}
-
-const note = {
-  id: dbNote.Id,
-
-  title:
-    dbNote.Title,
-
-  price:
-    Number(
-      dbNote.Price
-    ) || 0,
-
-  // old orders compatibility
-  pdf:
-    dbNote.Pdf || null,
-};
-
-      // -----------------------------
-      // CHECK USER IN SQL
-      // -----------------------------
-
-        // =====================================================
-// CHECK WHETHER NOTE SALES ARE ENABLED
-// =====================================================
-
-const settingsResult = await pool.request().query(`
-  SELECT TOP 1
-    NotesSalesEnabled
-  FROM dbo.SiteSettings
-  ORDER BY Id DESC
-`);
-
-const notesSalesEnabled =
-  settingsResult.recordset.length === 0
-    ? true
-    : Boolean(settingsResult.recordset[0].NotesSalesEnabled);
-
-if (!notesSalesEnabled) {
-  return res.status(403).json({
-    success: false,
-    error:
-      "Notes purchasing is temporarily unavailable. Please try again later.",
-    code: "NOTES_SALES_DISABLED",
-  });
-}
-
-      const userResult =
-  await pool
-    .request()
-    .input(
-      "UserId",
-      sql.Int,
-      Number(userId)
-    )
-    .query(`
-      SELECT
-        Id
-      FROM dbo.Users
-      WHERE Id = @UserId
-    `);
+      const userId =
+        Number(decoded?.userId);
 
       if (
-        userResult.recordset.length === 0
+        !Number.isInteger(userId) ||
+        userId <= 0
       ) {
-
-        return res.status(404).json({
-
+        return res.status(401).json({
           success: false,
-
           error:
-            "User not found",
-
+            "Invalid login session",
         });
-
       }
 
-      // -----------------------------
+      // =================================================
+      // NOTE ID
+      // =================================================
+
+      const noteId =
+        Number(req.body?.noteId);
+
+      if (
+        !Number.isInteger(noteId) ||
+        noteId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Valid Note ID is required",
+        });
+      }
+
+      const pool =
+        await connectDB();
+
+      // =================================================
+      // LOAD NOTE FROM SQL
+      // =================================================
+
+      const noteResult =
+        await pool
+          .request()
+
+          .input(
+            "NoteId",
+            sql.Int,
+            noteId
+          )
+
+          .query(`
+            SELECT TOP 1
+              Id,
+              Title,
+              Price,
+              Pdf,
+
+              CASE
+                WHEN Content IS NOT NULL
+                  AND LTRIM(RTRIM(Content)) <> ''
+                THEN CAST(1 AS BIT)
+                ELSE CAST(0 AS BIT)
+              END AS HasContent,
+
+              IsActive
+
+            FROM dbo.Notes
+
+            WHERE Id = @NoteId
+          `);
+
+      if (
+        noteResult.recordset.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Note not found",
+        });
+      }
+
+      const dbNote =
+        noteResult.recordset[0];
+
+      if (!dbNote.IsActive) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "This note is currently unavailable.",
+        });
+      }
+
+      if (!dbNote.HasContent) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "This note is not available for purchase yet",
+        });
+      }
+
+      const note = {
+        id:
+          dbNote.Id,
+
+        title:
+          dbNote.Title,
+
+        price:
+          Number(
+            dbNote.Price
+          ) || 0,
+
+        pdf:
+          dbNote.Pdf ||
+          null,
+      };
+
+      // =================================================
+      // NOTES SALES SETTING
+      // =================================================
+
+      const settingsResult =
+        await pool
+          .request()
+          .query(`
+            SELECT TOP 1
+              NotesSalesEnabled
+            FROM dbo.SiteSettings
+            ORDER BY Id DESC
+          `);
+
+      const notesSalesEnabled =
+        settingsResult.recordset
+          .length === 0
+          ? true
+          : Boolean(
+              settingsResult
+                .recordset[0]
+                .NotesSalesEnabled
+            );
+
+      if (!notesSalesEnabled) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "Notes purchasing is temporarily unavailable. Please try again later.",
+          code:
+            "NOTES_SALES_DISABLED",
+        });
+      }
+
+      // =================================================
+      // VERIFY JWT USER EXISTS
+      // =================================================
+
+      const userResult =
+        await pool
+          .request()
+
+          .input(
+            "UserId",
+            sql.Int,
+            userId
+          )
+
+          .query(`
+            SELECT
+              Id
+            FROM dbo.Users
+            WHERE Id = @UserId
+          `);
+
+      if (
+        userResult.recordset.length ===
+        0
+      ) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "User account not found",
+        });
+      }
+
+      // =================================================
       // PRICE
-      // -----------------------------
+      // =================================================
 
       const amount =
         Number(note.price);
 
-      // -----------------------------
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Invalid note price",
+        });
+      }
+
+      // =================================================
       // CREATE RAZORPAY ORDER
-      // -----------------------------
+      // =================================================
 
       const razorpayOrder =
         await razorpay.orders.create({
-
           amount:
-            amount * 100,
+            Math.round(
+              amount * 100
+            ),
 
           currency:
             "INR",
 
           receipt:
             `receipt_${Date.now()}`,
-
         });
-// =================================================
-// SAVE ORDER TO SQL SERVER
-// =================================================
 
-await pool
-  .request()
+      // =================================================
+      // SAVE ORDER TO SQL
+      // =================================================
 
-  // ORDER ID
-  .input(
-    "OrderId",
-    sql.NVarChar(100),
-    razorpayOrder.id
-  )
+      await pool
+        .request()
 
-  // USER ID
-  .input(
-    "UserId",
-    sql.Int,
-    Number(userId)
-  )
+        .input(
+          "OrderId",
+          sql.NVarChar(100),
+          razorpayOrder.id
+        )
 
-  // NOTE ID
-  .input(
-    "NoteId",
-    sql.Int,
-    note.id
-  )
+        .input(
+          "UserId",
+          sql.Int,
+          userId
+        )
 
-  // TITLE
-  .input(
-    "Title",
-    sql.NVarChar(255),
-    note.title
-  )
+        .input(
+          "NoteId",
+          sql.Int,
+          note.id
+        )
 
-  // PRICE
-  .input(
-    "Price",
-    sql.Decimal(10, 2),
-    note.price
-  )
+        .input(
+          "Title",
+          sql.NVarChar(255),
+          note.title
+        )
 
-  // PDF
-  .input(
-    "Pdf",
-    sql.NVarChar(500),
-    note.pdf
-  )
+        .input(
+          "Price",
+          sql.Decimal(10, 2),
+          note.price
+        )
 
-  // PAID
-  .input(
-    "Paid",
-    sql.Bit,
-    false
-  )
+        .input(
+          "Pdf",
+          sql.NVarChar(500),
+          note.pdf
+        )
 
-  .query(`
-    INSERT INTO dbo.Orders
-    (
-      OrderId,
-      UserId,
-      NoteId,
-      Title,
-      Price,
-      Pdf,
-      Paid
-    )
-    VALUES
-    (
-      @OrderId,
-      @UserId,
-      @NoteId,
-      @Title,
-      @Price,
-      @Pdf,
-      @Paid
-    )
-  `);
+        .input(
+          "Paid",
+          sql.Bit,
+          false
+        )
 
-      // -----------------------------
-      // LOG
-      // -----------------------------
+        .query(`
+          INSERT INTO dbo.Orders
+          (
+            OrderId,
+            UserId,
+            NoteId,
+            Title,
+            Price,
+            Pdf,
+            Paid
+          )
+          VALUES
+          (
+            @OrderId,
+            @UserId,
+            @NoteId,
+            @Title,
+            @Price,
+            @Pdf,
+            @Paid
+          )
+        `);
+
+      console.log("");
+      console.log(
+        "================================="
+      );
 
       console.log(
-        "Razorpay Order ID:",
+        "SECURE RAZORPAY ORDER CREATED"
+      );
+
+      console.log(
+        "Order ID:",
         razorpayOrder.id
       );
 
       console.log(
-        "Note:",
-        note.title
-      );
-
-      console.log(
-        "Price:",
-        note.price
-      );
-
-      console.log(
-        "User ID:",
+        "User ID from JWT:",
         userId
       );
 
       console.log(
-        "ORDER SAVED TO SQL SERVER"
+        "Note ID:",
+        note.id
       );
 
       console.log(
         "================================="
       );
-      console.log("");
 
-      // -----------------------------
+      // =================================================
       // RESPONSE
-      // -----------------------------
+      // =================================================
 
-     return res.json({
-  success: true,
+      return res.json({
+        success: true,
 
-  keyId:
-    process.env.RAZORPAY_KEY_ID,
+        keyId:
+          process.env
+            .RAZORPAY_KEY_ID,
 
-  ...razorpayOrder,
-});
+        ...razorpayOrder,
+      });
 
     } catch (error) {
-
       console.error(
         "Razorpay order error:",
         error
       );
 
       return res.status(500).json({
-
         success: false,
-
         error:
           "Failed to create payment order",
-
       });
-
     }
-
   }
 );
-
 // ======================================================
 // VERIFY RAZORPAY PAYMENT
 // ======================================================
@@ -1584,179 +1606,6 @@ app.post(
 
     }
 
-  }
-);
-// ======================================================
-// MY PURCHASED NOTES
-// Logged-in user ke sirf paid notes
-// ======================================================
-
-app.get(
-  "/api/my-notes",
-  async (req, res) => {
-    try {
-      // -----------------------------------------------
-      // JWT TOKEN
-      // -----------------------------------------------
-
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.slice(7)
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          error:
-            "Please log in to view your notes",
-        });
-      }
-
-      // -----------------------------------------------
-      // VERIFY TOKEN
-      // -----------------------------------------------
-
-      let decoded;
-
-      try {
-        decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET
-        );
-      } catch (error) {
-        return res.status(401).json({
-          success: false,
-          error:
-            "Your session has expired. Please log in again.",
-        });
-      }
-
-      if (!decoded?.userId) {
-        return res.status(401).json({
-          success: false,
-          error:
-            "Invalid login session",
-        });
-      }
-
-      // -----------------------------------------------
-      // DATABASE
-      // -----------------------------------------------
-
-      const pool =
-        await connectDB();
-
-      const result =
-        await pool
-          .request()
-
-          .input(
-            "UserId",
-            sql.Int,
-            Number(decoded.userId)
-          )
-
-          .query(`
-            SELECT
-              o.OrderId,
-              o.NoteId,
-              o.Title,
-              o.Price,
-              o.PaymentId,
-              o.CreatedAt,
-              o.VerifiedAt,
-
-              n.CategoryTitle,
-              n.SubcategoryTitle,
-
-              CASE
-                WHEN n.Content IS NOT NULL
-                  AND LTRIM(RTRIM(n.Content)) <> ''
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-              END AS HasContent
-
-            FROM dbo.Orders o
-
-            INNER JOIN dbo.Notes n
-              ON n.Id = o.NoteId
-
-            WHERE
-              o.UserId = @UserId
-              AND o.Paid = 1
-
-            ORDER BY
-              COALESCE(
-                o.VerifiedAt,
-                o.CreatedAt
-              ) DESC
-          `);
-
-      const notes =
-        result.recordset.map(
-          (item) => ({
-            orderId:
-              item.OrderId,
-
-            noteId:
-              item.NoteId,
-
-            title:
-              item.Title,
-
-            price:
-              Number(
-                item.Price
-              ) || 0,
-
-            categoryTitle:
-              item.CategoryTitle,
-
-            subcategoryTitle:
-              item.SubcategoryTitle,
-
-            hasContent:
-              Boolean(
-                item.HasContent
-              ),
-
-            paymentId:
-              item.PaymentId,
-
-            purchasedAt:
-              item.VerifiedAt ||
-              item.CreatedAt,
-
-            readUrl:
-              `/read-note/${item.NoteId}?orderId=${encodeURIComponent(
-                item.OrderId
-              )}`,
-          })
-        );
-
-      return res.json({
-        success: true,
-        count:
-          notes.length,
-        notes,
-      });
-
-    } catch (error) {
-      console.error(
-        "My purchased notes error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        error:
-          "Unable to load purchased notes",
-      });
-    }
   }
 );
 // ======================================================

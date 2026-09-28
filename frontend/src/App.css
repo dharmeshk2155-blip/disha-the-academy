@@ -54,6 +54,16 @@ body {
   padding-top: var(--header-height); /* push content below the fixed top header */
 }
 
+/* Hide ALL scrollbars everywhere (page, sidebar, dropdowns etc.)
+   but scrolling itself keeps working with mouse wheel / touch / keyboard */
+* {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* old Edge / IE */
+}
+
+*::-webkit-scrollbar {
+  display: none;              /* Chrome, Edge, Safari, Opera */
+}
 /* ================================
    LEFT VERTICAL SIDEBAR (logo + nav links)
 ================================ */
@@ -72,6 +82,12 @@ body {
   z-index: 200;
   overflow-y: auto;
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.35);
+    /* Hide scrollbar but keep scrolling working */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.navbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Logo (now lives in the top header bar, before the search box) */

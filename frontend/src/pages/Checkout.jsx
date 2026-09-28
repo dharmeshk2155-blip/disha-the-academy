@@ -446,127 +446,156 @@ function Checkout() {
       return;
     }
 
-    const token =
-      localStorage.getItem(
-        "dishaToken"
+   const token =
+  localStorage.getItem(
+    "dishaToken"
+  );
+
+if (!token) {
+  localStorage.removeItem(
+    "dishaUser"
+  );
+
+  alert(
+    "Your login session is missing. Please log in again."
+  );
+
+  navigate("/login");
+
+  return;
+}
+
+try {
+  setLoading(true);
+
+  // -----------------------------------------------
+  // LOAD RAZORPAY SCRIPT
+  // -----------------------------------------------
+
+  const razorpayLoaded =
+    await loadRazorpay();
+
+  if (
+    !razorpayLoaded ||
+    !window.Razorpay
+  ) {
+    throw new Error(
+      "Razorpay failed to load. Please check your internet connection."
+    );
+  }
+
+  // -----------------------------------------------
+  // CREATE SECURE RAZORPAY ORDER
+  // -----------------------------------------------
+
+  const response =
+    await fetch(
+      `${API_BASE}/api/payment/create-order`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body:
+          JSON.stringify({
+            noteId:
+              Number(
+                note.id
+              ),
+          }),
+      }
+    );
+
+  const order =
+    await response
+      .json()
+      .catch(() => ({}));
+
+  console.log(
+    "CREATE ORDER RESPONSE:",
+    order
+  );
+
+  // -----------------------------------------------
+  // EXPIRED / INVALID LOGIN
+  // -----------------------------------------------
+
+  if (response.status === 401) {
+    localStorage.removeItem(
+      "dishaToken"
+    );
+
+    localStorage.removeItem(
+      "dishaUser"
+    );
+
+    alert(
+      order.error ||
+        order.message ||
+        "Your session has expired. Please log in again."
+    );
+
+    navigate("/login");
+
+    return;
+  }
+
+  // -----------------------------------------------
+  // CREATE ORDER ERROR
+  // -----------------------------------------------
+
+  if (
+    !response.ok ||
+    !order.success
+  ) {
+    if (
+      order.code ===
+      "NOTES_SALES_DISABLED"
+    ) {
+      setNotesSalesEnabled(
+        false
       );
+    }
 
-    try {
-      setLoading(true);
+    throw new Error(
+      order.error ||
+        order.message ||
+        "Failed to create payment order"
+    );
+  }
 
-      // -----------------------------------------------
-      // LOAD RAZORPAY SCRIPT
-      // -----------------------------------------------
+  // -----------------------------------------------
+  // RAZORPAY KEY
+  // -----------------------------------------------
 
-      const razorpayLoaded =
-        await loadRazorpay();
+  const razorpayKey =
+    order.keyId ||
+    import.meta.env
+      .VITE_RAZORPAY_KEY_ID;
 
-      if (
-        !razorpayLoaded ||
-        !window.Razorpay
-      ) {
-        throw new Error(
-          "Razorpay failed to load. Please check your internet connection."
-        );
-      }
+  if (!razorpayKey) {
+    throw new Error(
+      "Razorpay Key ID is missing."
+    );
+  }
 
-      // -----------------------------------------------
-      // CREATE RAZORPAY ORDER
-      // -----------------------------------------------
+  if (!order.id) {
+    throw new Error(
+      "Razorpay Order ID is missing."
+    );
+  }
 
-      const response =
-        await fetch(
-          `${API_BASE}/api/payment/create-order`,
-          {
-            method:
-              "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              ...(token
-                ? {
-                    Authorization:
-                      `Bearer ${token}`,
-                  }
-                : {}),
-            },
-
-            body:
-              JSON.stringify({
-                noteId:
-                  Number(
-                    note.id
-                  ),
-
-                // Current backend compatibility.
-                // Later backend ko JWT-only karenge.
-                userId:
-                  loggedInUser.id,
-              }),
-          }
-        );
-
-      const order =
-        await response
-          .json()
-          .catch(
-            () => ({})
-          );
-
-      console.log(
-        "CREATE ORDER RESPONSE:",
-        order
-      );
-
-      if (
-        !response.ok ||
-        !order.success
-      ) {
-        if (
-          order.code ===
-          "NOTES_SALES_DISABLED"
-        ) {
-          setNotesSalesEnabled(
-            false
-          );
-        }
-
-        throw new Error(
-          order.error ||
-            order.message ||
-            "Failed to create payment order"
-        );
-      }
-
-      // -----------------------------------------------
-      // RAZORPAY KEY
-      // -----------------------------------------------
-
-      const razorpayKey =
-        order.keyId ||
-        import.meta.env
-          .VITE_RAZORPAY_KEY_ID;
-
-      if (!razorpayKey) {
-        throw new Error(
-          "Razorpay Key ID is missing."
-        );
-      }
-
-      if (!order.id) {
-        throw new Error(
-          "Razorpay Order ID is missing."
-        );
-      }
-
-      if (!order.amount) {
-        throw new Error(
-          "Payment amount is missing."
-        );
-      }
-
+  if (!order.amount) {
+    throw new Error(
+      "Payment amount is missing."
+    );
+  }
       // -----------------------------------------------
       // RAZORPAY OPTIONS
       // -----------------------------------------------

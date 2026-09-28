@@ -1,5 +1,11 @@
-﻿import React from "react";
+import React from "react";
 import "./Footer.css";
+import {
+              FaFacebookF,
+              FaInstagram,
+              FaYoutube,
+              FaTelegramPlane,
+         } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -12,13 +18,25 @@ const Footer = () => {
             Quality study notes, exam preparation material and current affairs
             to help you prepare smarter and achieve your goals.
           </p>
+          
 
-          <div className="footer-social">
-            <a href="#" aria-label="Facebook">f</a>
-            <a href="#" aria-label="Instagram">◎</a>
-            <a href="#" aria-label="YouTube">▶</a>
-            <a href="#" aria-label="Telegram">✈</a>
-          </div>
+         <div className="footer-social">
+  <a href="#" aria-label="Facebook">
+    <FaFacebookF />
+  </a>
+
+  <a href="#" aria-label="Instagram">
+    <FaInstagram />
+  </a>
+
+  <a href="#" aria-label="YouTube">
+    <FaYoutube />
+  </a>
+
+  <a href="#" aria-label="Telegram">
+    <FaTelegramPlane />
+  </a>
+</div>
         </div>
 
         <div className="footer-column">
