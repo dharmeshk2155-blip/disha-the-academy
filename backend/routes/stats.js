@@ -1,35 +1,49 @@
 const express = require("express");
-const { connectDB } = require("../db");
+
+const User = require("../models/User");
+const Test = require("../models/Test");
+const Question = require("../models/Question");
 
 const router = express.Router();
 
-// --- GET /api/stats ---
-// Returns real, live counts from the database for the About page
-// (and anywhere else genuine numbers are needed).
+// =====================================================
+// GET /api/stats
+// Live public statistics from MongoDB
+// =====================================================
+
 router.get("/", async (req, res) => {
   try {
-    const pool = await connectDB();
+    const [
+      registeredStudents,
+      mockTestsCount,
+      questionsCount,
+    ] = await Promise.all([
+      User.countDocuments({
+        isActive: true,
+      }),
 
-    const usersResult = await pool
-      .request()
-      .query("SELECT COUNT(*) AS count FROM Users");
+      Test.countDocuments({
+        isActive: true,
+      }),
 
-    const testsResult = await pool
-      .request()
-      .query("SELECT COUNT(*) AS count FROM Tests");
+      Question.countDocuments(),
+    ]);
 
-    const questionsResult = await pool
-      .request()
-      .query("SELECT COUNT(*) AS count FROM Questions");
-
-    res.json({
-      registeredStudents: usersResult.recordset[0].count,
-      mockTestsCount: testsResult.recordset[0].count,
-      questionsCount: questionsResult.recordset[0].count,
+    return res.json({
+      registeredStudents,
+      mockTestsCount,
+      questionsCount,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to load stats" });
+  } catch (error) {
+    console.error(
+      "MongoDB stats error:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        "Failed to load stats",
+    });
   }
 });
 

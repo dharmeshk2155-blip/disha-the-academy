@@ -1,7 +1,8 @@
 const express = require("express");
-const { sql, connectDB } = require("../db");
+const SiteSettings = require("../models/SiteSettings");
 
 const router = express.Router();
+
 
 // ======================================================
 // ADMIN SECURITY
@@ -10,7 +11,10 @@ const router = express.Router();
 function requireAdminKey(req, res, next) {
   const adminKey = req.header("x-admin-key");
 
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  if (
+    !adminKey ||
+    adminKey !== process.env.ADMIN_KEY
+  ) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized",
@@ -20,25 +24,91 @@ function requireAdminKey(req, res, next) {
   next();
 }
 
+
+// ======================================================
+// BOOLEAN HELPER
+// ======================================================
+
+function parseBoolean(
+  value,
+  defaultValue
+) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return defaultValue;
+  }
+
+  if (
+    value === true ||
+    value === "true" ||
+    value === 1 ||
+    value === "1"
+  ) {
+    return true;
+  }
+
+  if (
+    value === false ||
+    value === "false" ||
+    value === 0 ||
+    value === "0"
+  ) {
+    return false;
+  }
+
+  return defaultValue;
+}
+
+
 // ======================================================
 // FORMAT SETTINGS
 // ======================================================
 
-function formatSettings(row) {
-  if (!row) return null;
+function formatSettings(settings) {
+  if (!settings) {
+    return null;
+  }
 
   return {
-    id: row.Id,
-    siteName: row.SiteName || "",
-    tagline: row.Tagline || "",
-    supportEmail: row.SupportEmail || "",
-    supportPhone: row.SupportPhone || "",
-    maintenanceMode: Boolean(row.MaintenanceMode),
-    notesSalesEnabled: Boolean(row.NotesSalesEnabled),
-    createdAt: row.CreatedAt,
-    updatedAt: row.UpdatedAt,
+    id:
+      settings._id?.toString(),
+
+    siteName:
+      settings.siteName ||
+      "",
+
+    tagline:
+      settings.tagline ||
+      "",
+
+    supportEmail:
+      settings.supportEmail ||
+      "",
+
+    supportPhone:
+      settings.supportPhone ||
+      "",
+
+    maintenanceMode:
+      Boolean(
+        settings.maintenanceMode
+      ),
+
+    notesSalesEnabled:
+      settings.notesSalesEnabled !==
+      false,
+
+    createdAt:
+      settings.createdAt,
+
+    updatedAt:
+      settings.updatedAt,
   };
 }
+
 
 // ======================================================
 // PUBLIC SETTINGS
@@ -47,253 +117,175 @@ function formatSettings(row) {
 
 router.get("/", async (req, res) => {
   try {
-    const pool = await connectDB();
-
-    const result = await pool.request().query(`
-      SELECT TOP 1
-        Id,
-        SiteName,
-        Tagline,
-        SupportEmail,
-        SupportPhone,
-        MaintenanceMode,
-        NotesSalesEnabled,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.SiteSettings
-      ORDER BY Id DESC
-    `);
-
-    if (result.recordset.length === 0) {
-      return res.json({
-        success: true,
-        settings: null,
-      });
-    }
+    const settings =
+      await SiteSettings.findOne({
+        key: "main",
+      }).lean();
 
     return res.json({
       success: true,
-      settings: formatSettings(result.recordset[0]),
+      settings:
+        formatSettings(settings),
     });
   } catch (error) {
-    console.error("Get settings error:", error);
+    console.error(
+      "Get MongoDB settings error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Unable to load website settings",
+      message:
+        "Unable to load website settings",
     });
   }
 });
+
 
 // ======================================================
 // ADMIN SETTINGS
 // GET /api/settings/admin
 // ======================================================
 
-router.get("/admin", requireAdminKey, async (req, res) => {
-  try {
-    const pool = await connectDB();
+router.get(
+  "/admin",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const settings =
+        await SiteSettings.findOne({
+          key: "main",
+        }).lean();
 
-    const result = await pool.request().query(`
-      SELECT TOP 1
-        Id,
-        SiteName,
-        Tagline,
-        SupportEmail,
-        SupportPhone,
-        MaintenanceMode,
-        NotesSalesEnabled,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.SiteSettings
-      ORDER BY Id DESC
-    `);
+      return res.json({
+        success: true,
+        settings:
+          formatSettings(settings),
+      });
+    } catch (error) {
+      console.error(
+        "Admin get MongoDB settings error:",
+        error
+      );
 
-    return res.json({
-      success: true,
-      settings:
-        result.recordset.length > 0
-          ? formatSettings(result.recordset[0])
-          : null,
-    });
-  } catch (error) {
-    console.error("Admin get settings error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load website settings",
-    });
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to load website settings",
+      });
+    }
   }
-});
+);
+
 
 // ======================================================
 // UPDATE SETTINGS
 // PUT /api/settings
 // ======================================================
 
-router.put("/", requireAdminKey, async (req, res) => {
-  try {
-    const {
-      siteName,
-      tagline = "",
-      supportEmail = "",
-      supportPhone = "",
-      maintenanceMode = false,
-      notesSalesEnabled = true,
-    } = req.body;
+router.put(
+  "/",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const {
+        siteName,
+        tagline = "",
+        supportEmail = "",
+        supportPhone = "",
+        maintenanceMode = false,
+        notesSalesEnabled = true,
+      } = req.body;
 
-    const cleanSiteName = String(siteName || "").trim();
+      const cleanSiteName =
+        String(
+          siteName || ""
+        ).trim();
 
-    if (!cleanSiteName) {
-      return res.status(400).json({
+      if (!cleanSiteName) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Site name is required",
+        });
+      }
+
+      const settings =
+        await SiteSettings
+          .findOneAndUpdate(
+            {
+              key: "main",
+            },
+
+            {
+              $set: {
+                siteName:
+                  cleanSiteName,
+
+                tagline:
+                  String(
+                    tagline || ""
+                  ).trim(),
+
+                supportEmail:
+                  String(
+                    supportEmail || ""
+                  ).trim(),
+
+                supportPhone:
+                  String(
+                    supportPhone || ""
+                  ).trim(),
+
+                maintenanceMode:
+                  parseBoolean(
+                    maintenanceMode,
+                    false
+                  ),
+
+                notesSalesEnabled:
+                  parseBoolean(
+                    notesSalesEnabled,
+                    true
+                  ),
+              },
+
+              $setOnInsert: {
+                key: "main",
+              },
+            },
+
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+            }
+          )
+          .lean();
+
+      return res.json({
+        success: true,
+        message:
+          "Website settings saved successfully",
+
+        settings:
+          formatSettings(settings),
+      });
+    } catch (error) {
+      console.error(
+        "Save MongoDB settings error:",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: "Site name is required",
+        message:
+          "Unable to save website settings",
       });
     }
-
-    const pool = await connectDB();
-
-    const existing = await pool.request().query(`
-      SELECT TOP 1 Id
-      FROM dbo.SiteSettings
-      ORDER BY Id DESC
-    `);
-
-    let result;
-
-    if (existing.recordset.length > 0) {
-      const id = existing.recordset[0].Id;
-
-      result = await pool
-        .request()
-        .input("Id", sql.Int, id)
-        .input("SiteName", sql.NVarChar(200), cleanSiteName)
-        .input(
-          "Tagline",
-          sql.NVarChar(500),
-          String(tagline || "").trim()
-        )
-        .input(
-          "SupportEmail",
-          sql.NVarChar(255),
-          String(supportEmail || "").trim()
-        )
-        .input(
-          "SupportPhone",
-          sql.NVarChar(30),
-          String(supportPhone || "").trim()
-        )
-        .input(
-          "MaintenanceMode",
-          sql.Bit,
-          Boolean(maintenanceMode)
-        )
-        .input(
-          "NotesSalesEnabled",
-          sql.Bit,
-          Boolean(notesSalesEnabled)
-        )
-        .query(`
-          UPDATE dbo.SiteSettings
-
-          SET
-            SiteName = @SiteName,
-            Tagline = @Tagline,
-            SupportEmail = @SupportEmail,
-            SupportPhone = @SupportPhone,
-            MaintenanceMode = @MaintenanceMode,
-            NotesSalesEnabled = @NotesSalesEnabled,
-            UpdatedAt = SYSDATETIME()
-
-          OUTPUT
-            INSERTED.Id,
-            INSERTED.SiteName,
-            INSERTED.Tagline,
-            INSERTED.SupportEmail,
-            INSERTED.SupportPhone,
-            INSERTED.MaintenanceMode,
-            INSERTED.NotesSalesEnabled,
-            INSERTED.CreatedAt,
-            INSERTED.UpdatedAt
-
-          WHERE Id = @Id
-        `);
-    } else {
-      result = await pool
-        .request()
-        .input("SiteName", sql.NVarChar(200), cleanSiteName)
-        .input(
-          "Tagline",
-          sql.NVarChar(500),
-          String(tagline || "").trim()
-        )
-        .input(
-          "SupportEmail",
-          sql.NVarChar(255),
-          String(supportEmail || "").trim()
-        )
-        .input(
-          "SupportPhone",
-          sql.NVarChar(30),
-          String(supportPhone || "").trim()
-        )
-        .input(
-          "MaintenanceMode",
-          sql.Bit,
-          Boolean(maintenanceMode)
-        )
-        .input(
-          "NotesSalesEnabled",
-          sql.Bit,
-          Boolean(notesSalesEnabled)
-        )
-        .query(`
-          INSERT INTO dbo.SiteSettings
-          (
-            SiteName,
-            Tagline,
-            SupportEmail,
-            SupportPhone,
-            MaintenanceMode,
-            NotesSalesEnabled
-          )
-
-          OUTPUT
-            INSERTED.Id,
-            INSERTED.SiteName,
-            INSERTED.Tagline,
-            INSERTED.SupportEmail,
-            INSERTED.SupportPhone,
-            INSERTED.MaintenanceMode,
-            INSERTED.NotesSalesEnabled,
-            INSERTED.CreatedAt,
-            INSERTED.UpdatedAt
-
-          VALUES
-          (
-            @SiteName,
-            @Tagline,
-            @SupportEmail,
-            @SupportPhone,
-            @MaintenanceMode,
-            @NotesSalesEnabled
-          )
-        `);
-    }
-
-    return res.json({
-      success: true,
-      message: "Website settings saved successfully",
-      settings: formatSettings(result.recordset[0]),
-    });
-  } catch (error) {
-    console.error("Save settings error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to save website settings",
-    });
   }
-});
+);
+
 
 module.exports = router;

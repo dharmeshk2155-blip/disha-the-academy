@@ -1,5 +1,8 @@
 const express = require("express");
-const { sql, connectDB } = require("../db");
+const mongoose = require("mongoose");
+
+const User = require("../models/User");
+const Order = require("../models/Order");
 
 const router = express.Router();
 
@@ -10,7 +13,10 @@ const router = express.Router();
 function requireAdminKey(req, res, next) {
   const adminKey = req.header("x-admin-key");
 
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  if (
+    !adminKey ||
+    adminKey !== process.env.ADMIN_KEY
+  ) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized",
@@ -21,165 +27,269 @@ function requireAdminKey(req, res, next) {
 }
 
 // ======================================================
+// HELPER
+// Escape special RegExp characters in search
+// ======================================================
+
+function escapeRegex(value) {
+  return String(value).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+}
+
+// ======================================================
 // GET ALL USERS
 // GET /api/admin/users
 // ======================================================
 
-router.get("/", requireAdminKey, async (req, res) => {
-  try {
-    const pool = await connectDB();
+router.get(
+  "/",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const search =
+        String(
+          req.query.search || ""
+        ).trim();
 
-    const search = String(req.query.search || "").trim();
+      // ------------------------------------------
+      // SEARCH FILTER
+      // ------------------------------------------
 
-    const request = pool.request();
+      let filter = {};
 
-    let whereClause = "";
+      if (search) {
+        const safeSearch =
+          escapeRegex(search);
 
-    if (search) {
-      request.input(
-        "Search",
-        sql.NVarChar(200),
-        `%${search}%`
+        const searchRegex =
+          new RegExp(
+            safeSearch,
+            "i"
+          );
+
+        filter = {
+          $or: [
+            {
+              fullName:
+                searchRegex,
+            },
+            {
+              email:
+                searchRegex,
+            },
+            {
+              mobile:
+                searchRegex,
+            },
+          ],
+        };
+      }
+
+      // ------------------------------------------
+      // LOAD USERS
+      // ------------------------------------------
+
+      const userDocuments =
+        await User.find(filter)
+          .sort({
+            createdAt: -1,
+            _id: -1,
+          })
+          .select(
+            "fullName email mobile createdAt"
+          )
+          .lean();
+
+      // ------------------------------------------
+      // FORMAT RESPONSE
+      // Same shape as old SQL API
+      // ------------------------------------------
+
+      const users =
+        userDocuments.map(
+          (user) => ({
+            id:
+              user._id.toString(),
+
+            name:
+              user.fullName,
+
+            email:
+              user.email,
+
+            mobile:
+              user.mobile || "",
+
+            createdAt:
+              user.createdAt,
+          })
+        );
+
+      return res.json({
+        success: true,
+        count: users.length,
+        users,
+      });
+    } catch (error) {
+      console.error(
+        "Admin users MongoDB error:",
+        error
       );
 
-      whereClause = `
-        WHERE
-          Name LIKE @Search
-          OR Email LIKE @Search
-          OR Mobile LIKE @Search
-      `;
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to load users",
+        });
     }
-
-    const result = await request.query(`
-      SELECT
-        Id,
-        Name,
-        Email,
-        Mobile,
-        CreatedAt
-      FROM dbo.Users
-      ${whereClause}
-      ORDER BY CreatedAt DESC, Id DESC
-    `);
-
-    const users = result.recordset.map((user) => ({
-      id: user.Id,
-      name: user.Name,
-      email: user.Email,
-      mobile: user.Mobile,
-      createdAt: user.CreatedAt,
-    }));
-
-    return res.json({
-      success: true,
-      count: users.length,
-      users,
-    });
-  } catch (error) {
-    console.error("Admin users error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load users",
-    });
   }
-});
+);
 
 // ======================================================
 // GET SINGLE USER
 // GET /api/admin/users/:id
 // ======================================================
 
-router.get("/:id", requireAdminKey, async (req, res) => {
-  try {
-    const userId = Number(req.params.id);
+router.get(
+  "/:id",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const userId =
+        String(
+          req.params.id || ""
+        ).trim();
 
-    if (!Number.isInteger(userId) || userId <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
+      // ------------------------------------------
+      // VALIDATE MONGODB OBJECT ID
+      // ------------------------------------------
+
+      if (
+        !mongoose.isValidObjectId(
+          userId
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid user ID",
+          });
+      }
+
+      // ------------------------------------------
+      // USER DETAILS
+      // ------------------------------------------
+
+      const user =
+        await User.findById(
+          userId
+        )
+          .select(
+            "fullName email mobile createdAt"
+          )
+          .lean();
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "User not found",
+          });
+      }
+
+      // ------------------------------------------
+      // USER ORDER SUMMARY
+      // Paid orders + total spent
+      // ------------------------------------------
+
+      const orderStats =
+        await Order.aggregate([
+          {
+            $match: {
+              userId:
+                new mongoose.Types.ObjectId(
+                  userId
+                ),
+
+              paid: true,
+            },
+          },
+
+          {
+            $group: {
+              _id: null,
+
+              paidOrders: {
+                $sum: 1,
+              },
+
+              totalSpent: {
+                $sum: "$price",
+              },
+            },
+          },
+        ]);
+
+      const stats =
+        orderStats[0] || {};
+
+      // ------------------------------------------
+      // RESPONSE
+      // ------------------------------------------
+
+      return res.json({
+        success: true,
+
+        user: {
+          id:
+            user._id.toString(),
+
+          name:
+            user.fullName,
+
+          email:
+            user.email,
+
+          mobile:
+            user.mobile || "",
+
+          createdAt:
+            user.createdAt,
+
+          paidOrders:
+            Number(
+              stats.paidOrders
+            ) || 0,
+
+          totalSpent:
+            Number(
+              stats.totalSpent
+            ) || 0,
+        },
       });
+    } catch (error) {
+      console.error(
+        "Admin user details MongoDB error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to load user details",
+        });
     }
-
-    const pool = await connectDB();
-
-    // ----------------------------------------------
-    // USER DETAILS
-    // ----------------------------------------------
-
-    const userResult = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query(`
-        SELECT
-          Id,
-          Name,
-          Email,
-          Mobile,
-          CreatedAt
-        FROM dbo.Users
-        WHERE Id = @UserId
-      `);
-
-    if (userResult.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const user = userResult.recordset[0];
-
-    // ----------------------------------------------
-    // USER ORDER SUMMARY
-    // ----------------------------------------------
-
-    const orderResult = await pool
-      .request()
-      .input("UserId", sql.Int, userId)
-      .query(`
-        SELECT
-          COUNT(CASE WHEN Paid = 1 THEN 1 END) AS PaidOrders,
-          ISNULL(
-            SUM(
-              CASE
-                WHEN Paid = 1 THEN Price
-                ELSE 0
-              END
-            ),
-            0
-          ) AS TotalSpent
-        FROM dbo.Orders
-        WHERE UserId = @UserId
-      `);
-
-    const orderStats = orderResult.recordset[0];
-
-    return res.json({
-      success: true,
-
-      user: {
-        id: user.Id,
-        name: user.Name,
-        email: user.Email,
-        mobile: user.Mobile,
-        createdAt: user.CreatedAt,
-
-        paidOrders:
-          Number(orderStats?.PaidOrders) || 0,
-
-        totalSpent:
-          Number(orderStats?.TotalSpent) || 0,
-      },
-    });
-  } catch (error) {
-    console.error("Admin user details error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load user details",
-    });
   }
-});
+);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const express = require("express");
-const { sql, connectDB } = require("../db");
+
+const AboutPage = require("../models/AboutPage");
 
 const router = express.Router();
 
@@ -10,7 +11,10 @@ const router = express.Router();
 function requireAdminKey(req, res, next) {
   const adminKey = req.header("x-admin-key");
 
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  if (
+    !adminKey ||
+    adminKey !== process.env.ADMIN_KEY
+  ) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized",
@@ -25,18 +29,27 @@ function requireAdminKey(req, res, next) {
 // ======================================================
 
 function formatPage(page) {
-  if (!page) return null;
+  if (!page) {
+    return null;
+  }
 
   return {
-    id: page.Id,
-    title: page.Title,
-    introduction: page.Introduction || "",
-    content: page.Content || "",
-    mission: page.Mission || "",
-    vision: page.Vision || "",
-    isActive: Boolean(page.IsActive),
-    createdAt: page.CreatedAt,
-    updatedAt: page.UpdatedAt,
+    id: page._id.toString(),
+    title: page.title,
+    introduction:
+      page.introduction || "",
+    content:
+      page.content || "",
+    mission:
+      page.mission || "",
+    vision:
+      page.vision || "",
+    isActive:
+      Boolean(page.isActive),
+    createdAt:
+      page.createdAt,
+    updatedAt:
+      page.updatedAt,
   };
 }
 
@@ -47,41 +60,33 @@ function formatPage(page) {
 
 router.get("/", async (req, res) => {
   try {
-    const pool = await connectDB();
-
-    const result = await pool.request().query(`
-      SELECT TOP 1
-        Id,
-        Title,
-        Introduction,
-        Content,
-        Mission,
-        Vision,
-        IsActive,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.AboutPage
-      WHERE IsActive = 1
-      ORDER BY Id DESC
-    `);
-
-    if (result.recordset.length === 0) {
-      return res.json({
-        success: true,
-        page: null,
-      });
-    }
+    const page =
+      await AboutPage.findOne({
+        isActive: true,
+      })
+        .sort({
+          createdAt: -1,
+          _id: -1,
+        })
+        .lean();
 
     return res.json({
       success: true,
-      page: formatPage(result.recordset[0]),
+      page:
+        page
+          ? formatPage(page)
+          : null,
     });
   } catch (error) {
-    console.error("Get About page error:", error);
+    console.error(
+      "MongoDB get About page error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Unable to load About page",
+      message:
+        "Unable to load About page",
     });
   }
 });
@@ -91,219 +96,182 @@ router.get("/", async (req, res) => {
 // GET /api/about/admin
 // ======================================================
 
-router.get("/admin", requireAdminKey, async (req, res) => {
-  try {
-    const pool = await connectDB();
+router.get(
+  "/admin",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const page =
+        await AboutPage.findOne({})
+          .sort({
+            createdAt: -1,
+            _id: -1,
+          })
+          .lean();
 
-    const result = await pool.request().query(`
-      SELECT TOP 1
-        Id,
-        Title,
-        Introduction,
-        Content,
-        Mission,
-        Vision,
-        IsActive,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.AboutPage
-      ORDER BY Id DESC
-    `);
+      return res.json({
+        success: true,
+        page:
+          page
+            ? formatPage(page)
+            : null,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin get About page error:",
+        error
+      );
 
-    return res.json({
-      success: true,
-      page:
-        result.recordset.length > 0
-          ? formatPage(result.recordset[0])
-          : null,
-    });
-  } catch (error) {
-    console.error("Admin get About page error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load About page",
-    });
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to load About page",
+        });
+    }
   }
-});
+);
 
 // ======================================================
 // CREATE / UPDATE ABOUT PAGE
 // PUT /api/about
 // ======================================================
 
-router.put("/", requireAdminKey, async (req, res) => {
-  try {
-    const {
-      title,
-      introduction = "",
-      content = "",
-      mission = "",
-      vision = "",
-      isActive = true,
-    } = req.body;
+router.put(
+  "/",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const {
+        title,
+        introduction = "",
+        content = "",
+        mission = "",
+        vision = "",
+        isActive = true,
+      } = req.body;
 
-    const cleanTitle = String(title || "").trim();
+      const cleanTitle =
+        String(
+          title || ""
+        ).trim();
 
-    if (!cleanTitle) {
-      return res.status(400).json({
-        success: false,
-        message: "Page title is required",
+      if (!cleanTitle) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Page title is required",
+          });
+      }
+
+      const cleanIntroduction =
+        String(
+          introduction || ""
+        ).trim();
+
+      const cleanContent =
+        String(
+          content || ""
+        ).trim();
+
+      const cleanMission =
+        String(
+          mission || ""
+        ).trim();
+
+      const cleanVision =
+        String(
+          vision || ""
+        ).trim();
+
+      // ------------------------------------------
+      // CHECK EXISTING ABOUT PAGE
+      // ------------------------------------------
+
+      let page =
+        await AboutPage.findOne({})
+          .sort({
+            createdAt: -1,
+            _id: -1,
+          });
+
+      // ------------------------------------------
+      // UPDATE EXISTING PAGE
+      // ------------------------------------------
+
+      if (page) {
+        page.title =
+          cleanTitle;
+
+        page.introduction =
+          cleanIntroduction;
+
+        page.content =
+          cleanContent;
+
+        page.mission =
+          cleanMission;
+
+        page.vision =
+          cleanVision;
+
+        page.isActive =
+          Boolean(isActive);
+
+        await page.save();
+      } else {
+        // ----------------------------------------
+        // CREATE FIRST ABOUT PAGE
+        // ----------------------------------------
+
+        page =
+          await AboutPage.create({
+            title:
+              cleanTitle,
+
+            introduction:
+              cleanIntroduction,
+
+            content:
+              cleanContent,
+
+            mission:
+              cleanMission,
+
+            vision:
+              cleanVision,
+
+            isActive:
+              Boolean(isActive),
+          });
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "About page saved successfully",
+
+        page:
+          formatPage(page),
       });
+    } catch (error) {
+      console.error(
+        "MongoDB save About page error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to save About page",
+        });
     }
-
-    const pool = await connectDB();
-
-    // Check whether About page already exists
-    const existingResult = await pool.request().query(`
-      SELECT TOP 1 Id
-      FROM dbo.AboutPage
-      ORDER BY Id DESC
-    `);
-
-    let result;
-
-    if (existingResult.recordset.length > 0) {
-      const pageId = existingResult.recordset[0].Id;
-
-      result = await pool
-        .request()
-        .input("Id", sql.Int, pageId)
-        .input(
-          "Title",
-          sql.NVarChar(300),
-          cleanTitle
-        )
-        .input(
-          "Introduction",
-          sql.NVarChar(sql.MAX),
-          String(introduction || "").trim()
-        )
-        .input(
-          "Content",
-          sql.NVarChar(sql.MAX),
-          String(content || "").trim()
-        )
-        .input(
-          "Mission",
-          sql.NVarChar(sql.MAX),
-          String(mission || "").trim()
-        )
-        .input(
-          "Vision",
-          sql.NVarChar(sql.MAX),
-          String(vision || "").trim()
-        )
-        .input(
-          "IsActive",
-          sql.Bit,
-          Boolean(isActive)
-        )
-        .query(`
-          UPDATE dbo.AboutPage
-
-          SET
-            Title = @Title,
-            Introduction = @Introduction,
-            Content = @Content,
-            Mission = @Mission,
-            Vision = @Vision,
-            IsActive = @IsActive,
-            UpdatedAt = SYSDATETIME()
-
-          OUTPUT
-            INSERTED.Id,
-            INSERTED.Title,
-            INSERTED.Introduction,
-            INSERTED.Content,
-            INSERTED.Mission,
-            INSERTED.Vision,
-            INSERTED.IsActive,
-            INSERTED.CreatedAt,
-            INSERTED.UpdatedAt
-
-          WHERE Id = @Id
-        `);
-    } else {
-      result = await pool
-        .request()
-        .input(
-          "Title",
-          sql.NVarChar(300),
-          cleanTitle
-        )
-        .input(
-          "Introduction",
-          sql.NVarChar(sql.MAX),
-          String(introduction || "").trim()
-        )
-        .input(
-          "Content",
-          sql.NVarChar(sql.MAX),
-          String(content || "").trim()
-        )
-        .input(
-          "Mission",
-          sql.NVarChar(sql.MAX),
-          String(mission || "").trim()
-        )
-        .input(
-          "Vision",
-          sql.NVarChar(sql.MAX),
-          String(vision || "").trim()
-        )
-        .input(
-          "IsActive",
-          sql.Bit,
-          Boolean(isActive)
-        )
-        .query(`
-          INSERT INTO dbo.AboutPage
-          (
-            Title,
-            Introduction,
-            Content,
-            Mission,
-            Vision,
-            IsActive
-          )
-
-          OUTPUT
-            INSERTED.Id,
-            INSERTED.Title,
-            INSERTED.Introduction,
-            INSERTED.Content,
-            INSERTED.Mission,
-            INSERTED.Vision,
-            INSERTED.IsActive,
-            INSERTED.CreatedAt,
-            INSERTED.UpdatedAt
-
-          VALUES
-          (
-            @Title,
-            @Introduction,
-            @Content,
-            @Mission,
-            @Vision,
-            @IsActive
-          )
-        `);
-    }
-
-    return res.json({
-      success: true,
-      message: "About page saved successfully",
-      page: formatPage(result.recordset[0]),
-    });
-  } catch (error) {
-    console.error("Save About page error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to save About page",
-    });
   }
-});
+);
 
 module.exports = router;

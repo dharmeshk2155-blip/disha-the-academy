@@ -1,20 +1,7 @@
 const express = require("express");
-const multer = require("multer");
-const { v2: cloudinary } = require("cloudinary");
+const Note = require("../models/Note");
 
 const router = express.Router();
-
-const { sql, connectDB } = require("../db");
-
-// ======================================================
-// CLOUDINARY
-// ======================================================
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // ======================================================
 // ADMIN SECURITY
@@ -37,146 +24,51 @@ function requireAdminKey(req, res, next) {
 }
 
 // ======================================================
-// NOTES IMAGE UPLOAD
+// FORMAT NOTE
 // ======================================================
 
-const imageStorage =
-  multer.memoryStorage();
+function formatNote(note) {
+  return {
+    id: note.id,
 
-const imageUpload = multer({
-  storage: imageStorage,
+    categorySlug:
+      note.categorySlug,
 
-  limits: {
-    fileSize:
-      8 * 1024 * 1024,
-  },
+    categoryTitle:
+      note.categoryTitle,
 
-  fileFilter: (
-    req,
-    file,
-    callback
-  ) => {
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    subcategorySlug:
+      note.subcategorySlug,
 
-    if (
-      !allowedTypes.includes(
-        file.mimetype
-      )
-    ) {
-      return callback(
-        new Error(
-          "Only JPG, PNG and WEBP images are allowed."
-        )
-      );
-    }
+    subcategoryTitle:
+      note.subcategoryTitle,
 
-    callback(null, true);
-  },
-});
+    title:
+      note.title,
 
-// ======================================================
-// UPLOAD NOTE IMAGE
-//
-// POST /api/admin/notes/upload-image
-// ======================================================
+    price:
+      Number(note.price) || 0,
 
-router.post(
-  "/upload-image",
-  requireAdminKey,
-  imageUpload.single("image"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Please select an image.",
-        });
-      }
+    pdf:
+      note.pdf || "",
 
-      const uploadResult =
-        await new Promise(
-          (
-            resolve,
-            reject
-          ) => {
-            const stream =
-              cloudinary.uploader.upload_stream(
-                {
-                  folder:
-                    "disha-the-academy/notes",
+    content:
+      note.content || "",
 
-                  resource_type:
-                    "image",
+    isActive:
+      Boolean(note.isActive),
 
-                  transformation: [
-                    {
-                      width: 1800,
-                      crop: "limit",
-                      quality: "auto",
-                      fetch_format:
-                        "auto",
-                    },
-                  ],
-                },
+    createdAt:
+      note.createdAt,
 
-                (
-                  error,
-                  result
-                ) => {
-                  if (error) {
-                    reject(error);
-                  } else {
-                    resolve(result);
-                  }
-                }
-              );
-
-            stream.end(
-              req.file.buffer
-            );
-          }
-        );
-
-      return res.json({
-        success: true,
-
-        message:
-          "Image uploaded successfully.",
-
-        imageUrl:
-          uploadResult.secure_url,
-
-        publicId:
-          uploadResult.public_id,
-
-        width:
-          uploadResult.width,
-
-        height:
-          uploadResult.height,
-      });
-    } catch (error) {
-      console.error(
-        "Note image upload error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Failed to upload image.",
-      });
-    }
-  }
-);
+    updatedAt:
+      note.updatedAt,
+  };
+}
 
 // ======================================================
 // GET ALL NOTES
+// GET /api/admin/notes
 // ======================================================
 
 router.get(
@@ -184,101 +76,36 @@ router.get(
   requireAdminKey,
   async (req, res) => {
     try {
-      const pool =
-        await connectDB();
-
-      const result =
-        await pool
-          .request()
-          .query(`
-            SELECT
-              Id,
-              CategorySlug,
-              CategoryTitle,
-              SubcategorySlug,
-              SubcategoryTitle,
-              Title,
-              Price,
-              Pdf,
-              Content,
-              IsActive,
-              CreatedAt,
-              UpdatedAt
-            FROM dbo.Notes
-            ORDER BY Id ASC
-          `);
-
       const notes =
-        result.recordset.map(
-          (note) => ({
-            id: note.Id,
-
-            categorySlug:
-              note.CategorySlug,
-
-            categoryTitle:
-              note.CategoryTitle,
-
-            subcategorySlug:
-              note.SubcategorySlug,
-
-            subcategoryTitle:
-              note.SubcategoryTitle,
-
-            title:
-              note.Title,
-
-            price:
-              Number(
-                note.Price
-              ) || 0,
-
-            // Old system preserved.
-            pdf:
-              note.Pdf || "",
-
-            // New article/book content.
-            content:
-              note.Content || "",
-
-            isActive:
-              Boolean(
-                note.IsActive
-              ),
-
-            createdAt:
-              note.CreatedAt,
-
-            updatedAt:
-              note.UpdatedAt,
-          })
-        );
+        await Note.find({})
+          .sort({ id: 1 })
+          .lean();
 
       return res.json({
         success: true,
         count:
           notes.length,
-        notes,
+        notes:
+          notes.map(formatNote),
       });
     } catch (error) {
       console.error(
-        "Admin notes fetch error:",
+        "Admin MongoDB notes fetch error:",
         error
       );
 
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message:
-            "Failed to load notes",
-        });
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load notes",
+      });
     }
   }
 );
 
 // ======================================================
 // CREATE NOTE
+// POST /api/admin/notes
 // ======================================================
 
 router.post(
@@ -336,10 +163,7 @@ router.post(
       const priceNumber =
         Number(price);
 
-      // ==================================================
       // REQUIRED FIELDS
-      // ==================================================
-
       if (
         !cleanCategorySlug ||
         !cleanCategoryTitle ||
@@ -347,189 +171,138 @@ router.post(
         !cleanSubcategoryTitle ||
         !cleanTitle
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message:
-              "Please fill all required fields.",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please fill all required fields.",
+        });
       }
 
-      // ==================================================
       // PRICE
-      // ==================================================
-
       if (
         !Number.isFinite(
           priceNumber
         ) ||
         priceNumber < 0
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message:
-              "Please enter a valid price.",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid price.",
+        });
       }
 
-      const pool =
-        await connectDB();
-
       // ==================================================
-      // NEXT ID
+      // NEXT NUMERIC NOTE ID
       // ==================================================
 
-      const idResult =
-        await pool
-          .request()
-          .query(`
-            SELECT
-              ISNULL(MAX(Id), 0) + 1
-                AS NextId
-            FROM dbo.Notes
-          `);
+      const lastNote =
+        await Note.findOne({})
+          .sort({ id: -1 })
+          .select({ id: 1 })
+          .lean();
 
       const nextId =
-        Number(
-          idResult
-            .recordset[0]
-            ?.NextId
-        ) || 1;
+        lastNote?.id
+          ? Number(lastNote.id) + 1
+          : 1;
 
       // ==================================================
-      // INSERT NOTE
+      // CREATE NOTE
       // ==================================================
 
-      await pool
-        .request()
+      const note =
+        await Note.create({
+          id:
+            nextId,
 
-        .input(
-          "Id",
-          sql.Int,
-          nextId
-        )
+          categorySlug:
+            cleanCategorySlug,
 
-        .input(
-          "CategorySlug",
-          sql.NVarChar(150),
-          cleanCategorySlug
-        )
+          categoryTitle:
+            cleanCategoryTitle,
 
-        .input(
-          "CategoryTitle",
-          sql.NVarChar(200),
-          cleanCategoryTitle
-        )
+          subcategorySlug:
+            cleanSubcategorySlug,
 
-        .input(
-          "SubcategorySlug",
-          sql.NVarChar(150),
-          cleanSubcategorySlug
-        )
+          subcategoryTitle:
+            cleanSubcategoryTitle,
 
-        .input(
-          "SubcategoryTitle",
-          sql.NVarChar(200),
-          cleanSubcategoryTitle
-        )
+          title:
+            cleanTitle,
 
-        .input(
-          "Title",
-          sql.NVarChar(255),
-          cleanTitle
-        )
+          price:
+            priceNumber,
 
-        .input(
-          "Price",
-          sql.Decimal(10, 2),
-          priceNumber
-        )
+          pdf:
+            cleanPdf,
 
-        .input(
-          "Pdf",
-          sql.NVarChar(500),
-          cleanPdf || null
-        )
+          content:
+            cleanContent,
 
-        .input(
-          "Content",
-          sql.NVarChar(
-            sql.MAX
-          ),
-          cleanContent || null
-        )
+          isActive:
+            isActive === false
+              ? false
+              : true,
+        });
 
-        .input(
-          "IsActive",
-          sql.Bit,
-          isActive === false
-            ? false
-            : true
-        )
-
-        .query(`
-          INSERT INTO dbo.Notes
-          (
-            Id,
-            CategorySlug,
-            CategoryTitle,
-            SubcategorySlug,
-            SubcategoryTitle,
-            Title,
-            Price,
-            Pdf,
-            Content,
-            IsActive
-          )
-
-          VALUES
-          (
-            @Id,
-            @CategorySlug,
-            @CategoryTitle,
-            @SubcategorySlug,
-            @SubcategoryTitle,
-            @Title,
-            @Price,
-            @Pdf,
-            @Content,
-            @IsActive
-          )
-        `);
+      console.log("");
+      console.log(
+        "================================="
+      );
+      console.log(
+        "MONGODB NOTE CREATED"
+      );
+      console.log(
+        "NOTE ID:",
+        note.id
+      );
+      console.log(
+        "TITLE:",
+        note.title
+      );
+      console.log(
+        "================================="
+      );
+      console.log("");
 
       return res
         .status(201)
         .json({
           success: true,
-
           message:
             "Note created successfully",
-
-          id: nextId,
+          id:
+            note.id,
         });
     } catch (error) {
       console.error(
-        "Admin create note error:",
+        "Admin MongoDB create note error:",
         error
       );
 
-      return res
-        .status(500)
-        .json({
+      if (
+        error?.code === 11000
+      ) {
+        return res.status(409).json({
           success: false,
-
           message:
-            "Failed to create note",
+            "A note with this ID already exists. Please try again.",
         });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to create note",
+      });
     }
   }
 );
 
 // ======================================================
 // UPDATE NOTE
+// PUT /api/admin/notes/:id
 // ======================================================
 
 router.put(
@@ -548,13 +321,11 @@ router.put(
         ) ||
         noteId <= 0
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message:
-              "Invalid note ID",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid note ID",
+        });
       }
 
       const {
@@ -568,14 +339,6 @@ router.put(
         content,
         isActive,
       } = req.body;
-
-      const contentProvided =
-        Object.prototype
-          .hasOwnProperty
-          .call(
-            req.body,
-            "content"
-          );
 
       const cleanCategorySlug =
         String(
@@ -607,11 +370,6 @@ router.put(
           pdf || ""
         ).trim();
 
-      const cleanContent =
-        String(
-          content || ""
-        ).trim();
-
       const priceNumber =
         Number(price);
 
@@ -622,14 +380,11 @@ router.put(
         !cleanSubcategoryTitle ||
         !cleanTitle
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-
-            message:
-              "Please fill all required fields.",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please fill all required fields.",
+        });
       }
 
       if (
@@ -638,177 +393,102 @@ router.put(
         ) ||
         priceNumber < 0
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-
-            message:
-              "Please enter a valid price.",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid price.",
+        });
       }
 
-      const pool =
-        await connectDB();
+      // Existing behavior:
+      // agar content request me nahi aaya,
+      // old content preserve hoga.
+      const updateData = {
+        categorySlug:
+          cleanCategorySlug,
 
-      const result =
-        await pool
-          .request()
+        categoryTitle:
+          cleanCategoryTitle,
 
-          .input(
-            "Id",
-            sql.Int,
-            noteId
-          )
+        subcategorySlug:
+          cleanSubcategorySlug,
 
-          .input(
-            "CategorySlug",
-            sql.NVarChar(150),
-            cleanCategorySlug
-          )
+        subcategoryTitle:
+          cleanSubcategoryTitle,
 
-          .input(
-            "CategoryTitle",
-            sql.NVarChar(200),
-            cleanCategoryTitle
-          )
+        title:
+          cleanTitle,
 
-          .input(
-            "SubcategorySlug",
-            sql.NVarChar(150),
-            cleanSubcategorySlug
-          )
+        price:
+          priceNumber,
 
-          .input(
-            "SubcategoryTitle",
-            sql.NVarChar(200),
-            cleanSubcategoryTitle
-          )
+        pdf:
+          cleanPdf,
 
-          .input(
-            "Title",
-            sql.NVarChar(255),
-            cleanTitle
-          )
-
-          .input(
-            "Price",
-            sql.Decimal(10, 2),
-            priceNumber
-          )
-
-          .input(
-            "Pdf",
-            sql.NVarChar(500),
-            cleanPdf || null
-          )
-
-          .input(
-            "Content",
-            sql.NVarChar(
-              sql.MAX
-            ),
-            contentProvided
-              ? cleanContent ||
-                null
-              : null
-          )
-
-          .input(
-            "ContentProvided",
-            sql.Bit,
-            contentProvided
-          )
-
-          .input(
-            "IsActive",
-            sql.Bit,
-            Boolean(
-              isActive
-            )
-          )
-
-          .query(`
-            UPDATE dbo.Notes
-
-            SET
-              CategorySlug =
-                @CategorySlug,
-
-              CategoryTitle =
-                @CategoryTitle,
-
-              SubcategorySlug =
-                @SubcategorySlug,
-
-              SubcategoryTitle =
-                @SubcategoryTitle,
-
-              Title =
-                @Title,
-
-              Price =
-                @Price,
-
-              Pdf =
-                @Pdf,
-
-              Content =
-                CASE
-                  WHEN
-                    @ContentProvided = 1
-                  THEN @Content
-                  ELSE Content
-                END,
-
-              IsActive =
-                @IsActive,
-
-              UpdatedAt =
-                SYSDATETIME()
-
-            WHERE Id = @Id
-          `);
+        isActive:
+          Boolean(isActive),
+      };
 
       if (
-        !result
-          .rowsAffected?.[0]
+        Object.prototype
+          .hasOwnProperty.call(
+            req.body,
+            "content"
+          )
       ) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message:
-              "Note not found",
-          });
+        updateData.content =
+          String(
+            content || ""
+          ).trim();
+      }
+
+      const note =
+        await Note.findOneAndUpdate(
+          {
+            id:
+              noteId,
+          },
+          {
+            $set:
+              updateData,
+          },
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
+
+      if (!note) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Note not found",
+        });
       }
 
       return res.json({
         success: true,
-
         message:
           "Note updated successfully",
       });
     } catch (error) {
       console.error(
-        "Admin update note error:",
+        "Admin MongoDB update note error:",
         error
       );
 
-      return res
-        .status(500)
-        .json({
-          success: false,
-
-          message:
-            "Failed to update note",
-        });
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to update note",
+      });
     }
   }
 );
 
 // ======================================================
 // DEACTIVATE NOTE
+// DELETE /api/admin/notes/:id
 // ======================================================
 
 router.delete(
@@ -827,133 +507,56 @@ router.delete(
         ) ||
         noteId <= 0
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message:
-              "Invalid note ID",
-          });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid note ID",
+        });
       }
 
-      const pool =
-        await connectDB();
+      const note =
+        await Note.findOneAndUpdate(
+          {
+            id:
+              noteId,
+          },
+          {
+            $set: {
+              isActive:
+                false,
+            },
+          },
+          {
+            new: true,
+          }
+        );
 
-      const result =
-        await pool
-          .request()
-
-          .input(
-            "Id",
-            sql.Int,
-            noteId
-          )
-
-          .query(`
-            UPDATE dbo.Notes
-
-            SET
-              IsActive = 0,
-
-              UpdatedAt =
-                SYSDATETIME()
-
-            WHERE Id = @Id
-          `);
-
-      if (
-        !result
-          .rowsAffected?.[0]
-      ) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message:
-              "Note not found",
-          });
+      if (!note) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Note not found",
+        });
       }
 
       return res.json({
         success: true,
-
         message:
           "Note deactivated successfully",
       });
     } catch (error) {
       console.error(
-        "Admin delete note error:",
+        "Admin MongoDB deactivate note error:",
         error
       );
 
-      return res
-        .status(500)
-        .json({
-          success: false,
-
-          message:
-            "Failed to deactivate note",
-        });
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to deactivate note",
+      });
     }
   }
 );
-
-// ======================================================
-// MULTER / IMAGE ERROR HANDLER
-// ======================================================
-
-router.use(
-  (
-    error,
-    req,
-    res,
-    next
-  ) => {
-    if (
-      error instanceof
-      multer.MulterError
-    ) {
-      if (
-        error.code ===
-        "LIMIT_FILE_SIZE"
-      ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-
-            message:
-              "Image must be smaller than 8 MB.",
-          });
-      }
-
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message:
-            error.message,
-        });
-    }
-
-    if (error) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-
-          message:
-            error.message ||
-            "Image upload failed.",
-        });
-    }
-
-    next();
-  }
-);
-
-// ======================================================
-// EXPORT
-// ======================================================
 
 module.exports = router;

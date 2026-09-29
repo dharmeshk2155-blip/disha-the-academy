@@ -1,0 +1,72 @@
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      maxlength: 150,
+      index: true,
+    },
+
+    mobile: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+      default: "",
+    },
+
+    passwordHash: {
+      type: String,
+      default: "",
+    },
+    resetOTPHash: {
+  type: String,
+  default: null,
+},
+
+resetOTPExpiry: {
+  type: Date,
+  default: null,
+},
+
+resetOTPRequestedAt: {
+  type: Date,
+  default: null,
+},
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
+    googleId: {
+      type: String,
+      default: "",
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+module.exports =
+  mongoose.models.User ||
+  mongoose.model("User", userSchema);

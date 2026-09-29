@@ -1,7 +1,10 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const multer = require("multer");
+
 const { v2: cloudinary } = require("cloudinary");
-const { sql, connectDB } = require("../db");
+
+const Blog = require("../models/Blog");
 
 const router = express.Router();
 
@@ -22,9 +25,13 @@ cloudinary.config({
 function requireAdminKey(req, res, next) {
   const adminKey = req.headers["x-admin-key"];
 
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  if (
+    !adminKey ||
+    adminKey !== process.env.ADMIN_KEY
+  ) {
     return res.status(401).json({
-      message: "Unauthorized admin request",
+      message:
+        "Unauthorized admin request",
     });
   }
 
@@ -32,27 +39,81 @@ function requireAdminKey(req, res, next) {
 }
 
 /* =========================================================
+   FORMAT BLOG
+========================================================= */
+
+function formatBlog(blog) {
+  return {
+    id: blog._id.toString(),
+
+    title:
+      blog.title,
+
+    category:
+      blog.category || "",
+
+    summary:
+      blog.summary,
+
+    imageUrl:
+      blog.imageUrl || "",
+
+    content:
+      blog.content,
+
+    author:
+      blog.author ||
+      "Disha The Academy",
+
+    date:
+      blog.publishedDate,
+
+    status:
+      blog.status,
+
+    createdAt:
+      blog.createdAt,
+
+    updatedAt:
+      blog.updatedAt,
+  };
+}
+
+/* =========================================================
    IMAGE UPLOAD
 ========================================================= */
 
-const storage = multer.memoryStorage();
+const storage =
+  multer.memoryStorage();
 
 const upload = multer({
   storage,
+
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize:
+      5 * 1024 * 1024,
   },
 
-  fileFilter: (req, file, cb) => {
+  fileFilter: (
+    req,
+    file,
+    cb
+  ) => {
     const allowedTypes = [
       "image/jpeg",
       "image/png",
       "image/webp",
     ];
 
-    if (!allowedTypes.includes(file.mimetype)) {
+    if (
+      !allowedTypes.includes(
+        file.mimetype
+      )
+    ) {
       return cb(
-        new Error("Only JPG, PNG and WEBP images are allowed")
+        new Error(
+          "Only JPG, PNG and WEBP images are allowed"
+        )
       );
     }
 
@@ -72,52 +133,85 @@ router.post(
   async (req, res) => {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          message: "Please select an image",
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Please select an image",
+          });
       }
 
-      const uploadResult = await new Promise(
-        (resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "disha-the-academy/blog",
-              resource_type: "image",
-
-              transformation: [
+      const uploadResult =
+        await new Promise(
+          (
+            resolve,
+            reject
+          ) => {
+            const stream =
+              cloudinary.uploader.upload_stream(
                 {
-                  width: 1400,
-                  height: 800,
-                  crop: "limit",
-                  quality: "auto",
-                  fetch_format: "auto",
+                  folder:
+                    "disha-the-academy/blog",
+
+                  resource_type:
+                    "image",
+
+                  transformation: [
+                    {
+                      width: 1400,
+                      height: 800,
+                      crop: "limit",
+                      quality: "auto",
+                      fetch_format:
+                        "auto",
+                    },
+                  ],
                 },
-              ],
-            },
-            (error, result) => {
-              if (error) {
-                reject(error);
-              } else {
-                resolve(result);
-              }
-            }
-          );
 
-          stream.end(req.file.buffer);
-        }
-      );
+                (
+                  error,
+                  result
+                ) => {
+                  if (error) {
+                    reject(
+                      error
+                    );
+                  } else {
+                    resolve(
+                      result
+                    );
+                  }
+                }
+              );
 
-      res.json({
-        message: "Image uploaded successfully",
-        imageUrl: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
+            stream.end(
+              req.file.buffer
+            );
+          }
+        );
+
+      return res.json({
+        message:
+          "Image uploaded successfully",
+
+        imageUrl:
+          uploadResult.secure_url,
+
+        publicId:
+          uploadResult.public_id,
       });
     } catch (error) {
-      console.error("Blog image upload error:", error);
+      console.error(
+        "Blog image upload error:",
+        error
+      );
 
-      res.status(500).json({
-        message: "Image upload failed",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Image upload failed",
+        });
     }
   }
 );
@@ -129,33 +223,34 @@ router.post(
 
 router.get("/", async (req, res) => {
   try {
-    const pool = await connectDB();
+    const blogDocuments =
+      await Blog.find({
+        status: "Published",
+      })
+        .sort({
+          publishedDate: -1,
+          _id: -1,
+        })
+        .lean();
 
-    const result = await pool.request().query(`
-      SELECT
-        Id AS id,
-        Title AS title,
-        Category AS category,
-        Summary AS summary,
-        ImageUrl AS imageUrl,
-        Content AS content,
-        Author AS author,
-        PublishedDate AS date,
-        Status AS status,
-        CreatedAt AS createdAt,
-        UpdatedAt AS updatedAt
-      FROM dbo.Blogs
-      WHERE Status = 'Published'
-      ORDER BY PublishedDate DESC, Id DESC
-    `);
+    const blogs =
+      blogDocuments.map(
+        formatBlog
+      );
 
-    res.json(result.recordset);
+    return res.json(blogs);
   } catch (error) {
-    console.error("Get blogs error:", error);
+    console.error(
+      "MongoDB get blogs error:",
+      error
+    );
 
-    res.status(500).json({
-      message: "Failed to load blogs",
-    });
+    return res
+      .status(500)
+      .json({
+        message:
+          "Failed to load blogs",
+      });
   }
 });
 
@@ -169,32 +264,34 @@ router.get(
   requireAdminKey,
   async (req, res) => {
     try {
-      const pool = await connectDB();
+      const blogDocuments =
+        await Blog.find({})
+          .sort({
+            publishedDate: -1,
+            _id: -1,
+          })
+          .lean();
 
-      const result = await pool.request().query(`
-        SELECT
-          Id AS id,
-          Title AS title,
-          Category AS category,
-          Summary AS summary,
-          ImageUrl AS imageUrl,
-          Content AS content,
-          Author AS author,
-          PublishedDate AS date,
-          Status AS status,
-          CreatedAt AS createdAt,
-          UpdatedAt AS updatedAt
-        FROM dbo.Blogs
-        ORDER BY PublishedDate DESC, Id DESC
-      `);
+      const blogs =
+        blogDocuments.map(
+          formatBlog
+        );
 
-      res.json(result.recordset);
+      return res.json(
+        blogs
+      );
     } catch (error) {
-      console.error("Admin get blogs error:", error);
+      console.error(
+        "MongoDB admin get blogs error:",
+        error
+      );
 
-      res.status(500).json({
-        message: "Failed to load blogs",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to load blogs",
+        });
     }
   }
 );
@@ -204,273 +301,387 @@ router.get(
    GET /api/blog/:id
 ========================================================= */
 
-router.get("/:id", async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.get(
+  "/:id",
+  async (req, res) => {
+    try {
+      const id =
+        String(
+          req.params.id || ""
+        ).trim();
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({
-        message: "Invalid blog ID",
-      });
+      if (
+        !mongoose.isValidObjectId(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid blog ID",
+          });
+      }
+
+      const blog =
+        await Blog.findOne({
+          _id: id,
+          status: "Published",
+        }).lean();
+
+      if (!blog) {
+        return res
+          .status(404)
+          .json({
+            message:
+              "Blog not found",
+          });
+      }
+
+      return res.json(
+        formatBlog(blog)
+      );
+    } catch (error) {
+      console.error(
+        "MongoDB get blog error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to load blog",
+        });
     }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input("id", sql.Int, id)
-      .query(`
-        SELECT
-          Id AS id,
-          Title AS title,
-          Category AS category,
-          Summary AS summary,
-          ImageUrl AS imageUrl,
-          Content AS content,
-          Author AS author,
-          PublishedDate AS date,
-          Status AS status,
-          CreatedAt AS createdAt,
-          UpdatedAt AS updatedAt
-        FROM dbo.Blogs
-        WHERE Id = @id
-          AND Status = 'Published'
-      `);
-
-    if (!result.recordset.length) {
-      return res.status(404).json({
-        message: "Blog not found",
-      });
-    }
-
-    res.json(result.recordset[0]);
-  } catch (error) {
-    console.error("Get blog error:", error);
-
-    res.status(500).json({
-      message: "Failed to load blog",
-    });
   }
-});
+);
 
 /* =========================================================
    CREATE BLOG
    POST /api/blog
 ========================================================= */
 
-router.post("/", requireAdminKey, async (req, res) => {
-  try {
-    const {
-      title,
-      category,
-      summary,
-      imageUrl,
-      content,
-      author,
-      date,
-      status,
-    } = req.body;
+router.post(
+  "/",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const {
+        title,
+        category,
+        summary,
+        imageUrl,
+        content,
+        author,
+        date,
+        status,
+      } = req.body;
 
-    if (!title?.trim()) {
-      return res.status(400).json({
-        message: "Title is required",
-      });
-    }
+      const cleanTitle =
+        String(
+          title || ""
+        ).trim();
 
-    if (!summary?.trim()) {
-      return res.status(400).json({
-        message: "Summary is required",
-      });
-    }
+      const cleanSummary =
+        String(
+          summary || ""
+        ).trim();
 
-    if (!content?.trim()) {
-      return res.status(400).json({
-        message: "Content is required",
-      });
-    }
+      const cleanContent =
+        String(
+          content || ""
+        ).trim();
 
-    if (!date) {
-      return res.status(400).json({
-        message: "Published date is required",
-      });
-    }
+      if (!cleanTitle) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Title is required",
+          });
+      }
 
-    const blogStatus =
-      status === "Draft" ? "Draft" : "Published";
+      if (!cleanSummary) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Summary is required",
+          });
+      }
 
-    const pool = await connectDB();
+      if (!cleanContent) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Content is required",
+          });
+      }
 
-    const result = await pool
-      .request()
-      .input("title", sql.NVarChar(500), title.trim())
-      .input(
-        "category",
-        sql.NVarChar(100),
-        category?.trim() || null
-      )
-      .input("summary", sql.NVarChar(sql.MAX), summary.trim())
-      .input(
-        "imageUrl",
-        sql.NVarChar(1000),
-        imageUrl?.trim() || null
-      )
-      .input("content", sql.NVarChar(sql.MAX), content.trim())
-      .input(
-        "author",
-        sql.NVarChar(150),
-        author?.trim() || "Disha The Academy"
-      )
-      .input("date", sql.Date, date)
-      .input("status", sql.NVarChar(20), blogStatus)
-      .query(`
-        INSERT INTO dbo.Blogs
-        (
-          Title,
-          Category,
-          Summary,
-          ImageUrl,
-          Content,
-          Author,
-          PublishedDate,
-          Status
+      if (!date) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Published date is required",
+          });
+      }
+
+      const publishedDate =
+        new Date(date);
+
+      if (
+        Number.isNaN(
+          publishedDate.getTime()
         )
-        OUTPUT INSERTED.Id AS id
-        VALUES
-        (
-          @title,
-          @category,
-          @summary,
-          @imageUrl,
-          @content,
-          @author,
-          @date,
-          @status
-        )
-      `);
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid published date",
+          });
+      }
 
-    res.status(201).json({
-      message: "Blog created successfully",
-      id: result.recordset[0].id,
-    });
-  } catch (error) {
-    console.error("Create blog error:", error);
+      const blogStatus =
+        status === "Draft"
+          ? "Draft"
+          : "Published";
 
-    res.status(500).json({
-      message: "Failed to create blog",
-    });
+      const blog =
+        await Blog.create({
+          title:
+            cleanTitle,
+
+          category:
+            String(
+              category || ""
+            ).trim(),
+
+          summary:
+            cleanSummary,
+
+          imageUrl:
+            String(
+              imageUrl || ""
+            ).trim(),
+
+          content:
+            cleanContent,
+
+          author:
+            String(
+              author || ""
+            ).trim() ||
+            "Disha The Academy",
+
+          publishedDate,
+
+          status:
+            blogStatus,
+        });
+
+      return res
+        .status(201)
+        .json({
+          message:
+            "Blog created successfully",
+
+          id:
+            blog._id.toString(),
+        });
+    } catch (error) {
+      console.error(
+        "MongoDB create blog error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to create blog",
+        });
+    }
   }
-});
+);
 
 /* =========================================================
    UPDATE BLOG
    PUT /api/blog/:id
 ========================================================= */
 
-router.put("/:id", requireAdminKey, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.put(
+  "/:id",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const id =
+        String(
+          req.params.id || ""
+        ).trim();
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({
-        message: "Invalid blog ID",
+      if (
+        !mongoose.isValidObjectId(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid blog ID",
+          });
+      }
+
+      const {
+        title,
+        category,
+        summary,
+        imageUrl,
+        content,
+        author,
+        date,
+        status,
+      } = req.body;
+
+      const cleanTitle =
+        String(
+          title || ""
+        ).trim();
+
+      const cleanSummary =
+        String(
+          summary || ""
+        ).trim();
+
+      const cleanContent =
+        String(
+          content || ""
+        ).trim();
+
+      if (!cleanTitle) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Title is required",
+          });
+      }
+
+      if (!cleanSummary) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Summary is required",
+          });
+      }
+
+      if (!cleanContent) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Content is required",
+          });
+      }
+
+      if (!date) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Published date is required",
+          });
+      }
+
+      const publishedDate =
+        new Date(date);
+
+      if (
+        Number.isNaN(
+          publishedDate.getTime()
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid published date",
+          });
+      }
+
+      const blog =
+        await Blog.findById(
+          id
+        );
+
+      if (!blog) {
+        return res
+          .status(404)
+          .json({
+            message:
+              "Blog not found",
+          });
+      }
+
+      blog.title =
+        cleanTitle;
+
+      blog.category =
+        String(
+          category || ""
+        ).trim();
+
+      blog.summary =
+        cleanSummary;
+
+      blog.imageUrl =
+        String(
+          imageUrl || ""
+        ).trim();
+
+      blog.content =
+        cleanContent;
+
+      blog.author =
+        String(
+          author || ""
+        ).trim() ||
+        "Disha The Academy";
+
+      blog.publishedDate =
+        publishedDate;
+
+      blog.status =
+        status === "Draft"
+          ? "Draft"
+          : "Published";
+
+      await blog.save();
+
+      return res.json({
+        message:
+          "Blog updated successfully",
       });
+    } catch (error) {
+      console.error(
+        "MongoDB update blog error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to update blog",
+        });
     }
-
-    const {
-      title,
-      category,
-      summary,
-      imageUrl,
-      content,
-      author,
-      date,
-      status,
-    } = req.body;
-
-    if (!title?.trim()) {
-      return res.status(400).json({
-        message: "Title is required",
-      });
-    }
-
-    if (!summary?.trim()) {
-      return res.status(400).json({
-        message: "Summary is required",
-      });
-    }
-
-    if (!content?.trim()) {
-      return res.status(400).json({
-        message: "Content is required",
-      });
-    }
-
-    if (!date) {
-      return res.status(400).json({
-        message: "Published date is required",
-      });
-    }
-
-    const blogStatus =
-      status === "Draft" ? "Draft" : "Published";
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input("id", sql.Int, id)
-      .input("title", sql.NVarChar(500), title.trim())
-      .input(
-        "category",
-        sql.NVarChar(100),
-        category?.trim() || null
-      )
-      .input("summary", sql.NVarChar(sql.MAX), summary.trim())
-      .input(
-        "imageUrl",
-        sql.NVarChar(1000),
-        imageUrl?.trim() || null
-      )
-      .input("content", sql.NVarChar(sql.MAX), content.trim())
-      .input(
-        "author",
-        sql.NVarChar(150),
-        author?.trim() || "Disha The Academy"
-      )
-      .input("date", sql.Date, date)
-      .input("status", sql.NVarChar(20), blogStatus)
-      .query(`
-        UPDATE dbo.Blogs
-        SET
-          Title = @title,
-          Category = @category,
-          Summary = @summary,
-          ImageUrl = @imageUrl,
-          Content = @content,
-          Author = @author,
-          PublishedDate = @date,
-          Status = @status,
-          UpdatedAt = SYSDATETIME()
-        WHERE Id = @id
-      `);
-
-    if (!result.rowsAffected[0]) {
-      return res.status(404).json({
-        message: "Blog not found",
-      });
-    }
-
-    res.json({
-      message: "Blog updated successfully",
-    });
-  } catch (error) {
-    console.error("Update blog error:", error);
-
-    res.status(500).json({
-      message: "Failed to update blog",
-    });
   }
-});
+);
 
 /* =========================================================
    DELETE BLOG
@@ -482,39 +693,54 @@ router.delete(
   requireAdminKey,
   async (req, res) => {
     try {
-      const id = Number(req.params.id);
+      const id =
+        String(
+          req.params.id || ""
+        ).trim();
 
-      if (!Number.isInteger(id) || id <= 0) {
-        return res.status(400).json({
-          message: "Invalid blog ID",
-        });
+      if (
+        !mongoose.isValidObjectId(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid blog ID",
+          });
       }
 
-      const pool = await connectDB();
+      const deletedBlog =
+        await Blog.findByIdAndDelete(
+          id
+        );
 
-      const result = await pool
-        .request()
-        .input("id", sql.Int, id)
-        .query(`
-          DELETE FROM dbo.Blogs
-          WHERE Id = @id
-        `);
-
-      if (!result.rowsAffected[0]) {
-        return res.status(404).json({
-          message: "Blog not found",
-        });
+      if (!deletedBlog) {
+        return res
+          .status(404)
+          .json({
+            message:
+              "Blog not found",
+          });
       }
 
-      res.json({
-        message: "Blog deleted successfully",
+      return res.json({
+        message:
+          "Blog deleted successfully",
       });
     } catch (error) {
-      console.error("Delete blog error:", error);
+      console.error(
+        "MongoDB delete blog error:",
+        error
+      );
 
-      res.status(500).json({
-        message: "Failed to delete blog",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to delete blog",
+        });
     }
   }
 );
@@ -523,26 +749,49 @@ router.delete(
    MULTER ERROR HANDLER
 ========================================================= */
 
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        message: "Image must be smaller than 5 MB",
-      });
+router.use(
+  (
+    error,
+    req,
+    res,
+    next
+  ) => {
+    if (
+      error instanceof
+      multer.MulterError
+    ) {
+      if (
+        error.code ===
+        "LIMIT_FILE_SIZE"
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Image must be smaller than 5 MB",
+          });
+      }
+
+      return res
+        .status(400)
+        .json({
+          message:
+            error.message,
+        });
     }
 
-    return res.status(400).json({
-      message: error.message,
-    });
-  }
+    if (error) {
+      return res
+        .status(400)
+        .json({
+          message:
+            error.message ||
+            "Image upload failed",
+        });
+    }
 
-  if (error) {
-    return res.status(400).json({
-      message: error.message || "Image upload failed",
-    });
+    next();
   }
-
-  next();
-});
+);
 
 module.exports = router;

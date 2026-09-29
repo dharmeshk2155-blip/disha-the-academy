@@ -1,7 +1,26 @@
+const { connectMongoDB } = require("./mongoDb");
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 require("dotenv").config();
+connectMongoDB()
+  .then(() => {
+    console.log("MongoDB ready");
+  })
+  .catch((error) => {
+    console.error(
+      "MongoDB startup error:",
+      error.message
+    );
+  });
+const mongoose = require("mongoose");
+const User = require("./models/User");
+const Order = require("./models/Order");
+const SiteSettings = require("./models/SiteSettings");
+const Note = require("./models/Note");
+const Test = require("./models/Test");
+const Question = require("./models/Question");
+const authRoutes = require("./routes/auth");
 const testsRouter = require("./routes/tests");
 const leaderboardRouter = require("./routes/leaderboard");
 const contactRouter = require("./routes/contact");
@@ -11,8 +30,6 @@ const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
-
-const { sql, connectDB } = require("./db");
 
 const app = express();
 const statsRoutes = require("./routes/stats");
@@ -38,6 +55,8 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
 app.use("/api", passwordRouter);
 app.use("/api/admin/users", adminUsersRoutes);
+app.use("/api", authRoutes);
+
 
 app.use("/api/blog", blogRoutes);
 app.use("/api/faq", faqRoutes);
@@ -96,85 +115,64 @@ app.get("/api/test", (req, res) => {
 
 // ======================================================
 // PUBLIC NOTES API - ACTIVE NOTES
+// MongoDB
 // ======================================================
 
 app.get("/api/notes", async (req, res) => {
   try {
-    const pool = await connectDB();
+    const notes =
+      await Note.find({
+        isActive: true,
+      })
+        .sort({ id: 1 })
+        .lean();
 
-    const result = await pool.request().query(`
-      SELECT
-        Id,
-        CategorySlug,
-        CategoryTitle,
-        SubcategorySlug,
-        SubcategoryTitle,
-        Title,
-        Price,
-        Pdf,
-
-        CASE
-          WHEN Content IS NOT NULL
-            AND LTRIM(RTRIM(Content)) <> ''
-          THEN CAST(1 AS BIT)
-          ELSE CAST(0 AS BIT)
-        END AS HasContent,
-
-        IsActive
-
-      FROM dbo.Notes
-
-      WHERE IsActive = 1
-
-      ORDER BY Id ASC
-    `);
-
-    const notes = result.recordset.map(
-      (note) => ({
-        id: note.Id,
+    const formattedNotes =
+      notes.map((note) => ({
+        id:
+          note.id,
 
         title:
-          note.Title,
+          note.title,
 
         subject:
-          note.SubcategoryTitle,
+          note.subcategoryTitle,
 
         price:
-          Number(note.Price) || 0,
+          Number(note.price) || 0,
 
         pdf:
-          note.Pdf || null,
+          note.pdf || null,
 
         hasContent:
           Boolean(
-            note.HasContent
+            String(
+              note.content || ""
+            ).trim()
           ),
 
         categorySlug:
-          note.CategorySlug,
+          note.categorySlug,
 
         categoryTitle:
-          note.CategoryTitle,
+          note.categoryTitle,
 
         subcategorySlug:
-          note.SubcategorySlug,
+          note.subcategorySlug,
 
         subcategoryTitle:
-          note.SubcategoryTitle,
+          note.subcategoryTitle,
 
         isActive:
-          Boolean(
-            note.IsActive
-          ),
-      })
+          Boolean(note.isActive),
+      }));
+
+    return res.json(
+      formattedNotes
     );
-
-    return res.json(notes);
-
   } catch (error) {
-
     console.error(
-      "Public notes fetch error:",
+      "Public MongoDB notes fetch error:",
       error
     );
 
@@ -188,14 +186,13 @@ app.get("/api/notes", async (req, res) => {
 
 // ======================================================
 // PUBLIC SINGLE NOTE API
+// MongoDB
 // ======================================================
 
 app.get(
   "/api/notes/:id",
   async (req, res) => {
-
     try {
-
       const noteId =
         Number(
           req.params.id
@@ -207,7 +204,6 @@ app.get(
         ) ||
         noteId <= 0
       ) {
-
         return res.status(400).json({
           success: false,
           message:
@@ -215,50 +211,15 @@ app.get(
         });
       }
 
-      const pool =
-        await connectDB();
+      const note =
+        await Note.findOne({
+          id:
+            noteId,
+          isActive:
+            true,
+        }).lean();
 
-      const result =
-        await pool
-          .request()
-
-          .input(
-            "Id",
-            sql.Int,
-            noteId
-          )
-
-          .query(`
-            SELECT
-              Id,
-              CategorySlug,
-              CategoryTitle,
-              SubcategorySlug,
-              SubcategoryTitle,
-              Title,
-              Price,
-              Pdf,
-
-              CASE
-                WHEN Content IS NOT NULL
-                  AND LTRIM(RTRIM(Content)) <> ''
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-              END AS HasContent,
-
-              IsActive
-
-            FROM dbo.Notes
-
-            WHERE
-              Id = @Id
-              AND IsActive = 1
-          `);
-
-      if (
-        result.recordset.length === 0
-      ) {
-
+      if (!note) {
         return res.status(404).json({
           success: false,
           message:
@@ -266,54 +227,47 @@ app.get(
         });
       }
 
-      const note =
-        result.recordset[0];
-
       return res.json({
         id:
-          note.Id,
+          note.id,
 
         title:
-          note.Title,
+          note.title,
 
         subject:
-          note.SubcategoryTitle,
+          note.subcategoryTitle,
 
         price:
-          Number(
-            note.Price
-          ) || 0,
+          Number(note.price) || 0,
 
         pdf:
-          note.Pdf || null,
+          note.pdf || null,
 
         hasContent:
           Boolean(
-            note.HasContent
+            String(
+              note.content || ""
+            ).trim()
           ),
 
         categorySlug:
-          note.CategorySlug,
+          note.categorySlug,
 
         categoryTitle:
-          note.CategoryTitle,
+          note.categoryTitle,
 
         subcategorySlug:
-          note.SubcategorySlug,
+          note.subcategorySlug,
 
         subcategoryTitle:
-          note.SubcategoryTitle,
+          note.subcategoryTitle,
 
         isActive:
-          Boolean(
-            note.IsActive
-          ),
+          Boolean(note.isActive),
       });
-
     } catch (error) {
-
       console.error(
-        "Public note fetch error:",
+        "Public MongoDB note fetch error:",
         error
       );
 
@@ -326,599 +280,9 @@ app.get(
   }
 );
 
+     
 // ======================================================
-// GOOGLE LOGIN
-// ======================================================
-
-app.post("/api/auth/google", async (req, res) => {
-  try {
-    const { accessToken } = req.body;
-
-    if (!accessToken) {
-      return res.status(400).json({
-        success: false,
-        message: "Access token is required",
-      });
-    }
-
-    // Verify the token actually belongs to our app
-    const tokenInfoRes = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`
-    );
-    const tokenInfo = await tokenInfoRes.json();
-
-    if (!tokenInfoRes.ok || tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid Google token",
-      });
-    }
-
-    // Get the user's profile info from Google
-    const profileRes = await fetch(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    const profile = await profileRes.json();
-
-    if (!profile.email) {
-      return res.status(400).json({
-        success: false,
-        message: "Could not get email from Google",
-      });
-    }
-
-    const normalizedEmail = profile.email.trim().toLowerCase();
-    const pool = await connectDB();
-
-    // Check if this user already exists
-    let userResult = await pool
-      .request()
-      .input("Email", sql.NVarChar(150), normalizedEmail)
-      .query(`SELECT Id, Name, Email, Mobile FROM dbo.Users WHERE Email = @Email`);
-
-    let user;
-
-    if (userResult.recordset.length > 0) {
-      // Existing user - just log them in
-      user = userResult.recordset[0];
-    } else {
-      // New user - create an account (no password needed for Google users)
-      const randomPassword = crypto.randomBytes(32).toString("hex");
-      const passwordHash = hashPassword(randomPassword);
-
-      const insertResult = await pool
-        .request()
-        .input("Name", sql.NVarChar(100), profile.name || "Google User")
-        .input("Email", sql.NVarChar(150), normalizedEmail)
-        .input("Mobile", sql.NVarChar(20), "")
-        .input("PasswordHash", sql.NVarChar(255), passwordHash)
-        .query(`
-          INSERT INTO dbo.Users (Name, Email, Mobile, PasswordHash)
-          OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Email, INSERTED.Mobile
-          VALUES (@Name, @Email, @Mobile, @PasswordHash)
-        `);
-
-      user = insertResult.recordset[0];
-    }
-
-    const token = jwt.sign(
-      { userId: user.Id, email: user.Email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    console.log("");
-    console.log("=================================");
-    console.log("GOOGLE LOGIN SUCCESSFUL");
-    console.log("USER ID:", user.Id);
-    console.log("EMAIL:", user.Email);
-    console.log("=================================");
-    console.log("");
-
-    return res.json({
-      success: true,
-      message: "Google login successful",
-      token,
-      user: {
-        id: user.Id,
-        fullName: user.Name,
-        email: user.Email,
-        mobile: user.Mobile,
-      },
-    });
-  } catch (error) {
-    console.error("Google login error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Google login failed",
-    });
-  }
-});
-
-// ======================================================
-// USER REGISTRATION
-// ======================================================
-
-app.post("/api/register", async (req, res) => {
-
-  try {
-
-    const {
-      name,
-      fullName,
-      email,
-      mobile,
-      password,
-      confirmPassword,
-    } = req.body;
-
-    const finalName = name || fullName;
-
-    // -----------------------------
-    // CHECK FIELDS
-    // -----------------------------
-
-       if (
-      !finalName ||
-      !email ||
-      !mobile ||
-      !password
-    ) {
-
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-
-    }
-
-    // -----------------------------
-    // NAME VALIDATION
-    // -----------------------------
-
-    if (finalName.trim().length < 2) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid full name",
-      });
-
-    }
-
-    // -----------------------------
-    // EMAIL FORMAT VALIDATION
-    // -----------------------------
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email.trim())) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid email address",
-      });
-
-    }
-
-    // -----------------------------
-    // MOBILE NUMBER VALIDATION (10-digit Indian number)
-    // -----------------------------
-
-    const mobileRegex = /^[6-9]\d{9}$/;
-
-    if (!mobileRegex.test(mobile.trim())) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid 10-digit mobile number",
-      });
-
-    }
-
-    // -----------------------------
-    // PASSWORD STRENGTH VALIDATION
-    // -----------------------------
-
-    if (password.length < 6) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters long",
-      });
-
-    }
-
-    // -----------------------------
-    // PASSWORD CONFIRM
-    // -----------------------------
-
-    if (
-      confirmPassword !== undefined &&
-      password !== confirmPassword
-    ) {
-
-      return res.status(400).json({
-        success: false,
-        message: "Passwords do not match",
-      });
-
-    }
-
-    const normalizedEmail =
-      email.trim().toLowerCase();
-
-    // -----------------------------
-    // CONNECT DATABASE
-    // -----------------------------
-
-    const pool = await connectDB();
-
-    // -----------------------------
-    // CHECK EMAIL
-    // -----------------------------
-
-    const existingUser = await pool
-      .request()
-      .input(
-        "Email",
-        sql.NVarChar(150),
-        normalizedEmail
-      )
-      .query(`
-        SELECT Id
-        FROM dbo.Users
-        WHERE Email = @Email
-      `);
-
-    if (
-      existingUser.recordset.length > 0
-    ) {
-
-      return res.status(409).json({
-        success: false,
-        message: "Email already registered",
-      });
-
-    }
-
-    // -----------------------------
-    // HASH PASSWORD
-    // -----------------------------
-
-    const passwordHash =
-      hashPassword(password);
-
-    // -----------------------------
-    // INSERT USER
-    // -----------------------------
-
-    const result = await pool
-      .request()
-      .input(
-        "Name",
-        sql.NVarChar(100),
-        finalName.trim()
-      )
-      .input(
-        "Email",
-        sql.NVarChar(150),
-        normalizedEmail
-      )
-      .input(
-        "Mobile",
-        sql.NVarChar(20),
-        mobile.trim()
-      )
-      .input(
-        "PasswordHash",
-        sql.NVarChar(255),
-        passwordHash
-      )
-      .query(`
-        INSERT INTO dbo.Users
-        (
-          Name,
-          Email,
-          Mobile,
-          PasswordHash
-        )
-
-        OUTPUT
-          INSERTED.Id,
-          INSERTED.Name,
-          INSERTED.Email,
-          INSERTED.Mobile,
-          INSERTED.CreatedAt
-
-        VALUES
-        (
-          @Name,
-          @Email,
-          @Mobile,
-          @PasswordHash
-        )
-      `);
-
-    const user =
-      result.recordset[0];
-
-    console.log("");
-    console.log(
-      "================================="
-    );
-    console.log(
-      "NEW USER REGISTERED"
-    );
-    console.log(
-      "User ID:",
-      user.Id
-    );
-    console.log(
-      "Name:",
-      user.Name
-    );
-    console.log(
-      "Email:",
-      user.Email
-    );
-    console.log(
-      "================================="
-    );
-    console.log("");
-
-    return res.status(201).json({
-
-      success: true,
-
-      message:
-        "Account created successfully",
-
-      user: {
-        id: user.Id,
-        fullName: user.Name,
-        email: user.Email,
-        mobile: user.Mobile,
-      },
-
-    });
-
-  } catch (error) {
-
-    console.error(
-      "Registration error:",
-      error
-    );
-
-    return res.status(500).json({
-
-      success: false,
-
-      message:
-        "Registration failed",
-
-    });
-
-  }
-
-});
-
-// ======================================================
-// USER LOGIN
-// ======================================================
-
-app.post("/api/login", async (req, res) => {
-
-  try {
-
-    const {
-      email,
-      password,
-    } = req.body;
-
-    // -----------------------------
-    // CHECK REQUIRED FIELDS
-    // -----------------------------
-
-    if (!email || !password) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        message:
-          "Email and password are required",
-
-      });
-
-    }
-
-    const normalizedEmail =
-      email.trim().toLowerCase();
-
-    // -----------------------------
-    // CONNECT SQL SERVER
-    // -----------------------------
-
-    const pool =
-      await connectDB();
-
-    // -----------------------------
-    // FIND USER
-    // -----------------------------
-
-    const result = await pool
-      .request()
-      .input(
-        "Email",
-        sql.NVarChar(150),
-        normalizedEmail
-      )
-      .query(`
-        SELECT
-          Id,
-          Name,
-          Email,
-          Mobile,
-          PasswordHash
-        FROM dbo.Users
-        WHERE Email = @Email
-      `);
-
-    // -----------------------------
-    // USER NOT FOUND
-    // -----------------------------
-
-    if (
-      result.recordset.length === 0
-    ) {
-
-      return res.status(401).json({
-
-        success: false,
-
-        message:
-          "Invalid email or password",
-
-      });
-
-    }
-
-    const user =
-      result.recordset[0];
-
-    // -----------------------------
-    // VERIFY PASSWORD
-    // -----------------------------
-
-    const passwordCorrect =
-      verifyPassword(
-        password,
-        user.PasswordHash
-      );
-
-    if (!passwordCorrect) {
-
-      return res.status(401).json({
-
-        success: false,
-
-        message:
-          "Invalid email or password",
-
-      });
-
-    }
-
-    // ==================================================
-    // CREATE JWT TOKEN
-    // ==================================================
-
-    const token = jwt.sign(
-
-      {
-        userId: user.Id,
-        email: user.Email,
-      },
-
-      process.env.JWT_SECRET,
-
-      {
-        expiresIn: "7d",
-      }
-
-    );
-
-    // -----------------------------
-    // LOGIN SUCCESS LOG
-    // -----------------------------
-
-    console.log("");
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "USER LOGIN SUCCESSFUL"
-    );
-
-    console.log(
-      "USER ID:",
-      user.Id
-    );
-
-    console.log(
-      "EMAIL:",
-      user.Email
-    );
-
-    console.log(
-      "JWT TOKEN CREATED"
-    );
-
-    console.log(
-      "================================="
-    );
-
-    console.log("");
-
-    // ==================================================
-    // LOGIN RESPONSE
-    // ==================================================
-
-    return res.json({
-
-      success: true,
-
-      message:
-        "Login successful",
-
-      token:
-
-        token,
-
-      user: {
-
-        id:
-          user.Id,
-
-        fullName:
-          user.Name,
-
-        email:
-          user.Email,
-
-        mobile:
-          user.Mobile,
-
-      },
-
-    });
-
-  } catch (error) {
-
-    console.error(
-      "Login error:",
-      error
-    );
-
-    return res.status(500).json({
-
-      success: false,
-
-      message:
-        "Login failed",
-
-    });
-
-  }
-
-});
-
-
-     // ======================================================
-// CREATE RAZORPAY ORDER - JWT SECURED
+// CREATE RAZORPAY ORDER - JWT + MONGODB
 // ======================================================
 
 app.post(
@@ -965,12 +329,18 @@ app.post(
         });
       }
 
+      // MongoDB user ID string hoti hai,
+      // ise Number() me convert nahi karna.
       const userId =
-        Number(decoded?.userId);
+        String(
+          decoded?.userId || ""
+        ).trim();
 
       if (
-        !Number.isInteger(userId) ||
-        userId <= 0
+        !userId ||
+        !mongoose.Types.ObjectId.isValid(
+          userId
+        )
       ) {
         return res.status(401).json({
           success: false,
@@ -980,11 +350,40 @@ app.post(
       }
 
       // =================================================
+      // VERIFY USER EXISTS IN MONGODB
+      // =================================================
+
+      const user =
+        await User.findById(
+          userId
+        )
+          .select("_id isActive")
+          .lean();
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "User account not found",
+        });
+      }
+
+      if (user.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "Your account is currently disabled",
+        });
+      }
+
+      // =================================================
       // NOTE ID
       // =================================================
 
       const noteId =
-        Number(req.body?.noteId);
+        Number(
+          req.body?.noteId
+        );
 
       if (
         !Number.isInteger(noteId) ||
@@ -997,48 +396,16 @@ app.post(
         });
       }
 
-      const pool =
-        await connectDB();
-
       // =================================================
-      // LOAD NOTE FROM SQL
+      // LOAD NOTE FROM MONGODB
       // =================================================
 
-      const noteResult =
-        await pool
-          .request()
+      const note =
+        await Note.findOne({
+          id: noteId,
+        }).lean();
 
-          .input(
-            "NoteId",
-            sql.Int,
-            noteId
-          )
-
-          .query(`
-            SELECT TOP 1
-              Id,
-              Title,
-              Price,
-              Pdf,
-
-              CASE
-                WHEN Content IS NOT NULL
-                  AND LTRIM(RTRIM(Content)) <> ''
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-              END AS HasContent,
-
-              IsActive
-
-            FROM dbo.Notes
-
-            WHERE Id = @NoteId
-          `);
-
-      if (
-        noteResult.recordset.length ===
-        0
-      ) {
+      if (!note) {
         return res.status(404).json({
           success: false,
           error:
@@ -1046,10 +413,7 @@ app.post(
         });
       }
 
-      const dbNote =
-        noteResult.recordset[0];
-
-      if (!dbNote.IsActive) {
+      if (!note.isActive) {
         return res.status(403).json({
           success: false,
           error:
@@ -1057,7 +421,16 @@ app.post(
         });
       }
 
-      if (!dbNote.HasContent) {
+      // =================================================
+      // CHECK NOTE CONTENT
+      // =================================================
+
+      const noteContent =
+        String(
+          note.content || ""
+        ).trim();
+
+      if (!noteContent) {
         return res.status(400).json({
           success: false,
           error:
@@ -1065,46 +438,20 @@ app.post(
         });
       }
 
-      const note = {
-        id:
-          dbNote.Id,
-
-        title:
-          dbNote.Title,
-
-        price:
-          Number(
-            dbNote.Price
-          ) || 0,
-
-        pdf:
-          dbNote.Pdf ||
-          null,
-      };
-
       // =================================================
-      // NOTES SALES SETTING
+      // NOTES SALES SETTING - MONGODB
       // =================================================
 
-      const settingsResult =
-        await pool
-          .request()
-          .query(`
-            SELECT TOP 1
-              NotesSalesEnabled
-            FROM dbo.SiteSettings
-            ORDER BY Id DESC
-          `);
+      const siteSettings =
+        await SiteSettings.findOne({
+          key: "main",
+        }).lean();
 
       const notesSalesEnabled =
-        settingsResult.recordset
-          .length === 0
-          ? true
-          : Boolean(
-              settingsResult
-                .recordset[0]
-                .NotesSalesEnabled
-            );
+        siteSettings
+          ? siteSettings.notesSalesEnabled !==
+            false
+          : true;
 
       if (!notesSalesEnabled) {
         return res.status(403).json({
@@ -1117,43 +464,13 @@ app.post(
       }
 
       // =================================================
-      // VERIFY JWT USER EXISTS
-      // =================================================
-
-      const userResult =
-        await pool
-          .request()
-
-          .input(
-            "UserId",
-            sql.Int,
-            userId
-          )
-
-          .query(`
-            SELECT
-              Id
-            FROM dbo.Users
-            WHERE Id = @UserId
-          `);
-
-      if (
-        userResult.recordset.length ===
-        0
-      ) {
-        return res.status(401).json({
-          success: false,
-          error:
-            "User account not found",
-        });
-      }
-
-      // =================================================
       // PRICE
       // =================================================
 
       const amount =
-        Number(note.price);
+        Number(
+          note.price
+        );
 
       if (
         !Number.isFinite(amount) ||
@@ -1185,76 +502,41 @@ app.post(
         });
 
       // =================================================
-      // SAVE ORDER TO SQL
+      // SAVE ORDER TO MONGODB
       // =================================================
 
-      await pool
-        .request()
+      await Order.create({
+        orderId:
+          razorpayOrder.id,
 
-        .input(
-          "OrderId",
-          sql.NVarChar(100),
-          razorpayOrder.id
-        )
+        userId:
+          user._id,
 
-        .input(
-          "UserId",
-          sql.Int,
-          userId
-        )
+        noteId:
+          note.id,
 
-        .input(
-          "NoteId",
-          sql.Int,
-          note.id
-        )
+        title:
+          note.title,
 
-        .input(
-          "Title",
-          sql.NVarChar(255),
-          note.title
-        )
+        price:
+          amount,
 
-        .input(
-          "Price",
-          sql.Decimal(10, 2),
-          note.price
-        )
+        pdf:
+          note.pdf || null,
 
-        .input(
-          "Pdf",
-          sql.NVarChar(500),
-          note.pdf
-        )
+        paid:
+          false,
 
-        .input(
-          "Paid",
-          sql.Bit,
-          false
-        )
+        paymentId:
+          "",
 
-        .query(`
-          INSERT INTO dbo.Orders
-          (
-            OrderId,
-            UserId,
-            NoteId,
-            Title,
-            Price,
-            Pdf,
-            Paid
-          )
-          VALUES
-          (
-            @OrderId,
-            @UserId,
-            @NoteId,
-            @Title,
-            @Price,
-            @Pdf,
-            @Paid
-          )
-        `);
+        verifiedAt:
+          null,
+      });
+
+      // =================================================
+      // LOG
+      // =================================================
 
       console.log("");
       console.log(
@@ -1271,8 +553,8 @@ app.post(
       );
 
       console.log(
-        "User ID from JWT:",
-        userId
+        "MongoDB User ID:",
+        user._id.toString()
       );
 
       console.log(
@@ -1281,8 +563,24 @@ app.post(
       );
 
       console.log(
+        "Note:",
+        note.title
+      );
+
+      console.log(
+        "Amount:",
+        amount
+      );
+
+      console.log(
+        "ORDER SAVED TO MONGODB"
+      );
+
+      console.log(
         "================================="
       );
+
+      console.log("");
 
       // =================================================
       // RESPONSE
@@ -1297,10 +595,9 @@ app.post(
 
         ...razorpayOrder,
       });
-
     } catch (error) {
       console.error(
-        "Razorpay order error:",
+        "MongoDB Razorpay order error:",
         error
       );
 
@@ -1313,256 +610,186 @@ app.post(
   }
 );
 // ======================================================
-// VERIFY RAZORPAY PAYMENT
+// VERIFY RAZORPAY PAYMENT - MONGODB
 // ======================================================
 
 app.post(
   "/api/payment/verify",
   async (req, res) => {
-
     try {
-
       const {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
       } = req.body;
 
-      // -----------------------------
+      // =================================================
       // CHECK PAYMENT DATA
-      // -----------------------------
+      // =================================================
 
       if (
         !razorpay_order_id ||
         !razorpay_payment_id ||
         !razorpay_signature
       ) {
-
         return res.status(400).json({
-
           success: false,
-
           error:
             "Payment details are missing",
-
         });
-
       }
 
-      // -----------------------------
-      // CONNECT SQL
-      // -----------------------------
-
-      const pool =
-        await connectDB();
-
       // =================================================
-      // FIND ORDER
+      // FIND ORDER IN MONGODB
       // =================================================
 
-      const orderResult =
-        await pool
-          .request()
-          .input(
-            "OrderId",
-            sql.NVarChar(100),
-            razorpay_order_id
-          )
-          .query(`
+      const order =
+        await Order.findOne({
+          orderId:
+            razorpay_order_id,
+        });
 
-            SELECT
-              Id,
-              OrderId,
-              UserId,
-              NoteId,
-              Title,
-              Price,
-              Pdf,
-              Paid,
-              PaymentId,
-              CreatedAt,
-              VerifiedAt
-
-            FROM dbo.Orders
-
-            WHERE OrderId = @OrderId
-
-          `);
-
-      // -----------------------------
-      // ORDER NOT FOUND
-      // -----------------------------
-
-      if (
-        orderResult.recordset.length === 0
-      ) {
-
+      if (!order) {
         console.error(
           "ORDER NOT FOUND:",
           razorpay_order_id
         );
 
         return res.status(404).json({
-
           success: false,
-
           error:
             "Order not found",
-
         });
-
       }
 
-      const order =
-        orderResult.recordset[0];
-
       // =================================================
-      // CREATE RAZORPAY SIGNATURE
+      // CREATE EXPECTED RAZORPAY SIGNATURE
       // =================================================
 
       const body =
-        razorpay_order_id +
-        "|" +
-        razorpay_payment_id;
+        `${razorpay_order_id}|${razorpay_payment_id}`;
 
       const expectedSignature =
         crypto
           .createHmac(
             "sha256",
-            process.env.RAZORPAY_KEY_SECRET
+            process.env
+              .RAZORPAY_KEY_SECRET
           )
           .update(body)
           .digest("hex");
 
-      // -----------------------------
-      // COMPARE SIGNATURE
-      // -----------------------------
-
-      const expectedBuffer =
-        Buffer.from(
-          expectedSignature,
-          "hex"
-        );
-
-      const receivedBuffer =
-        Buffer.from(
-          razorpay_signature,
-          "hex"
-        );
+      // =================================================
+      // SAFE SIGNATURE COMPARISON
+      // =================================================
 
       let isValid = false;
 
-      if (
-        expectedBuffer.length ===
-        receivedBuffer.length
-      ) {
-
-        isValid =
-          crypto.timingSafeEqual(
-            expectedBuffer,
-            receivedBuffer
+      try {
+        const expectedBuffer =
+          Buffer.from(
+            expectedSignature,
+            "hex"
           );
 
+        const receivedBuffer =
+          Buffer.from(
+            razorpay_signature,
+            "hex"
+          );
+
+        if (
+          expectedBuffer.length ===
+          receivedBuffer.length
+        ) {
+          isValid =
+            crypto.timingSafeEqual(
+              expectedBuffer,
+              receivedBuffer
+            );
+        }
+      } catch (error) {
+        isValid = false;
       }
 
-      // -----------------------------
+      // =================================================
       // INVALID SIGNATURE
-      // -----------------------------
+      // =================================================
 
       if (!isValid) {
-
         console.error(
           "INVALID PAYMENT SIGNATURE"
         );
 
         return res.status(400).json({
-
           success: false,
-
           error:
             "Invalid payment signature",
-
         });
-
       }
 
       // =================================================
-      // UPDATE ORDER
+      // UPDATE ORDER IN MONGODB
       // =================================================
 
-      await pool
-        .request()
+      order.paid = true;
 
-        .input(
-          "OrderId",
-          sql.NVarChar(100),
-          razorpay_order_id
-        )
+      order.paymentId =
+        razorpay_payment_id;
 
-        .input(
-          "PaymentId",
-          sql.NVarChar(100),
-          razorpay_payment_id
-        )
+      order.verifiedAt =
+        new Date();
 
-        .query(`
+      await order.save();
 
-          UPDATE dbo.Orders
-
-          SET
-            Paid = 1,
-            PaymentId = @PaymentId,
-            VerifiedAt = GETDATE()
-
-          WHERE OrderId = @OrderId
-
-        `);
-
-      // -----------------------------
+      // =================================================
       // LOG
-      // -----------------------------
+      // =================================================
 
       console.log("");
       console.log(
         "================================="
       );
+
       console.log(
         "PAYMENT VERIFIED SUCCESSFULLY"
       );
+
       console.log(
         "Order ID:",
         razorpay_order_id
       );
+
       console.log(
         "Payment ID:",
         razorpay_payment_id
       );
+
       console.log(
         "User ID:",
-        order.UserId
+        order.userId.toString()
       );
+
       console.log(
         "Note ID:",
-        order.NoteId
+        order.noteId
       );
+
       console.log(
-        "PDF:",
-        order.Pdf
+        "ORDER UPDATED IN MONGODB"
       );
-      console.log(
-        "ORDER UPDATED IN SQL SERVER"
-      );
+
       console.log(
         "================================="
       );
+
       console.log("");
 
-      // -----------------------------
+      // =================================================
       // RESPONSE
-      // -----------------------------
+      // =================================================
 
       return res.json({
-
         success: true,
 
         message:
@@ -1572,44 +799,37 @@ app.post(
           razorpay_order_id,
 
         userId:
-          order.UserId,
+          order.userId.toString(),
 
         noteId:
-          order.NoteId,
-          readUrl:
-  `/read-note/${order.NoteId}?orderId=${encodeURIComponent(
-    razorpay_order_id
-  )}`,
+          order.noteId,
+
+        readUrl:
+          `/read-note/${order.noteId}?orderId=${encodeURIComponent(
+            razorpay_order_id
+          )}`,
 
         downloadUrl:
           `/api/pdf/download/${encodeURIComponent(
             razorpay_order_id
           )}`,
-
       });
-
     } catch (error) {
-
       console.error(
-        "Payment verification error:",
+        "MongoDB payment verification error:",
         error
       );
 
       return res.status(500).json({
-
         success: false,
-
         error:
           "Payment verification failed",
-
       });
-
     }
-
   }
 );
 // ======================================================
-// MY PURCHASED NOTES
+// MY PURCHASED NOTES - MONGODB
 // Logged-in user ke sirf paid notes
 // ======================================================
 
@@ -1617,9 +837,9 @@ app.get(
   "/api/my-notes",
   async (req, res) => {
     try {
-      // ===============================================
-      // AUTHORIZATION HEADER
-      // ===============================================
+      // =================================================
+      // AUTH TOKEN
+      // =================================================
 
       const authHeader =
         req.headers.authorization;
@@ -1638,9 +858,9 @@ app.get(
         });
       }
 
-      // ===============================================
+      // =================================================
       // VERIFY JWT
-      // ===============================================
+      // =================================================
 
       let decoded;
 
@@ -1657,7 +877,17 @@ app.get(
         });
       }
 
-      if (!decoded?.userId) {
+      const userId =
+        String(
+          decoded?.userId || ""
+        ).trim();
+
+      if (
+        !userId ||
+        !mongoose.Types.ObjectId.isValid(
+          userId
+        )
+      ) {
         return res.status(401).json({
           success: false,
           error:
@@ -1665,103 +895,150 @@ app.get(
         });
       }
 
-      // ===============================================
-      // DATABASE
-      // ===============================================
+      // =================================================
+      // VERIFY USER EXISTS
+      // =================================================
 
-      const pool =
-        await connectDB();
+      const user =
+        await User.findById(
+          userId
+        )
+          .select("_id isActive")
+          .lean();
 
-      const result =
-        await pool
-          .request()
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "User account not found",
+        });
+      }
 
-          .input(
-            "UserId",
-            sql.Int,
-            Number(decoded.userId)
+      // =================================================
+      // LOAD PAID ORDERS FROM MONGODB
+      // =================================================
+
+      const orders =
+        await Order.find({
+          userId:
+            user._id,
+          paid:
+            true,
+        })
+          .sort({
+            verifiedAt: -1,
+            createdAt: -1,
+          })
+          .lean();
+
+      // =================================================
+      // GET NOTE IDS
+      // =================================================
+
+      const noteIds =
+        [
+          ...new Set(
+            orders.map(
+              (order) =>
+                Number(
+                  order.noteId
+                )
+            )
+          ),
+        ].filter(
+          (noteId) =>
+            Number.isInteger(
+              noteId
+            ) &&
+            noteId > 0
+        );
+
+      // =================================================
+      // LOAD NOTES FROM MONGODB
+      // =================================================
+
+      const noteDocuments =
+        noteIds.length > 0
+          ? await Note.find({
+              id: {
+                $in:
+                  noteIds,
+              },
+            }).lean()
+          : [];
+
+      const notesById =
+        new Map(
+          noteDocuments.map(
+            (note) => [
+              Number(
+                note.id
+              ),
+              note,
+            ]
           )
+        );
 
-          .query(`
-            SELECT
-              o.OrderId,
-              o.NoteId,
-              o.Title,
-              o.Price,
-              o.PaymentId,
-              o.CreatedAt,
-              o.VerifiedAt,
-
-              n.CategoryTitle,
-              n.SubcategoryTitle,
-
-              CASE
-                WHEN n.Content IS NOT NULL
-                  AND LTRIM(RTRIM(n.Content)) <> ''
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-              END AS HasContent
-
-            FROM dbo.Orders o
-
-            INNER JOIN dbo.Notes n
-              ON n.Id = o.NoteId
-
-            WHERE
-              o.UserId = @UserId
-              AND o.Paid = 1
-
-            ORDER BY
-              COALESCE(
-                o.VerifiedAt,
-                o.CreatedAt
-              ) DESC
-          `);
-
-      // ===============================================
+      // =================================================
       // FORMAT RESPONSE
-      // ===============================================
+      // =================================================
 
       const notes =
-        result.recordset.map(
-          (item) => ({
-            orderId:
-              item.OrderId,
+        orders.map(
+          (order) => {
+            const note =
+              notesById.get(
+                Number(
+                  order.noteId
+                )
+              );
 
-            noteId:
-              item.NoteId,
-
-            title:
-              item.Title,
-
-            price:
-              Number(
-                item.Price
-              ) || 0,
-
-            categoryTitle:
-              item.CategoryTitle,
-
-            subcategoryTitle:
-              item.SubcategoryTitle,
-
-            hasContent:
+            const hasContent =
               Boolean(
-                item.HasContent
-              ),
+                String(
+                  note?.content || ""
+                ).trim()
+              );
 
-            paymentId:
-              item.PaymentId,
+            return {
+              orderId:
+                order.orderId,
 
-            purchasedAt:
-              item.VerifiedAt ||
-              item.CreatedAt,
+              noteId:
+                order.noteId,
 
-            readUrl:
-              `/read-note/${item.NoteId}?orderId=${encodeURIComponent(
-                item.OrderId
-              )}`,
-          })
+              title:
+                order.title,
+
+              price:
+                Number(
+                  order.price
+                ) || 0,
+
+              categoryTitle:
+                note?.categoryTitle ||
+                "",
+
+              subcategoryTitle:
+                note?.subcategoryTitle ||
+                "",
+
+              hasContent,
+
+              paymentId:
+                order.paymentId ||
+                "",
+
+              purchasedAt:
+                order.verifiedAt ||
+                order.createdAt,
+
+              readUrl:
+                `/read-note/${order.noteId}?orderId=${encodeURIComponent(
+                  order.orderId
+                )}`,
+            };
+          }
         );
 
       return res.json({
@@ -1770,10 +1047,9 @@ app.get(
           notes.length,
         notes,
       });
-
     } catch (error) {
       console.error(
-        "My purchased notes error:",
+        "MongoDB purchased notes error:",
         error
       );
 
@@ -1786,7 +1062,7 @@ app.get(
   }
 );
 // ======================================================
-// PAID NOTE CONTENT
+// PAID NOTE CONTENT - MONGODB
 // Only the user who purchased the note can read it
 // ======================================================
 
@@ -1816,9 +1092,7 @@ app.get(
 
       const token =
         authHeader &&
-        authHeader.startsWith(
-          "Bearer "
-        )
+        authHeader.startsWith("Bearer ")
           ? authHeader.slice(7)
           : null;
 
@@ -1850,7 +1124,17 @@ app.get(
         });
       }
 
-      if (!decoded?.userId) {
+      const userId =
+        String(
+          decoded?.userId || ""
+        ).trim();
+
+      if (
+        !userId ||
+        !mongoose.Types.ObjectId.isValid(
+          userId
+        )
+      ) {
         return res.status(401).json({
           success: false,
           error:
@@ -1859,53 +1143,16 @@ app.get(
       }
 
       // =================================================
-      // DATABASE
+      // FIND ORDER IN MONGODB
       // =================================================
 
-      const pool =
-        await connectDB();
+      const order =
+        await Order.findOne({
+          orderId:
+            orderId,
+        }).lean();
 
-      const result =
-        await pool
-          .request()
-
-          .input(
-            "OrderId",
-            sql.NVarChar(100),
-            orderId
-          )
-
-          .query(`
-            SELECT
-              o.OrderId,
-              o.UserId,
-              o.NoteId,
-              o.Paid,
-              o.PaymentId,
-              o.VerifiedAt,
-
-              n.Title,
-              n.CategoryTitle,
-              n.SubcategoryTitle,
-              n.Content
-
-            FROM dbo.Orders o
-
-            INNER JOIN dbo.Notes n
-              ON n.Id = o.NoteId
-
-            WHERE
-              o.OrderId = @OrderId
-          `);
-
-      // =================================================
-      // ORDER NOT FOUND
-      // =================================================
-
-      if (
-        result.recordset.length ===
-        0
-      ) {
+      if (!order) {
         return res.status(404).json({
           success: false,
           error:
@@ -1913,16 +1160,13 @@ app.get(
         });
       }
 
-      const order =
-        result.recordset[0];
-
       // =================================================
       // ORDER OWNER CHECK
       // =================================================
 
       if (
-        Number(order.UserId) !==
-        Number(decoded.userId)
+        String(order.userId) !==
+        userId
       ) {
         return res.status(403).json({
           success: false,
@@ -1935,11 +1179,31 @@ app.get(
       // PAYMENT CHECK
       // =================================================
 
-      if (!order.Paid) {
+      if (!order.paid) {
         return res.status(403).json({
           success: false,
           error:
             "Payment is required before reading this note",
+        });
+      }
+
+      // =================================================
+      // LOAD NOTE FROM MONGODB
+      // =================================================
+
+      const note =
+        await Note.findOne({
+          id:
+            Number(
+              order.noteId
+            ),
+        }).lean();
+
+      if (!note) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Note not found",
         });
       }
 
@@ -1949,7 +1213,7 @@ app.get(
 
       const content =
         String(
-          order.Content || ""
+          note.content || ""
         ).trim();
 
       if (!content) {
@@ -1969,34 +1233,34 @@ app.get(
 
         note: {
           id:
-            order.NoteId,
+            note.id,
 
           title:
-            order.Title,
+            note.title,
 
           categoryTitle:
-            order.CategoryTitle,
+            note.categoryTitle,
 
           subcategoryTitle:
-            order.SubcategoryTitle,
+            note.subcategoryTitle,
 
           content,
         },
 
         order: {
           orderId:
-            order.OrderId,
+            order.orderId,
 
           paymentId:
-            order.PaymentId,
+            order.paymentId || "",
 
           verifiedAt:
-            order.VerifiedAt,
+            order.verifiedAt,
         },
       });
     } catch (error) {
       console.error(
-        "Paid note content error:",
+        "MongoDB paid note content error:",
         error
       );
 
@@ -2010,17 +1274,25 @@ app.get(
 );
 
 // ======================================================
-// DOWNLOAD PDF
+// DOWNLOAD PDF - MONGODB
 // ======================================================
 
 app.get(
   "/api/pdf/download/:orderId",
   async (req, res) => {
-
     try {
-
       const orderId =
-        req.params.orderId;
+        String(
+          req.params.orderId || ""
+        ).trim();
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Order ID is required",
+        });
+      }
 
       console.log("");
       console.log(
@@ -2034,151 +1306,159 @@ app.get(
         orderId
       );
 
-      const pool =
-        await connectDB();
-
-      // -----------------------------
-      // FIND ORDER
-      // -----------------------------
-
-      const result =
-        await pool
-          .request()
-          .input(
-            "OrderId",
-            sql.NVarChar(100),
-            orderId
-          )
-          .query(`
-
-            SELECT
-              Id,
-              OrderId,
-              UserId,
-              NoteId,
-              Title,
-              Price,
-              Pdf,
-              Paid,
-              PaymentId,
-              CreatedAt,
-              VerifiedAt
-
-            FROM dbo.Orders
-
-            WHERE OrderId = @OrderId
-
-          `);
-
-      // -----------------------------
-      // ORDER NOT FOUND
-      // -----------------------------
-
-      if (
-        result.recordset.length === 0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          error:
-            "Order not found",
-
-        });
-
-      }
+      // =================================================
+      // FIND ORDER IN MONGODB
+      // =================================================
 
       const order =
-        result.recordset[0];
+        await Order.findOne({
+          orderId:
+            orderId,
+        }).lean();
 
-      console.log(
-        "Order found:",
-        order.OrderId
-      );
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Order not found",
+        });
+      }
 
-      console.log(
-        "User ID:",
-        order.UserId
-      );
+      // =================================================
+      // AUTH TOKEN
+      // Header token preferred.
+      // Query token kept for current frontend compatibility.
+      // =================================================
 
-      console.log(
-        "Paid:",
-        order.Paid
-      );
+      const authHeader =
+        req.headers.authorization;
 
-      // -----------------------------
-      // AUTH CHECK — only the user who
-      // placed this order can download it
-      // -----------------------------
-
-      const authHeader = req.headers.authorization;
       const headerToken =
-        authHeader && authHeader.startsWith("Bearer ")
+        authHeader &&
+        authHeader.startsWith("Bearer ")
           ? authHeader.slice(7)
           : null;
-      const token = headerToken || req.query.token;
+
+      const token =
+        headerToken ||
+        req.query.token;
 
       if (!token) {
         return res.status(401).json({
           success: false,
-          error: "Please log in to download this file",
+          error:
+            "Please log in to download this file",
         });
       }
+
+      // =================================================
+      // VERIFY JWT
+      // =================================================
 
       let decoded;
+
       try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
+        decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        );
+      } catch (error) {
         return res.status(401).json({
           success: false,
-          error: "Your session has expired. Please log in again",
+          error:
+            "Your session has expired. Please log in again",
         });
       }
 
+      const userId =
+        String(
+          decoded?.userId || ""
+        ).trim();
+
       if (
-        !order.UserId ||
-        Number(decoded.userId) !== Number(order.UserId)
+        !userId ||
+        !mongoose.Types.ObjectId.isValid(
+          userId
+        )
+      ) {
+        return res.status(401).json({
+          success: false,
+          error:
+            "Invalid login session",
+        });
+      }
+
+      // =================================================
+      // ORDER OWNER CHECK
+      // =================================================
+
+      if (
+        !order.userId ||
+        String(order.userId) !==
+          userId
       ) {
         return res.status(403).json({
           success: false,
-          error: "You are not authorized to download this file",
+          error:
+            "You are not authorized to download this file",
         });
       }
 
-      // -----------------------------
+      // =================================================
       // PAYMENT CHECK
-      // -----------------------------
+      // =================================================
 
-      if (!order.Paid) {
-
+      if (!order.paid) {
         return res.status(403).json({
-
           success: false,
-
           error:
             "Payment required before downloading PDF",
-
         });
-
       }
 
-      // -----------------------------
-      // PDF FILE
-      // -----------------------------
+      // =================================================
+      // PDF FILE CHECK
+      // =================================================
 
       const pdfFileName =
-        order.Pdf;
+        String(
+          order.pdf || ""
+        ).trim();
+
+      if (!pdfFileName) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "PDF file is not available for this note",
+        });
+      }
+
+      // Only file name use karenge
+      // path traversal se protection
+      const safePdfFileName =
+        path.basename(
+          pdfFileName
+        );
 
       const pdfPath =
         path.join(
           pdfFolder,
-          pdfFileName
+          safePdfFileName
         );
 
       console.log(
+        "MongoDB User ID:",
+        String(order.userId)
+      );
+
+      console.log(
+        "Paid:",
+        order.paid
+      );
+
+      console.log(
         "PDF:",
-        pdfFileName
+        safePdfFileName
       );
 
       console.log(
@@ -2186,33 +1466,30 @@ app.get(
         pdfPath
       );
 
-      // -----------------------------
-      // CHECK FILE
-      // -----------------------------
+      // =================================================
+      // CHECK FILE EXISTS
+      // =================================================
 
       if (
-        !fs.existsSync(pdfPath)
+        !fs.existsSync(
+          pdfPath
+        )
       ) {
-
         console.error(
           "PDF FILE NOT FOUND:",
           pdfPath
         );
 
         return res.status(404).json({
-
           success: false,
-
           error:
             "PDF file not found on server",
-
         });
-
       }
 
-      // -----------------------------
+      // =================================================
       // DOWNLOAD
-      // -----------------------------
+      // =================================================
 
       console.log(
         "PDF DOWNLOAD STARTED"
@@ -2224,1284 +1501,1508 @@ app.get(
 
       return res.download(
         pdfPath,
-        pdfFileName,
+        safePdfFileName,
         (error) => {
-
           if (error) {
-
             console.error(
               "PDF download error:",
               error
             );
-
           }
-
         }
       );
-
     } catch (error) {
-
       console.error(
-        "PDF download error:",
+        "MongoDB PDF download error:",
         error
       );
 
       if (!res.headersSent) {
-
         return res.status(500).json({
-
           success: false,
-
           error:
             "Unable to download PDF",
-
         });
-
       }
-
     }
-
   }
 );
-
 // ======================================================
-// CHECK ORDER STATUS
+// CHECK ORDER STATUS - MONGODB
 // ======================================================
 
 app.get(
   "/api/payment/order/:orderId",
   async (req, res) => {
-
     try {
-
       const orderId =
-        req.params.orderId;
+        String(
+          req.params.orderId || ""
+        ).trim();
 
-      const pool =
-        await connectDB();
-
-      const result =
-        await pool
-          .request()
-          .input(
-            "OrderId",
-            sql.NVarChar(100),
-            orderId
-          )
-          .query(`
-
-            SELECT
-              Id,
-              OrderId,
-              UserId,
-              NoteId,
-              Title,
-              Price,
-              Pdf,
-              Paid,
-              PaymentId,
-              CreatedAt,
-              VerifiedAt
-
-            FROM dbo.Orders
-
-            WHERE OrderId = @OrderId
-
-          `);
-
-      if (
-        result.recordset.length === 0
-      ) {
-
-        return res.status(404).json({
-
+      if (!orderId) {
+        return res.status(400).json({
           success: false,
-
           error:
-            "Order not found",
-
+            "Order ID is required",
         });
-
       }
 
+      // =================================================
+      // FIND ORDER IN MONGODB
+      // =================================================
+
       const order =
-        result.recordset[0];
+        await Order.findOne({
+          orderId:
+            orderId,
+        }).lean();
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "Order not found",
+        });
+      }
+
+      // =================================================
+      // RESPONSE
+      // =================================================
 
       return res.json({
-
         success: true,
 
         order: {
-
           id:
-            order.Id,
+            order._id.toString(),
 
           orderId:
-            order.OrderId,
+            order.orderId,
 
           userId:
-            order.UserId,
+            order.userId
+              ? String(order.userId)
+              : "",
 
           noteId:
-            order.NoteId,
+            order.noteId,
 
           title:
-            order.Title,
+            order.title,
 
           price:
-            order.Price,
+            Number(
+              order.price
+            ) || 0,
 
           paid:
-            order.Paid,
+            Boolean(
+              order.paid
+            ),
 
           paymentId:
-            order.PaymentId,
+            order.paymentId || "",
 
           createdAt:
-            order.CreatedAt,
+            order.createdAt,
 
           verifiedAt:
-            order.VerifiedAt,
-
+            order.verifiedAt || null,
         },
-
       });
-
     } catch (error) {
-
       console.error(
-        "Order status error:",
+        "MongoDB order status error:",
         error
       );
 
       return res.status(500).json({
-
         success: false,
-
         error:
           "Unable to check order status",
-
       });
-
     }
+  }
+);
+// ======================================================
+// ADMIN DASHBOARD API - MONGODB
+// ======================================================
 
+app.get(
+  "/api/admin/dashboard",
+  async (req, res) => {
+    try {
+      // =================================================
+      // ADMIN SECURITY
+      // =================================================
+
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "Unauthorized",
+        });
+      }
+
+      // =================================================
+      // TOTAL USERS - MONGODB
+      // =================================================
+
+      const totalUsers =
+        await User.countDocuments();
+
+      // =================================================
+      // TOTAL NOTES - MONGODB
+      // =================================================
+
+      const totalNotes =
+        await Note.countDocuments();
+
+      // =================================================
+      // ORDER / REVENUE STATS - MONGODB
+      // =================================================
+
+      const orderStats =
+        await Order.aggregate([
+          {
+            $group: {
+              _id: null,
+
+              paidOrders: {
+                $sum: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$paid",
+                        true,
+                      ],
+                    },
+                    1,
+                    0,
+                  ],
+                },
+              },
+
+              totalRevenue: {
+                $sum: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$paid",
+                        true,
+                      ],
+                    },
+                    "$price",
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+        ]);
+
+      const paidOrders =
+        Number(
+          orderStats[0]
+            ?.paidOrders
+        ) || 0;
+
+      const totalRevenue =
+        Number(
+          orderStats[0]
+            ?.totalRevenue
+        ) || 0;
+
+      // =================================================
+      // RECENT PAID ORDERS - MONGODB
+      // =================================================
+
+      const recentOrderDocs =
+        await Order.find({
+          paid: true,
+        })
+          .sort({
+            verifiedAt: -1,
+            createdAt: -1,
+          })
+          .limit(5)
+          .populate(
+            "userId",
+            "fullName email"
+          )
+          .lean();
+
+      const recentOrders =
+        recentOrderDocs.map(
+          (order) => {
+            const user =
+              order.userId &&
+              typeof order.userId ===
+                "object"
+                ? order.userId
+                : null;
+
+            return {
+              id:
+                order._id.toString(),
+
+              orderId:
+                order.orderId,
+
+              userId:
+                user?._id
+                  ? user._id.toString()
+                  : order.userId
+                    ? String(
+                        order.userId
+                      )
+                    : "",
+
+              userName:
+                user?.fullName ||
+                "Unknown User",
+
+              userEmail:
+                user?.email ||
+                "",
+
+              noteId:
+                order.noteId,
+
+              title:
+                order.title,
+
+              price:
+                Number(
+                  order.price
+                ) || 0,
+
+              paid:
+                Boolean(
+                  order.paid
+                ),
+
+              paymentId:
+                order.paymentId ||
+                "",
+
+              createdAt:
+                order.createdAt,
+
+              verifiedAt:
+                order.verifiedAt ||
+                null,
+            };
+          }
+        );
+
+      // =================================================
+// TEST COUNT - MONGODB
+// =================================================
+
+const totalTests =
+  await Test.countDocuments({
+    isActive: true,
+  });
+
+      // =================================================
+      // RESPONSE
+      // =================================================
+
+      return res.json({
+        success: true,
+
+        stats: {
+          totalUsers,
+          totalNotes,
+          totalTests,
+          paidOrders,
+          totalRevenue,
+        },
+
+        recentOrders,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin dashboard error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load admin dashboard",
+      });
+    }
   }
 );
 
 // ======================================================
-// ADMIN DASHBOARD API
+// ADMIN ORDER SUMMARY - MONGODB
 // ======================================================
 
-app.get("/api/admin/dashboard", async (req, res) => {
-  try {
-  
-    // -----------------------------------
-    // ADMIN KEY CHECK
-    // -----------------------------------
-
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    // -----------------------------------
-    // DATABASE CONNECTION
-    // -----------------------------------
-
-    const pool = await connectDB();
-
-    // -----------------------------------
-    // TOTAL USERS
-    // -----------------------------------
-
-    const usersResult = await pool.request().query(`
-      SELECT COUNT(*) AS totalUsers
-      FROM dbo.Users
-    `);
-
-    // -----------------------------------
-    // ORDER / REVENUE STATS
-    // -----------------------------------
-
-    const ordersResult = await pool.request().query(`
-      SELECT
-        COUNT(CASE WHEN Paid = 1 THEN 1 END) AS paidOrders,
-        ISNULL(
-          SUM(
-            CASE
-              WHEN Paid = 1 THEN Price
-              ELSE 0
-            END
-          ),
-          0
-        ) AS totalRevenue
-      FROM dbo.Orders
-    `);
-
-    // -----------------------------------
-    // RECENT PAID ORDERS
-    // -----------------------------------
-
-    const recentOrdersResult = await pool.request().query(`
-      SELECT TOP 5
-        o.Id,
-        o.OrderId,
-        o.UserId,
-        o.NoteId,
-        o.Title,
-        o.Price,
-        o.Paid,
-        o.PaymentId,
-        o.CreatedAt,
-        o.VerifiedAt,
-        u.Name AS UserName,
-        u.Email AS UserEmail
-      FROM dbo.Orders o
-      LEFT JOIN dbo.Users u
-        ON o.UserId = u.Id
-      WHERE o.Paid = 1
-      ORDER BY
-        COALESCE(o.VerifiedAt, o.CreatedAt) DESC
-    `);
-
-    // -----------------------------------
-    // NOTES
-    // Currently notes are stored in
-    // server.js array, not SQL database.
-    // -----------------------------------
-
-  const notesResult = await pool.request().query(`
-  SELECT COUNT(*) AS totalNotes
-  FROM dbo.Notes
-`);
-
-const totalNotes =
-  Number(notesResult.recordset[0]?.totalNotes) || 0;
-
-    // -----------------------------------
-    // TEST COUNT
-    // -----------------------------------
-
-    const testsResult = await pool.request().query(`
-      SELECT COUNT(*) AS totalTests
-      FROM dbo.Tests
-    `);
-
-    const totalTests =
-      Number(testsResult.recordset[0]?.totalTests) || 0;
-
-    // -----------------------------------
-    // RESPONSE
-    // -----------------------------------
-
-    return res.json({
-      success: true,
-
-      stats: {
-        totalUsers:
-          Number(usersResult.recordset[0]?.totalUsers) || 0,
-
-        totalNotes,
-
-        totalTests,
-
-        paidOrders:
-          Number(ordersResult.recordset[0]?.paidOrders) || 0,
-
-        totalRevenue:
-          Number(ordersResult.recordset[0]?.totalRevenue) || 0,
-      },
-
-      recentOrders:
-        recentOrdersResult.recordset.map((order) => ({
-          id: order.Id,
-          orderId: order.OrderId,
-          userId: order.UserId,
-          userName: order.UserName || "Unknown User",
-          userEmail: order.UserEmail || "",
-          noteId: order.NoteId,
-          title: order.Title,
-          price: Number(order.Price) || 0,
-          paid: Boolean(order.Paid),
-          paymentId: order.PaymentId,
-          createdAt: order.CreatedAt,
-          verifiedAt: order.VerifiedAt,
-        })),
-    });
-  } catch (error) {
-    console.error("Admin dashboard error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load admin dashboard",
-    });
-  }
-});
-
-// ======================================================
-// ADMIN ORDERS API (full list, for the "View all" page)
-// ======================================================
-// =====================================================
-// ADMIN ORDER SUMMARY
-// =====================================================
-
-app.get("/api/admin/orders-summary", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const pool = await connectDB();
-
-    const result = await pool.request().query(`
-      SELECT
-        COUNT(*) AS TotalOrders,
-
-        SUM(
-          CASE
-            WHEN Paid = 1 THEN 1
-            ELSE 0
-          END
-        ) AS PaidOrders,
-
-        SUM(
-          CASE
-            WHEN Paid = 0 THEN 1
-            ELSE 0
-          END
-        ) AS PendingOrders,
-
-        ISNULL(
-          SUM(
-            CASE
-              WHEN Paid = 1 THEN Price
-              ELSE 0
-            END
-          ),
-          0
-        ) AS TotalRevenue
-
-      FROM dbo.Orders
-    `);
-
-    const stats = result.recordset[0];
-
-    return res.json({
-      success: true,
-
-      summary: {
-        totalOrders: Number(stats.TotalOrders) || 0,
-        paidOrders: Number(stats.PaidOrders) || 0,
-        pendingOrders: Number(stats.PendingOrders) || 0,
-        totalRevenue: Number(stats.TotalRevenue) || 0,
-      },
-    });
-  } catch (error) {
-    console.error("Admin order summary error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load order summary",
-    });
-  }
-});
-
-app.get("/api/admin/orders", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const pool = await connectDB();
-
-    const status = (req.query.status || "all").toLowerCase();
-    const search = (req.query.search || "").trim();
-
-    let whereClauses = [];
-
-    if (status === "paid") {
-      whereClauses.push("o.Paid = 1");
-    } else if (status === "unpaid") {
-      whereClauses.push("o.Paid = 0");
-    }
-
-    if (search) {
-      whereClauses.push(
-        "(u.Name LIKE @search OR u.Email LIKE @search OR o.Title LIKE @search OR o.OrderId LIKE @search)"
-      );
-    }
-
-    const whereSql =
-      whereClauses.length > 0
-        ? `WHERE ${whereClauses.join(" AND ")}`
-        : "";
-
-    const request = pool.request();
-
-    if (search) {
-      request.input("search", sql.NVarChar, `%${search}%`);
-    }
-
-    const ordersResult = await request.query(`
-      SELECT
-        o.Id,
-        o.OrderId,
-        o.UserId,
-        o.NoteId,
-        o.Title,
-        o.Price,
-        o.Paid,
-        o.PaymentId,
-        o.CreatedAt,
-        o.VerifiedAt,
-        u.Name AS UserName,
-        u.Email AS UserEmail
-      FROM dbo.Orders o
-      LEFT JOIN dbo.Users u
-        ON o.UserId = u.Id
-      ${whereSql}
-      ORDER BY
-        COALESCE(o.VerifiedAt, o.CreatedAt) DESC
-    `);
-
-    return res.json({
-      success: true,
-
-      orders: ordersResult.recordset.map((order) => ({
-        id: order.Id,
-        orderId: order.OrderId,
-        userId: order.UserId,
-        userName: order.UserName || "Unknown User",
-        userEmail: order.UserEmail || "",
-        noteId: order.NoteId,
-        title: order.Title,
-        price: Number(order.Price) || 0,
-        paid: Boolean(order.Paid),
-        paymentId: order.PaymentId,
-        createdAt: order.CreatedAt,
-        verifiedAt: order.VerifiedAt,
-      })),
-    });
-  } catch (error) {
-    console.error("Admin orders error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load orders",
-    });
-  }
-});
-
-// =====================================================
-// ADMIN TESTS - GET ALL TESTS
-// =====================================================
-
-app.get("/api/admin/tests", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const pool = await connectDB();
-
-    const result = await pool.request().query(`
-      SELECT
-        t.TestId,
-        t.Category,
-        t.Title,
-        t.Subject,
-        t.Duration,
-        t.MarksPerCorrect,
-        t.NegativeMarking,
-        t.TopCategory,
-        t.SubExam,
-        COUNT(q.QuestionId) AS TotalQuestions
-      FROM dbo.Tests t
-      LEFT JOIN dbo.Questions q
-        ON t.TestId = q.TestId
-      GROUP BY
-        t.TestId,
-        t.Category,
-        t.Title,
-        t.Subject,
-        t.Duration,
-        t.MarksPerCorrect,
-        t.NegativeMarking,
-        t.TopCategory,
-        t.SubExam
-      ORDER BY t.Category, t.Title
-    `);
-
-    const tests = result.recordset.map((test) => ({
-      testId: test.TestId,
-      category: test.Category,
-      title: test.Title,
-      subject: test.Subject,
-      duration: Number(test.Duration) || 0,
-      marksPerCorrect: Number(test.MarksPerCorrect) || 0,
-      negativeMarking: Number(test.NegativeMarking) || 0,
-      topCategory: test.TopCategory,
-      subExam: test.SubExam,
-      totalQuestions: Number(test.TotalQuestions) || 0,
-    }));
-
-    return res.json({
-      success: true,
-      count: tests.length,
-      tests,
-    });
-  } catch (error) {
-    console.error("Admin tests error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load tests",
-    });
-  }
-});
-// =====================================================
-// ADMIN - CREATE NEW MOCK TEST
-// =====================================================
-
-app.post("/api/admin/tests", async (req, res) => {
-  try {
-    // -----------------------------------------
-    // ADMIN SECURITY
-    // -----------------------------------------
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    // -----------------------------------------
-    // GET FORM DATA
-    // -----------------------------------------
-    const {
-      testId,
-      category,
-      title,
-      subject,
-      duration,
-      marksPerCorrect,
-      negativeMarking,
-      topCategory,
-      subExam,
-    } = req.body;
-
-    // -----------------------------------------
-    // BASIC VALIDATION
-    // -----------------------------------------
-    const cleanTestId = String(testId || "").trim();
-    const cleanCategory = String(category || "").trim();
-    const cleanTitle = String(title || "").trim();
-    const cleanSubject = String(subject || "").trim();
-    const cleanTopCategory = String(topCategory || "").trim();
-    const cleanSubExam = String(subExam || "").trim();
-
-    if (
-      !cleanTestId ||
-      !cleanCategory ||
-      !cleanTitle ||
-      !cleanSubject ||
-      !cleanTopCategory ||
-      !cleanSubExam
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields.",
-      });
-    }
-
-    // TestId URL-safe rakhenge
-    if (!/^[a-z0-9-]+$/.test(cleanTestId)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Test ID can contain only lowercase letters, numbers and hyphens.",
-      });
-    }
-
-    const durationNumber = Number(duration);
-    const marksNumber = Number(marksPerCorrect);
-    const negativeNumber = Number(negativeMarking);
-
-    if (
-      !Number.isFinite(durationNumber) ||
-      durationNumber <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Duration must be greater than 0.",
-      });
-    }
-
-    if (
-      !Number.isFinite(marksNumber) ||
-      marksNumber <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Marks per correct answer must be greater than 0.",
-      });
-    }
-
-    if (
-      !Number.isFinite(negativeNumber) ||
-      negativeNumber < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Negative marking cannot be less than 0.",
-      });
-    }
-
-    const pool = await connectDB();
-
-    // -----------------------------------------
-    // CHECK DUPLICATE TEST ID
-    // -----------------------------------------
-    const existingTest = await pool
-      .request()
-      .input("TestId", sql.NVarChar, cleanTestId)
-      .query(`
-        SELECT TOP 1 TestId
-        FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
-
-    if (existingTest.recordset.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: "A test with this Test ID already exists.",
-      });
-    }
-
-    // -----------------------------------------
-    // INSERT TEST
-    // -----------------------------------------
-    await pool
-      .request()
-      .input("TestId", sql.NVarChar, cleanTestId)
-      .input("Category", sql.NVarChar, cleanCategory)
-      .input("Title", sql.NVarChar, cleanTitle)
-      .input("Subject", sql.NVarChar, cleanSubject)
-      .input("Duration", sql.Int, Math.round(durationNumber))
-      .input("MarksPerCorrect", sql.Decimal(10, 2), marksNumber)
-      .input("NegativeMarking", sql.Decimal(10, 2), negativeNumber)
-      .input("TopCategory", sql.NVarChar, cleanTopCategory)
-      .input("SubExam", sql.NVarChar, cleanSubExam)
-      .query(`
-        INSERT INTO dbo.Tests
-        (
-          TestId,
-          Category,
-          Title,
-          Subject,
-          Duration,
-          MarksPerCorrect,
-          NegativeMarking,
-          TopCategory,
-          SubExam
-        )
-        VALUES
-        (
-          @TestId,
-          @Category,
-          @Title,
-          @Subject,
-          @Duration,
-          @MarksPerCorrect,
-          @NegativeMarking,
-          @TopCategory,
-          @SubExam
-        )
-      `);
-
-    // -----------------------------------------
-    // SUCCESS
-    // -----------------------------------------
-    return res.status(201).json({
-      success: true,
-      message: "Test created successfully.",
-      test: {
-        testId: cleanTestId,
-        category: cleanCategory,
-        title: cleanTitle,
-        subject: cleanSubject,
-        duration: Math.round(durationNumber),
-        marksPerCorrect: marksNumber,
-        negativeMarking: negativeNumber,
-        topCategory: cleanTopCategory,
-        subExam: cleanSubExam,
-        totalQuestions: 0,
-      },
-    });
-  } catch (error) {
-    console.error("Admin create test error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create test.",
-    });
-  }
-});
-
-// =====================================================
-// ADMIN - UPDATE MOCK TEST
-// =====================================================
-
-app.put("/api/admin/tests/:testId", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const currentTestId = String(req.params.testId || "").trim();
-
-    const {
-      category,
-      title,
-      subject,
-      duration,
-      marksPerCorrect,
-      negativeMarking,
-      topCategory,
-      subExam,
-    } = req.body;
-
-    const cleanCategory = String(category || "").trim();
-    const cleanTitle = String(title || "").trim();
-    const cleanSubject = String(subject || "").trim();
-    const cleanTopCategory = String(topCategory || "").trim();
-    const cleanSubExam = String(subExam || "").trim();
-
-    if (
-      !currentTestId ||
-      !cleanCategory ||
-      !cleanTitle ||
-      !cleanSubject ||
-      !cleanTopCategory ||
-      !cleanSubExam
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields.",
-      });
-    }
-
-    const durationNumber = Number(duration);
-    const marksNumber = Number(marksPerCorrect);
-    const negativeNumber = Number(negativeMarking);
-
-    if (
-      !Number.isFinite(durationNumber) ||
-      durationNumber <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Duration must be greater than 0.",
-      });
-    }
-
-    if (
-      !Number.isFinite(marksNumber) ||
-      marksNumber <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Marks per correct answer must be greater than 0.",
-      });
-    }
-
-    if (
-      !Number.isFinite(negativeNumber) ||
-      negativeNumber < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Negative marking cannot be less than 0.",
-      });
-    }
-
-    const pool = await connectDB();
-
-    // Check whether the test actually exists
-    const existingTest = await pool
-      .request()
-      .input("TestId", sql.NVarChar, currentTestId)
-      .query(`
-        SELECT TOP 1 TestId
-        FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
-
-    if (existingTest.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Test not found.",
-      });
-    }
-
-    // TestId itself is intentionally not changed.
-    await pool
-      .request()
-      .input("TestId", sql.NVarChar, currentTestId)
-      .input("Category", sql.NVarChar, cleanCategory)
-      .input("Title", sql.NVarChar, cleanTitle)
-      .input("Subject", sql.NVarChar, cleanSubject)
-      .input(
-        "Duration",
-        sql.Int,
-        Math.round(durationNumber)
-      )
-      .input(
-        "MarksPerCorrect",
-        sql.Decimal(10, 2),
-        marksNumber
-      )
-      .input(
-        "NegativeMarking",
-        sql.Decimal(10, 2),
-        negativeNumber
-      )
-      .input(
-        "TopCategory",
-        sql.NVarChar,
-        cleanTopCategory
-      )
-      .input(
-        "SubExam",
-        sql.NVarChar,
-        cleanSubExam
-      )
-      .query(`
-        UPDATE dbo.Tests
-        SET
-          Category = @Category,
-          Title = @Title,
-          Subject = @Subject,
-          Duration = @Duration,
-          MarksPerCorrect = @MarksPerCorrect,
-          NegativeMarking = @NegativeMarking,
-          TopCategory = @TopCategory,
-          SubExam = @SubExam
-        WHERE TestId = @TestId
-      `);
-
-    return res.json({
-      success: true,
-      message: "Test updated successfully.",
-      test: {
-        testId: currentTestId,
-        category: cleanCategory,
-        title: cleanTitle,
-        subject: cleanSubject,
-        duration: Math.round(durationNumber),
-        marksPerCorrect: marksNumber,
-        negativeMarking: negativeNumber,
-        topCategory: cleanTopCategory,
-        subExam: cleanSubExam,
-      },
-    });
-  } catch (error) {
-    console.error("Admin update test error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update test.",
-    });
-  }
-});
-
-// =====================================================
-// ADMIN - GET QUESTIONS OF A TEST
-// =====================================================
-
-app.get("/api/admin/tests/:testId/questions", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const testId = String(req.params.testId || "").trim();
-
-    if (!testId) {
-      return res.status(400).json({
-        success: false,
-        message: "Test ID is required.",
-      });
-    }
-
-    const pool = await connectDB();
-
-    // First check that test exists
-    const testResult = await pool
-      .request()
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        SELECT
-          TestId,
-          Category,
-          Title,
-          Subject,
-          Duration,
-          MarksPerCorrect,
-          NegativeMarking,
-          TopCategory,
-          SubExam
-        FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
-
-    if (testResult.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Test not found.",
-      });
-    }
-
-    // Get questions belonging to this test
-    const questionsResult = await pool
-      .request()
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        SELECT
-          QuestionId,
-          TestId,
-          QuestionText,
-          OptionA,
-          OptionB,
-          OptionC,
-          OptionD,
-          CorrectAnswer,
-          QuestionTextHi,
-          OptionAHi,
-          OptionBHi,
-          OptionCHi,
-          OptionDHi
-        FROM dbo.Questions
-        WHERE TestId = @TestId
-        ORDER BY QuestionId ASC
-      `);
-
-    const test = testResult.recordset[0];
-
-    const questions = questionsResult.recordset.map((question) => ({
-      questionId: question.QuestionId,
-      testId: question.TestId,
-
-      questionText: question.QuestionText,
-
-      optionA: question.OptionA,
-      optionB: question.OptionB,
-      optionC: question.OptionC,
-      optionD: question.OptionD,
-
-      correctAnswer: Number(question.CorrectAnswer),
-
-      questionTextHi: question.QuestionTextHi || "",
-      optionAHi: question.OptionAHi || "",
-      optionBHi: question.OptionBHi || "",
-      optionCHi: question.OptionCHi || "",
-      optionDHi: question.OptionDHi || "",
-    }));
-
-    return res.json({
-      success: true,
-
-      test: {
-        testId: test.TestId,
-        category: test.Category,
-        title: test.Title,
-        subject: test.Subject,
-        duration: Number(test.Duration) || 0,
-        marksPerCorrect: Number(test.MarksPerCorrect) || 0,
-        negativeMarking: Number(test.NegativeMarking) || 0,
-        topCategory: test.TopCategory,
-        subExam: test.SubExam,
-      },
-
-      count: questions.length,
-      questions,
-    });
-  } catch (error) {
-    console.error("Admin get questions error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to load questions.",
-    });
-  }
-});
-
-// =====================================================
-// ADMIN - ADD QUESTION TO TEST
-// =====================================================
-
-app.post("/api/admin/tests/:testId/questions", async (req, res) => {
-  try {
-    const adminKey = req.header("x-admin-key");
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const testId = String(req.params.testId || "").trim();
-
-    const {
-      questionText,
-      optionA,
-      optionB,
-      optionC,
-      optionD,
-      correctAnswer,
-      questionTextHi,
-      optionAHi,
-      optionBHi,
-      optionCHi,
-      optionDHi,
-    } = req.body;
-
-    // -----------------------------
-    // Clean required fields
-    // -----------------------------
-
-    const cleanQuestionText = String(questionText || "").trim();
-    const cleanOptionA = String(optionA || "").trim();
-    const cleanOptionB = String(optionB || "").trim();
-    const cleanOptionC = String(optionC || "").trim();
-    const cleanOptionD = String(optionD || "").trim();
-
-    const correctAnswerNumber = Number(correctAnswer);
-
-    // -----------------------------
-    // Validation
-    // -----------------------------
-
-    if (!testId) {
-      return res.status(400).json({
-        success: false,
-        message: "Test ID is required.",
-      });
-    }
-
-    if (
-      !cleanQuestionText ||
-      !cleanOptionA ||
-      !cleanOptionB ||
-      !cleanOptionC ||
-      !cleanOptionD
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Question and all four options are required.",
-      });
-    }
-
-    if (
-      !Number.isInteger(correctAnswerNumber) ||
-      correctAnswerNumber < 1 ||
-      correctAnswerNumber > 4
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Correct answer must be between 1 and 4.",
-      });
-    }
-
-    const pool = await connectDB();
-
-    // -----------------------------
-    // Check test exists
-    // -----------------------------
-
-    const testResult = await pool
-      .request()
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        SELECT TOP 1 TestId
-        FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
-
-    if (testResult.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Test not found.",
-      });
-    }
-
-    // -----------------------------
-    // Generate next QuestionId
-    // -----------------------------
-
-   
-
-    // -----------------------------
-    // Insert question
-    // -----------------------------
-
-   const insertResult = await pool
-  .request()
-  .input("TestId", sql.NVarChar, testId)
-  .input("QuestionText", sql.NVarChar, cleanQuestionText)
-  .input("OptionA", sql.NVarChar, cleanOptionA)
-  .input("OptionB", sql.NVarChar, cleanOptionB)
-  .input("OptionC", sql.NVarChar, cleanOptionC)
-  .input("OptionD", sql.NVarChar, cleanOptionD)
-  .input("CorrectAnswer", sql.Int, correctAnswerNumber)
-  .input(
-    "QuestionTextHi",
-    sql.NVarChar,
-    String(questionTextHi || "").trim() || null
-  )
-  .input(
-    "OptionAHi",
-    sql.NVarChar,
-    String(optionAHi || "").trim() || null
-  )
-  .input(
-    "OptionBHi",
-    sql.NVarChar,
-    String(optionBHi || "").trim() || null
-  )
-  .input(
-    "OptionCHi",
-    sql.NVarChar,
-    String(optionCHi || "").trim() || null
-  )
-  .input(
-    "OptionDHi",
-    sql.NVarChar,
-    String(optionDHi || "").trim() || null
-  )
-  .query(`
-    INSERT INTO dbo.Questions
-    (
-      TestId,
-      QuestionText,
-      OptionA,
-      OptionB,
-      OptionC,
-      OptionD,
-      CorrectAnswer,
-      QuestionTextHi,
-      OptionAHi,
-      OptionBHi,
-      OptionCHi,
-      OptionDHi
-    )
-    OUTPUT INSERTED.QuestionId
-    VALUES
-    (
-      @TestId,
-      @QuestionText,
-      @OptionA,
-      @OptionB,
-      @OptionC,
-      @OptionD,
-      @CorrectAnswer,
-      @QuestionTextHi,
-      @OptionAHi,
-      @OptionBHi,
-      @OptionCHi,
-      @OptionDHi
-    )
-  `);
-
-const newQuestionId =
-  insertResult.recordset[0].QuestionId;
-    // -----------------------------
-    // Success
-    // -----------------------------
-
-    return res.status(201).json({
-      success: true,
-      message: "Question added successfully.",
-
-      question: {
-        questionId: newQuestionId,
-        testId,
-        questionText: cleanQuestionText,
-        optionA: cleanOptionA,
-        optionB: cleanOptionB,
-        optionC: cleanOptionC,
-        optionD: cleanOptionD,
-        correctAnswer: correctAnswerNumber,
-
-        questionTextHi: String(questionTextHi || "").trim(),
-        optionAHi: String(optionAHi || "").trim(),
-        optionBHi: String(optionBHi || "").trim(),
-        optionCHi: String(optionCHi || "").trim(),
-        optionDHi: String(optionDHi || "").trim(),
-      },
-    });
-  } catch (error) {
-    console.error("Admin add question error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to add question.",
-    });
-  }
-});
-
-// =====================================================
-// ADMIN - UPDATE QUESTION
-// =====================================================
-
-app.put(
-  "/api/admin/tests/:testId/questions/:questionId",
+app.get(
+  "/api/admin/orders-summary",
   async (req, res) => {
     try {
-      const adminKey = req.header("x-admin-key");
+      const adminKey =
+        req.header("x-admin-key");
 
-      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
         return res.status(401).json({
           success: false,
           message: "Unauthorized",
         });
       }
 
-      const testId = String(req.params.testId || "").trim();
-      const questionId = Number(req.params.questionId);
+      const totalOrders =
+        await Order.countDocuments();
+
+      const paidOrders =
+        await Order.countDocuments({
+          paid: true,
+        });
+
+      const pendingOrders =
+        await Order.countDocuments({
+          paid: false,
+        });
+
+      const revenueResult =
+        await Order.aggregate([
+          {
+            $match: {
+              paid: true,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalRevenue: {
+                $sum: "$price",
+              },
+            },
+          },
+        ]);
+
+      const totalRevenue =
+        Number(
+          revenueResult[0]
+            ?.totalRevenue
+        ) || 0;
+
+      return res.json({
+        success: true,
+
+        summary: {
+          totalOrders,
+          paidOrders,
+          pendingOrders,
+          totalRevenue,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin order summary error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load order summary",
+      });
+    }
+  }
+);
+
+// ======================================================
+// ADMIN ORDERS LIST - MONGODB
+// ======================================================
+
+app.get(
+  "/api/admin/orders",
+  async (req, res) => {
+    try {
+      // =================================================
+      // ADMIN SECURITY
+      // =================================================
+
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // =================================================
+      // FILTERS
+      // =================================================
+
+      const status =
+        String(
+          req.query.status || "all"
+        )
+          .trim()
+          .toLowerCase();
+
+      const search =
+        String(
+          req.query.search || ""
+        ).trim();
+
+      const orderQuery = {};
+
+      if (status === "paid") {
+        orderQuery.paid = true;
+      } else if (
+        status === "unpaid"
+      ) {
+        orderQuery.paid = false;
+      }
+
+      // =================================================
+      // SEARCH
+      // =================================================
+
+      if (search) {
+        const escapedSearch =
+          search.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+          );
+
+        const searchRegex =
+          new RegExp(
+            escapedSearch,
+            "i"
+          );
+
+        // User name/email matching IDs
+        const matchingUsers =
+          await User.find({
+            $or: [
+              {
+                fullName:
+                  searchRegex,
+              },
+              {
+                email:
+                  searchRegex,
+              },
+            ],
+          })
+            .select("_id")
+            .lean();
+
+        const userIds =
+          matchingUsers.map(
+            (user) =>
+              user._id
+          );
+
+        orderQuery.$or = [
+          {
+            title:
+              searchRegex,
+          },
+          {
+            orderId:
+              searchRegex,
+          },
+          {
+            paymentId:
+              searchRegex,
+          },
+        ];
+
+        if (userIds.length > 0) {
+          orderQuery.$or.push({
+            userId: {
+              $in:
+                userIds,
+            },
+          });
+        }
+      }
+
+      // =================================================
+      // LOAD ORDERS
+      // =================================================
+
+      const orderDocs =
+        await Order.find(
+          orderQuery
+        )
+          .sort({
+            verifiedAt: -1,
+            createdAt: -1,
+          })
+          .populate(
+            "userId",
+            "fullName email"
+          )
+          .lean();
+
+      // =================================================
+      // FORMAT RESPONSE
+      // =================================================
+
+      const orders =
+        orderDocs.map(
+          (order) => {
+            const user =
+              order.userId &&
+              typeof order.userId ===
+                "object"
+                ? order.userId
+                : null;
+
+            return {
+              id:
+                order._id.toString(),
+
+              orderId:
+                order.orderId,
+
+              userId:
+                user?._id
+                  ? user._id.toString()
+                  : order.userId
+                    ? String(
+                        order.userId
+                      )
+                    : "",
+
+              userName:
+                user?.fullName ||
+                "Unknown User",
+
+              userEmail:
+                user?.email ||
+                "",
+
+              noteId:
+                order.noteId,
+
+              title:
+                order.title,
+
+              price:
+                Number(
+                  order.price
+                ) || 0,
+
+              paid:
+                Boolean(
+                  order.paid
+                ),
+
+              paymentId:
+                order.paymentId ||
+                "",
+
+              createdAt:
+                order.createdAt,
+
+              verifiedAt:
+                order.verifiedAt ||
+                null,
+            };
+          }
+        );
+
+      return res.json({
+        success: true,
+        orders,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin orders error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load orders",
+      });
+    }
+  }
+);
+
+// =====================================================
+// ADMIN TESTS - GET ALL TESTS - MONGODB
+// =====================================================
+
+app.get(
+  "/api/admin/tests",
+  async (req, res) => {
+    try {
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // MongoDB se saare tests
+      const testDocuments =
+        await Test.find({})
+          .sort({
+            category: 1,
+            title: 1,
+          })
+          .lean();
+
+      // Har test ke questions count
+      const questionCounts =
+        await Question.aggregate([
+          {
+            $group: {
+              _id: "$testId",
+              totalQuestions: {
+                $sum: 1,
+              },
+            },
+          },
+        ]);
+
+      const questionCountMap =
+        new Map(
+          questionCounts.map(
+            (item) => [
+              String(item._id),
+              Number(
+                item.totalQuestions
+              ) || 0,
+            ]
+          )
+        );
+
+      const tests =
+        testDocuments.map(
+          (test) => ({
+            testId:
+              test.testId,
+
+            category:
+              test.category,
+
+            title:
+              test.title,
+
+            subject:
+              test.subject,
+
+            duration:
+              Number(
+                test.duration
+              ) || 0,
+
+            marksPerCorrect:
+              Number(
+                test.marksPerCorrect
+              ) || 0,
+
+            negativeMarking:
+              Number(
+                test.negativeMarking
+              ) || 0,
+
+            topCategory:
+              test.topCategory,
+
+            subExam:
+              test.subExam,
+
+            totalQuestions:
+              questionCountMap.get(
+                String(test.testId)
+              ) || 0,
+          })
+        );
+
+      return res.json({
+        success: true,
+        count: tests.length,
+        tests,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin tests error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load tests",
+      });
+    }
+  }
+);
+// =====================================================
+// ADMIN - CREATE NEW MOCK TEST - MONGODB
+// =====================================================
+
+app.post(
+  "/api/admin/tests",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
+
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // ===============================================
+      // FORM DATA
+      // ===============================================
+
+      const {
+        testId,
+        category,
+        title,
+        subject,
+        duration,
+        marksPerCorrect,
+        negativeMarking,
+        topCategory,
+        subExam,
+      } = req.body;
+
+      const cleanTestId =
+        String(testId || "")
+          .trim()
+          .toLowerCase();
+
+      const cleanCategory =
+        String(category || "").trim();
+
+      const cleanTitle =
+        String(title || "").trim();
+
+      const cleanSubject =
+        String(subject || "").trim();
+
+      const cleanTopCategory =
+        String(topCategory || "").trim();
+
+      const cleanSubExam =
+        String(subExam || "").trim();
+
+      // ===============================================
+      // REQUIRED FIELDS
+      // ===============================================
+
+      if (
+        !cleanTestId ||
+        !cleanCategory ||
+        !cleanTitle ||
+        !cleanSubject ||
+        !cleanTopCategory ||
+        !cleanSubExam
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please fill all required fields.",
+        });
+      }
+
+      // ===============================================
+      // TEST ID VALIDATION
+      // ===============================================
+
+      if (
+        !/^[a-z0-9-]+$/.test(
+          cleanTestId
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Test ID can contain only lowercase letters, numbers and hyphens.",
+        });
+      }
+
+      // ===============================================
+      // NUMBER VALIDATION
+      // ===============================================
+
+      const durationNumber =
+        Number(duration);
+
+      const marksNumber =
+        Number(marksPerCorrect);
+
+      const negativeNumber =
+        Number(negativeMarking);
+
+      if (
+        !Number.isFinite(
+          durationNumber
+        ) ||
+        durationNumber <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Duration must be greater than 0.",
+        });
+      }
+
+      if (
+        !Number.isFinite(
+          marksNumber
+        ) ||
+        marksNumber <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Marks per correct answer must be greater than 0.",
+        });
+      }
+
+      if (
+        !Number.isFinite(
+          negativeNumber
+        ) ||
+        negativeNumber < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Negative marking cannot be less than 0.",
+        });
+      }
+
+      // ===============================================
+      // DUPLICATE TEST ID CHECK
+      // ===============================================
+
+      const existingTest =
+        await Test.findOne({
+          testId:
+            cleanTestId,
+        })
+          .select("_id")
+          .lean();
+
+      if (existingTest) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "A test with this Test ID already exists.",
+        });
+      }
+
+      // ===============================================
+      // CREATE TEST IN MONGODB
+      // ===============================================
+
+      const newTest =
+        await Test.create({
+          testId:
+            cleanTestId,
+
+          category:
+            cleanCategory,
+
+          title:
+            cleanTitle,
+
+          subject:
+            cleanSubject,
+
+          duration:
+            Math.round(
+              durationNumber
+            ),
+
+          marksPerCorrect:
+            marksNumber,
+
+          negativeMarking:
+            negativeNumber,
+
+          topCategory:
+            cleanTopCategory,
+
+          subExam:
+            cleanSubExam,
+
+          isActive:
+            true,
+        });
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.status(201).json({
+        success: true,
+        message:
+          "Test created successfully.",
+
+        test: {
+          testId:
+            newTest.testId,
+
+          category:
+            newTest.category,
+
+          title:
+            newTest.title,
+
+          subject:
+            newTest.subject,
+
+          duration:
+            Number(
+              newTest.duration
+            ) || 0,
+
+          marksPerCorrect:
+            Number(
+              newTest.marksPerCorrect
+            ) || 0,
+
+          negativeMarking:
+            Number(
+              newTest.negativeMarking
+            ) || 0,
+
+          topCategory:
+            newTest.topCategory,
+
+          subExam:
+            newTest.subExam,
+
+          totalQuestions: 0,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin create test error:",
+        error
+      );
+
+      if (
+        error?.code === 11000
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "A test with this Test ID already exists.",
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to create test.",
+      });
+    }
+  }
+);
+
+// =====================================================
+// ADMIN - UPDATE MOCK TEST - MONGODB
+// =====================================================
+
+app.put(
+  "/api/admin/tests/:testId",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
+
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // ===============================================
+      // TEST ID
+      // ===============================================
+
+      const currentTestId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const {
+        category,
+        title,
+        subject,
+        duration,
+        marksPerCorrect,
+        negativeMarking,
+        topCategory,
+        subExam,
+      } = req.body;
+
+      const cleanCategory =
+        String(category || "").trim();
+
+      const cleanTitle =
+        String(title || "").trim();
+
+      const cleanSubject =
+        String(subject || "").trim();
+
+      const cleanTopCategory =
+        String(topCategory || "").trim();
+
+      const cleanSubExam =
+        String(subExam || "").trim();
+
+      // ===============================================
+      // REQUIRED FIELDS
+      // ===============================================
+
+      if (
+        !currentTestId ||
+        !cleanCategory ||
+        !cleanTitle ||
+        !cleanSubject ||
+        !cleanTopCategory ||
+        !cleanSubExam
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please fill all required fields.",
+        });
+      }
+
+      // ===============================================
+      // NUMBER VALIDATION
+      // ===============================================
+
+      const durationNumber =
+        Number(duration);
+
+      const marksNumber =
+        Number(marksPerCorrect);
+
+      const negativeNumber =
+        Number(negativeMarking);
+
+      if (
+        !Number.isFinite(
+          durationNumber
+        ) ||
+        durationNumber <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Duration must be greater than 0.",
+        });
+      }
+
+      if (
+        !Number.isFinite(
+          marksNumber
+        ) ||
+        marksNumber <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Marks per correct answer must be greater than 0.",
+        });
+      }
+
+      if (
+        !Number.isFinite(
+          negativeNumber
+        ) ||
+        negativeNumber < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Negative marking cannot be less than 0.",
+        });
+      }
+
+      // ===============================================
+      // FIND TEST
+      // ===============================================
+
+      const test =
+        await Test.findOne({
+          testId:
+            currentTestId,
+        });
+
+      if (!test) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Test not found.",
+        });
+      }
+
+      // ===============================================
+      // UPDATE TEST
+      // Test ID intentionally unchanged
+      // ===============================================
+
+      test.category =
+        cleanCategory;
+
+      test.title =
+        cleanTitle;
+
+      test.subject =
+        cleanSubject;
+
+      test.duration =
+        Math.round(
+          durationNumber
+        );
+
+      test.marksPerCorrect =
+        marksNumber;
+
+      test.negativeMarking =
+        negativeNumber;
+
+      test.topCategory =
+        cleanTopCategory;
+
+      test.subExam =
+        cleanSubExam;
+
+      await test.save();
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.json({
+        success: true,
+
+        message:
+          "Test updated successfully.",
+
+        test: {
+          testId:
+            test.testId,
+
+          category:
+            test.category,
+
+          title:
+            test.title,
+
+          subject:
+            test.subject,
+
+          duration:
+            Number(
+              test.duration
+            ) || 0,
+
+          marksPerCorrect:
+            Number(
+              test.marksPerCorrect
+            ) || 0,
+
+          negativeMarking:
+            Number(
+              test.negativeMarking
+            ) || 0,
+
+          topCategory:
+            test.topCategory,
+
+          subExam:
+            test.subExam,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin update test error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to update test.",
+      });
+    }
+  }
+);
+// =====================================================
+// ADMIN - GET QUESTIONS OF A TEST - MONGODB
+// =====================================================
+
+app.get(
+  "/api/admin/tests/:testId/questions",
+  async (req, res) => {
+    try {
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const testId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (!testId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Test ID is required.",
+        });
+      }
+
+      // ===============================================
+      // FIND TEST
+      // ===============================================
+
+      const test =
+        await Test.findOne({
+          testId,
+        }).lean();
+
+      if (!test) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Test not found.",
+        });
+      }
+
+      // ===============================================
+      // LOAD QUESTIONS
+      // ===============================================
+
+      const questionDocuments =
+        await Question.find({
+          testId,
+        })
+          .sort({
+            questionId: 1,
+          })
+          .lean();
+
+      // ===============================================
+      // FORMAT QUESTIONS
+      // ===============================================
+
+      const questions =
+        questionDocuments.map(
+          (question) => ({
+            questionId:
+              question.questionId,
+
+            testId:
+              question.testId,
+
+            questionText:
+              question.questionText,
+
+            optionA:
+              question.optionA,
+
+            optionB:
+              question.optionB,
+
+            optionC:
+              question.optionC,
+
+            optionD:
+              question.optionD,
+
+            correctAnswer:
+              Number(
+                question.correctAnswer
+              ),
+
+            questionTextHi:
+              question.questionTextHi ||
+              "",
+
+            optionAHi:
+              question.optionAHi ||
+              "",
+
+            optionBHi:
+              question.optionBHi ||
+              "",
+
+            optionCHi:
+              question.optionCHi ||
+              "",
+
+            optionDHi:
+              question.optionDHi ||
+              "",
+          })
+        );
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.json({
+        success: true,
+
+        test: {
+          testId:
+            test.testId,
+
+          category:
+            test.category,
+
+          title:
+            test.title,
+
+          subject:
+            test.subject,
+
+          duration:
+            Number(
+              test.duration
+            ) || 0,
+
+          marksPerCorrect:
+            Number(
+              test.marksPerCorrect
+            ) || 0,
+
+          negativeMarking:
+            Number(
+              test.negativeMarking
+            ) || 0,
+
+          topCategory:
+            test.topCategory,
+
+          subExam:
+            test.subExam,
+        },
+
+        count:
+          questions.length,
+
+        questions,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin get questions error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load questions.",
+      });
+    }
+  }
+);
+
+// =====================================================
+// ADMIN - ADD QUESTION TO TEST - MONGODB
+// =====================================================
+
+app.post(
+  "/api/admin/tests/:testId/questions",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
+
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // ===============================================
+      // TEST ID
+      // ===============================================
+
+      const testId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
 
       const {
         questionText,
@@ -3517,36 +3018,74 @@ app.put(
         optionDHi,
       } = req.body;
 
-      // -----------------------------
+      // ===============================================
       // CLEAN VALUES
-      // -----------------------------
+      // ===============================================
 
-      const cleanQuestionText = String(questionText || "").trim();
-      const cleanOptionA = String(optionA || "").trim();
-      const cleanOptionB = String(optionB || "").trim();
-      const cleanOptionC = String(optionC || "").trim();
-      const cleanOptionD = String(optionD || "").trim();
+      const cleanQuestionText =
+        String(
+          questionText || ""
+        ).trim();
 
-      const correctAnswerNumber = Number(correctAnswer);
+      const cleanOptionA =
+        String(
+          optionA || ""
+        ).trim();
 
-      // -----------------------------
+      const cleanOptionB =
+        String(
+          optionB || ""
+        ).trim();
+
+      const cleanOptionC =
+        String(
+          optionC || ""
+        ).trim();
+
+      const cleanOptionD =
+        String(
+          optionD || ""
+        ).trim();
+
+      const correctAnswerNumber =
+        Number(
+          correctAnswer
+        );
+
+      const cleanQuestionTextHi =
+        String(
+          questionTextHi || ""
+        ).trim();
+
+      const cleanOptionAHi =
+        String(
+          optionAHi || ""
+        ).trim();
+
+      const cleanOptionBHi =
+        String(
+          optionBHi || ""
+        ).trim();
+
+      const cleanOptionCHi =
+        String(
+          optionCHi || ""
+        ).trim();
+
+      const cleanOptionDHi =
+        String(
+          optionDHi || ""
+        ).trim();
+
+      // ===============================================
       // VALIDATION
-      // -----------------------------
+      // ===============================================
 
       if (!testId) {
         return res.status(400).json({
           success: false,
-          message: "Test ID is required.",
-        });
-      }
-
-      if (
-        !Number.isInteger(questionId) ||
-        questionId <= 0
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid Question ID.",
+          message:
+            "Test ID is required.",
         });
       }
 
@@ -3565,7 +3104,9 @@ app.put(
       }
 
       if (
-        !Number.isInteger(correctAnswerNumber) ||
+        !Number.isInteger(
+          correctAnswerNumber
+        ) ||
         correctAnswerNumber < 1 ||
         correctAnswerNumber > 4
       ) {
@@ -3576,381 +3117,699 @@ app.put(
         });
       }
 
-      const pool = await connectDB();
+      // ===============================================
+      // CHECK TEST EXISTS
+      // ===============================================
 
-      // -----------------------------
-      // CHECK QUESTION EXISTS
-      // -----------------------------
+      const test =
+        await Test.findOne({
+          testId,
+        })
+          .select("_id testId")
+          .lean();
 
-      const existingQuestion = await pool
-        .request()
-        .input("QuestionId", sql.Int, questionId)
-        .input("TestId", sql.NVarChar, testId)
-        .query(`
-          SELECT TOP 1
-            QuestionId
-          FROM dbo.Questions
-          WHERE
-            QuestionId = @QuestionId
-            AND TestId = @TestId
-        `);
-
-      if (existingQuestion.recordset.length === 0) {
+      if (!test) {
         return res.status(404).json({
           success: false,
-          message: "Question not found.",
+          message:
+            "Test not found.",
         });
       }
 
-      // -----------------------------
-      // UPDATE QUESTION
-      // -----------------------------
+      // ===============================================
+      // GENERATE NEXT QUESTION ID
+      // ===============================================
 
-      await pool
-        .request()
-        .input("QuestionId", sql.Int, questionId)
-        .input("TestId", sql.NVarChar, testId)
-        .input(
-          "QuestionText",
-          sql.NVarChar,
-          cleanQuestionText
-        )
-        .input(
-          "OptionA",
-          sql.NVarChar,
-          cleanOptionA
-        )
-        .input(
-          "OptionB",
-          sql.NVarChar,
-          cleanOptionB
-        )
-        .input(
-          "OptionC",
-          sql.NVarChar,
-          cleanOptionC
-        )
-        .input(
-          "OptionD",
-          sql.NVarChar,
-          cleanOptionD
-        )
-        .input(
-          "CorrectAnswer",
-          sql.Int,
-          correctAnswerNumber
-        )
-        .input(
-          "QuestionTextHi",
-          sql.NVarChar,
-          String(questionTextHi || "").trim() || null
-        )
-        .input(
-          "OptionAHi",
-          sql.NVarChar,
-          String(optionAHi || "").trim() || null
-        )
-        .input(
-          "OptionBHi",
-          sql.NVarChar,
-          String(optionBHi || "").trim() || null
-        )
-        .input(
-          "OptionCHi",
-          sql.NVarChar,
-          String(optionCHi || "").trim() || null
-        )
-        .input(
-          "OptionDHi",
-          sql.NVarChar,
-          String(optionDHi || "").trim() || null
-        )
-        .query(`
-          UPDATE dbo.Questions
-          SET
-            QuestionText = @QuestionText,
-            OptionA = @OptionA,
-            OptionB = @OptionB,
-            OptionC = @OptionC,
-            OptionD = @OptionD,
-            CorrectAnswer = @CorrectAnswer,
-            QuestionTextHi = @QuestionTextHi,
-            OptionAHi = @OptionAHi,
-            OptionBHi = @OptionBHi,
-            OptionCHi = @OptionCHi,
-            OptionDHi = @OptionDHi
-          WHERE
-            QuestionId = @QuestionId
-            AND TestId = @TestId
-        `);
+      const lastQuestion =
+        await Question.findOne({})
+          .sort({
+            questionId: -1,
+          })
+          .select("questionId")
+          .lean();
 
-      // -----------------------------
-      // SUCCESS
-      // -----------------------------
+      const newQuestionId =
+        Number(
+          lastQuestion?.questionId
+        ) + 1 || 1;
 
-      return res.json({
-        success: true,
-        message: "Question updated successfully.",
+      // ===============================================
+      // CREATE QUESTION
+      // ===============================================
 
-        question: {
-          questionId,
+      const newQuestion =
+        await Question.create({
+          questionId:
+            newQuestionId,
+
           testId,
-          questionText: cleanQuestionText,
-          optionA: cleanOptionA,
-          optionB: cleanOptionB,
-          optionC: cleanOptionC,
-          optionD: cleanOptionD,
-          correctAnswer: correctAnswerNumber,
+
+          questionText:
+            cleanQuestionText,
+
+          optionA:
+            cleanOptionA,
+
+          optionB:
+            cleanOptionB,
+
+          optionC:
+            cleanOptionC,
+
+          optionD:
+            cleanOptionD,
+
+          correctAnswer:
+            correctAnswerNumber,
 
           questionTextHi:
-            String(questionTextHi || "").trim(),
+            cleanQuestionTextHi,
 
           optionAHi:
-            String(optionAHi || "").trim(),
+            cleanOptionAHi,
 
           optionBHi:
-            String(optionBHi || "").trim(),
+            cleanOptionBHi,
 
           optionCHi:
-            String(optionCHi || "").trim(),
+            cleanOptionCHi,
 
           optionDHi:
-            String(optionDHi || "").trim(),
+            cleanOptionDHi,
+        });
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.status(201).json({
+        success: true,
+        message:
+          "Question added successfully.",
+
+        question: {
+          questionId:
+            newQuestion.questionId,
+
+          testId:
+            newQuestion.testId,
+
+          questionText:
+            newQuestion.questionText,
+
+          optionA:
+            newQuestion.optionA,
+
+          optionB:
+            newQuestion.optionB,
+
+          optionC:
+            newQuestion.optionC,
+
+          optionD:
+            newQuestion.optionD,
+
+          correctAnswer:
+            Number(
+              newQuestion.correctAnswer
+            ),
+
+          questionTextHi:
+            newQuestion.questionTextHi ||
+            "",
+
+          optionAHi:
+            newQuestion.optionAHi ||
+            "",
+
+          optionBHi:
+            newQuestion.optionBHi ||
+            "",
+
+          optionCHi:
+            newQuestion.optionCHi ||
+            "",
+
+          optionDHi:
+            newQuestion.optionDHi ||
+            "",
         },
       });
     } catch (error) {
       console.error(
-        "Admin update question error:",
+        "MongoDB admin add question error:",
         error
       );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to update question.",
+        message:
+          "Failed to add question.",
       });
     }
   }
 );
 
 // =====================================================
-// ADMIN - DELETE QUESTION
+// ADMIN - UPDATE QUESTION - MONGODB
 // =====================================================
 
-app.delete(
+app.put(
   "/api/admin/tests/:testId/questions/:questionId",
   async (req, res) => {
     try {
-      const adminKey = req.header("x-admin-key");
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
 
-      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      const adminKey =
+        req.header("x-admin-key");
+
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
         return res.status(401).json({
           success: false,
           message: "Unauthorized",
         });
       }
 
-      const testId = String(req.params.testId || "").trim();
-      const questionId = Number(req.params.questionId);
+      // ===============================================
+      // PARAMS
+      // ===============================================
 
-      // -----------------------------
+      const testId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const questionId =
+        Number(
+          req.params.questionId
+        );
+
+      const {
+        questionText,
+        optionA,
+        optionB,
+        optionC,
+        optionD,
+        correctAnswer,
+        questionTextHi,
+        optionAHi,
+        optionBHi,
+        optionCHi,
+        optionDHi,
+      } = req.body;
+
+      // ===============================================
+      // CLEAN VALUES
+      // ===============================================
+
+      const cleanQuestionText =
+        String(
+          questionText || ""
+        ).trim();
+
+      const cleanOptionA =
+        String(
+          optionA || ""
+        ).trim();
+
+      const cleanOptionB =
+        String(
+          optionB || ""
+        ).trim();
+
+      const cleanOptionC =
+        String(
+          optionC || ""
+        ).trim();
+
+      const cleanOptionD =
+        String(
+          optionD || ""
+        ).trim();
+
+      const correctAnswerNumber =
+        Number(
+          correctAnswer
+        );
+
+      const cleanQuestionTextHi =
+        String(
+          questionTextHi || ""
+        ).trim();
+
+      const cleanOptionAHi =
+        String(
+          optionAHi || ""
+        ).trim();
+
+      const cleanOptionBHi =
+        String(
+          optionBHi || ""
+        ).trim();
+
+      const cleanOptionCHi =
+        String(
+          optionCHi || ""
+        ).trim();
+
+      const cleanOptionDHi =
+        String(
+          optionDHi || ""
+        ).trim();
+
+      // ===============================================
       // VALIDATION
-      // -----------------------------
+      // ===============================================
 
       if (!testId) {
         return res.status(400).json({
           success: false,
-          message: "Test ID is required.",
+          message:
+            "Test ID is required.",
         });
       }
 
       if (
-        !Number.isInteger(questionId) ||
+        !Number.isInteger(
+          questionId
+        ) ||
         questionId <= 0
       ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid Question ID.",
+          message:
+            "Invalid Question ID.",
         });
       }
-
-      const pool = await connectDB();
-
-      // -----------------------------
-      // CHECK QUESTION EXISTS
-      // -----------------------------
-
-      const existingQuestion = await pool
-        .request()
-        .input("QuestionId", sql.Int, questionId)
-        .input("TestId", sql.NVarChar, testId)
-        .query(`
-          SELECT TOP 1
-            QuestionId,
-            QuestionText
-          FROM dbo.Questions
-          WHERE
-            QuestionId = @QuestionId
-            AND TestId = @TestId
-        `);
-
-      if (existingQuestion.recordset.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Question not found.",
-        });
-      }
-
-      // -----------------------------
-      // DELETE QUESTION
-      // -----------------------------
-
-      const deleteResult = await pool
-        .request()
-        .input("QuestionId", sql.Int, questionId)
-        .input("TestId", sql.NVarChar, testId)
-        .query(`
-          DELETE FROM dbo.Questions
-          WHERE
-            QuestionId = @QuestionId
-            AND TestId = @TestId
-        `);
 
       if (
-        !deleteResult.rowsAffected ||
-        deleteResult.rowsAffected[0] !== 1
+        !cleanQuestionText ||
+        !cleanOptionA ||
+        !cleanOptionB ||
+        !cleanOptionC ||
+        !cleanOptionD
       ) {
-        return res.status(500).json({
+        return res.status(400).json({
           success: false,
-          message: "Question could not be deleted.",
+          message:
+            "Question and all four options are required.",
         });
       }
 
-      // -----------------------------
-      // SUCCESS
-      // -----------------------------
+      if (
+        !Number.isInteger(
+          correctAnswerNumber
+        ) ||
+        correctAnswerNumber < 1 ||
+        correctAnswerNumber > 4
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Correct answer must be between 1 and 4.",
+        });
+      }
+
+      // ===============================================
+      // FIND QUESTION
+      // ===============================================
+
+      const question =
+        await Question.findOne({
+          questionId,
+          testId,
+        });
+
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Question not found.",
+        });
+      }
+
+      // ===============================================
+      // UPDATE QUESTION
+      // ===============================================
+
+      question.questionText =
+        cleanQuestionText;
+
+      question.optionA =
+        cleanOptionA;
+
+      question.optionB =
+        cleanOptionB;
+
+      question.optionC =
+        cleanOptionC;
+
+      question.optionD =
+        cleanOptionD;
+
+      question.correctAnswer =
+        correctAnswerNumber;
+
+      question.questionTextHi =
+        cleanQuestionTextHi;
+
+      question.optionAHi =
+        cleanOptionAHi;
+
+      question.optionBHi =
+        cleanOptionBHi;
+
+      question.optionCHi =
+        cleanOptionCHi;
+
+      question.optionDHi =
+        cleanOptionDHi;
+
+      await question.save();
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
 
       return res.json({
         success: true,
-        message: "Question deleted successfully.",
-        questionId,
+
+        message:
+          "Question updated successfully.",
+
+        question: {
+          questionId:
+            question.questionId,
+
+          testId:
+            question.testId,
+
+          questionText:
+            question.questionText,
+
+          optionA:
+            question.optionA,
+
+          optionB:
+            question.optionB,
+
+          optionC:
+            question.optionC,
+
+          optionD:
+            question.optionD,
+
+          correctAnswer:
+            Number(
+              question.correctAnswer
+            ),
+
+          questionTextHi:
+            question.questionTextHi ||
+            "",
+
+          optionAHi:
+            question.optionAHi ||
+            "",
+
+          optionBHi:
+            question.optionBHi ||
+            "",
+
+          optionCHi:
+            question.optionCHi ||
+            "",
+
+          optionDHi:
+            question.optionDHi ||
+            "",
+        },
       });
     } catch (error) {
       console.error(
-        "Admin delete question error:",
+        "MongoDB admin update question error:",
         error
       );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to delete question.",
+        message:
+          "Failed to update question.",
       });
     }
   }
 );
 
 // =====================================================
-// ADMIN - DELETE TEST
+// ADMIN - DELETE QUESTION - MONGODB
 // =====================================================
 
-app.delete("/api/admin/tests/:testId", async (req, res) => {
-  let transaction;
+app.delete(
+  "/api/admin/tests/:testId/questions/:questionId",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
 
-  try {
-    const adminKey = req.header("x-admin-key");
+      const adminKey =
+        req.header("x-admin-key");
 
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      // ===============================================
+      // PARAMS
+      // ===============================================
+
+      const testId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const questionId =
+        Number(
+          req.params.questionId
+        );
+
+      // ===============================================
+      // VALIDATION
+      // ===============================================
+
+      if (!testId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Test ID is required.",
+        });
+      }
+
+      if (
+        !Number.isInteger(
+          questionId
+        ) ||
+        questionId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid Question ID.",
+        });
+      }
+
+      // ===============================================
+      // FIND QUESTION
+      // ===============================================
+
+      const question =
+        await Question.findOne({
+          questionId,
+          testId,
+        });
+
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Question not found.",
+        });
+      }
+
+      // ===============================================
+      // DELETE QUESTION
+      // ===============================================
+
+      await Question.deleteOne({
+        _id: question._id,
+      });
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.json({
+        success: true,
+        message:
+          "Question deleted successfully.",
+        questionId,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin delete question error:",
+        error
+      );
+
+      return res.status(500).json({
         success: false,
-        message: "Unauthorized",
+        message:
+          "Failed to delete question.",
       });
     }
+  }
+);
 
-    const testId = String(req.params.testId || "").trim();
+// =====================================================
+// ADMIN - DELETE TEST - MONGODB
+// =====================================================
 
-    if (!testId) {
-      return res.status(400).json({
-        success: false,
-        message: "Test ID is required.",
-      });
-    }
+app.delete(
+  "/api/admin/tests/:testId",
+  async (req, res) => {
+    try {
+      // ===============================================
+      // ADMIN SECURITY
+      // ===============================================
 
-    const pool = await connectDB();
+      const adminKey =
+        req.header("x-admin-key");
 
-    // Check test exists
-    const testResult = await pool
-      .request()
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        SELECT TOP 1
-          TestId,
-          Title
-        FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
+      if (
+        !adminKey ||
+        adminKey !== process.env.ADMIN_KEY
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-    if (testResult.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Test not found.",
-      });
-    }
+      // ===============================================
+      // TEST ID
+      // ===============================================
 
-    transaction = new sql.Transaction(pool);
+      const testId =
+        String(
+          req.params.testId || ""
+        )
+          .trim()
+          .toLowerCase();
 
-    await transaction.begin();
+      if (!testId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Test ID is required.",
+        });
+      }
 
-    // Delete questions first
-    const questionsDeleteResult = await new sql.Request(transaction)
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        DELETE FROM dbo.Questions
-        WHERE TestId = @TestId
-      `);
+      // ===============================================
+      // CHECK TEST EXISTS
+      // ===============================================
 
-    // Delete test
-    const testDeleteResult = await new sql.Request(transaction)
-      .input("TestId", sql.NVarChar, testId)
-      .query(`
-        DELETE FROM dbo.Tests
-        WHERE TestId = @TestId
-      `);
+      const test =
+        await Test.findOne({
+          testId,
+        })
+          .select(
+            "_id testId title"
+          )
+          .lean();
 
-    if (
-      !testDeleteResult.rowsAffected ||
-      testDeleteResult.rowsAffected[0] !== 1
-    ) {
-      throw new Error("Test could not be deleted.");
-    }
+      if (!test) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Test not found.",
+        });
+      }
 
-    await transaction.commit();
+      // ===============================================
+      // DELETE QUESTIONS OF THIS TEST
+      // ===============================================
 
-    return res.json({
-      success: true,
-      message: "Test deleted successfully.",
-      testId,
-      deletedQuestions:
-        questionsDeleteResult.rowsAffected?.[0] || 0,
-    });
-  } catch (error) {
-    if (transaction) {
-      try {
-        await transaction.rollback();
-      } catch (rollbackError) {
-        console.error(
-          "Delete test rollback error:",
-          rollbackError
+      const questionsDeleteResult =
+        await Question.deleteMany({
+          testId,
+        });
+
+      const deletedQuestions =
+        Number(
+          questionsDeleteResult
+            .deletedCount
+        ) || 0;
+
+      // ===============================================
+      // DELETE TEST
+      // ===============================================
+
+      const testDeleteResult =
+        await Test.deleteOne({
+          _id: test._id,
+        });
+
+      if (
+        testDeleteResult
+          .deletedCount !== 1
+      ) {
+        throw new Error(
+          "Test could not be deleted."
         );
       }
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      return res.json({
+        success: true,
+
+        message:
+          "Test deleted successfully.",
+
+        testId,
+
+        deletedQuestions,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin delete test error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to delete test.",
+      });
     }
-
-    console.error("Admin delete test error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to delete test.",
-    });
   }
-});
+);
 const adminVerifyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,

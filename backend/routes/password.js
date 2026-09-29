@@ -1,8 +1,9 @@
 const express = require("express");
 const crypto = require("crypto");
+
 const router = express.Router();
 
-const { sql, connectDB } = require("../db");
+const User = require("../models/User");
 const { hashPassword } = require("../utils/password");
 const { sendOtpEmail } = require("../utils/mailer");
 
@@ -11,189 +12,397 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// ======================================================
+// HELPERS
+// ======================================================
+
 function generateOtp() {
-  // 6-digit numeric OTP, always 6 digits (no leading-zero truncation)
+  // Always generates a 6-digit OTP
   return crypto.randomInt(100000, 1000000).toString();
+}
+
+function hashOtp(otp) {
+  return crypto
+    .createHash("sha256")
+    .update(String(otp))
+    .digest("hex");
+}
+
+function otpHashesMatch(storedHash, providedOtp) {
+  if (!storedHash || !providedOtp) {
+    return false;
+  }
+
+  try {
+    const providedHash = hashOtp(
+      String(providedOtp).trim()
+    );
+
+    const storedBuffer =
+      Buffer.from(
+        storedHash,
+        "hex"
+      );
+
+    const providedBuffer =
+      Buffer.from(
+        providedHash,
+        "hex"
+      );
+
+    if (
+      storedBuffer.length !==
+      providedBuffer.length
+    ) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(
+      storedBuffer,
+      providedBuffer
+    );
+  } catch {
+    return false;
+  }
 }
 
 // ======================================================
 // STEP 1: REQUEST OTP
-// POST /api/forgot-password   { email }
+// POST /api/forgot-password
+// body: { email }
 // ======================================================
 
-router.post("/forgot-password", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email || !emailRegex.test(email.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid email address",
-      });
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const pool = await connectDB();
-
-    const userResult = await pool
-      .request()
-      .input("Email", sql.NVarChar(150), normalizedEmail)
-      .query(`
-        SELECT Id, Name, Email, ResetOTPExpiry
-        FROM dbo.Users
-        WHERE Email = @Email
-      `);
-
-    // Always return a generic success message, even if the email doesn't
-    // exist — this stops attackers from using this endpoint to find out
-    // which emails are registered.
-    const genericResponse = {
-      success: true,
-      message: "If that email is registered, an OTP has been sent to it.",
-    };
-
-    if (userResult.recordset.length === 0) {
-      return res.json(genericResponse);
-    }
-
-    const user = userResult.recordset[0];
-
-    // Basic resend cooldown so the same user can't spam OTP requests
-    if (user.ResetOTPExpiry) {
-      const expiry = new Date(user.ResetOTPExpiry);
-      const secondsSinceLastOtp =
-        OTP_EXPIRY_MINUTES * 60 - (expiry - new Date()) / 1000;
+router.post(
+  "/forgot-password",
+  async (req, res) => {
+    try {
+      const { email } = req.body;
 
       if (
-        secondsSinceLastOtp >= 0 &&
-        secondsSinceLastOtp < OTP_RESEND_COOLDOWN_SECONDS
+        !email ||
+        !emailRegex.test(
+          String(email).trim()
+        )
       ) {
-        return res.status(429).json({
+        return res.status(400).json({
           success: false,
-          message: "Please wait a bit before requesting another OTP.",
+          message:
+            "Please enter a valid email address",
         });
       }
-    }
 
-    const otp = generateOtp();
-    const expiryDate = new Date(
-      Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000
-    );
+      const normalizedEmail =
+        String(email)
+          .trim()
+          .toLowerCase();
 
-    await pool
-      .request()
-      .input("Email", sql.NVarChar(150), normalizedEmail)
-      .input("ResetOTP", sql.NVarChar(10), otp)
-      .input("ResetOTPExpiry", sql.DateTime, expiryDate)
-      .query(`
-        UPDATE dbo.Users
-        SET ResetOTP = @ResetOTP, ResetOTPExpiry = @ResetOTPExpiry
-        WHERE Email = @Email
-      `);
-
-    try {
-      await sendOtpEmail(user.Email, otp, user.Name);
-    } catch (mailErr) {
-      console.error("Failed to send OTP email:", mailErr.message);
-      return res.status(500).json({
-        success: false,
+      // Generic response prevents attackers
+      // from checking which emails are registered.
+      const genericResponse = {
+        success: true,
         message:
-          "Could not send OTP email right now. Please try again shortly.",
-      });
-    }
+          "If that email is registered, an OTP has been sent to it.",
+      };
 
-    return res.json(genericResponse);
-  } catch (error) {
-    console.error("Forgot-password error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
+      // ------------------------------------------
+      // FIND USER IN MONGODB
+      // ------------------------------------------
+
+      const user =
+        await User.findOne({
+          email: normalizedEmail,
+        });
+
+      if (!user) {
+        return res.json(
+          genericResponse
+        );
+      }
+
+      // ------------------------------------------
+      // RESEND COOLDOWN
+      // ------------------------------------------
+
+      if (
+        user.resetOTPRequestedAt
+      ) {
+        const secondsSinceLastRequest =
+          (
+            Date.now() -
+            new Date(
+              user.resetOTPRequestedAt
+            ).getTime()
+          ) / 1000;
+
+        if (
+          secondsSinceLastRequest >=
+            0 &&
+          secondsSinceLastRequest <
+            OTP_RESEND_COOLDOWN_SECONDS
+        ) {
+          return res
+            .status(429)
+            .json({
+              success: false,
+              message:
+                "Please wait a bit before requesting another OTP.",
+            });
+        }
+      }
+
+      // ------------------------------------------
+      // GENERATE OTP
+      // ------------------------------------------
+
+      const otp =
+        generateOtp();
+
+      const otpHash =
+        hashOtp(otp);
+
+      const expiryDate =
+        new Date(
+          Date.now() +
+            OTP_EXPIRY_MINUTES *
+              60 *
+              1000
+        );
+
+      // ------------------------------------------
+      // SAVE HASH ONLY
+      // Raw OTP is NOT stored in MongoDB
+      // ------------------------------------------
+
+      user.resetOTPHash =
+        otpHash;
+
+      user.resetOTPExpiry =
+        expiryDate;
+
+      user.resetOTPRequestedAt =
+        new Date();
+
+      await user.save();
+
+      // ------------------------------------------
+      // SEND OTP EMAIL
+      // ------------------------------------------
+
+      try {
+        await sendOtpEmail(
+          user.email,
+          otp,
+          user.fullName
+        );
+      } catch (mailError) {
+        console.error(
+          "Failed to send OTP email:",
+          mailError.message
+        );
+
+        // Email failed, so invalidate the OTP
+        user.resetOTPHash = null;
+        user.resetOTPExpiry =
+          null;
+        user.resetOTPRequestedAt =
+          null;
+
+        await user.save();
+
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message:
+              "Could not send OTP email right now. Please try again shortly.",
+          });
+      }
+
+      return res.json(
+        genericResponse
+      );
+    } catch (error) {
+      console.error(
+        "Forgot-password error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Something went wrong. Please try again.",
+        });
+    }
   }
-});
+);
 
 // ======================================================
 // STEP 2: VERIFY OTP + SET NEW PASSWORD
-// POST /api/reset-password   { email, otp, newPassword }
+// POST /api/reset-password
+//
+// body:
+// {
+//   email,
+//   otp,
+//   newPassword
+// }
 // ======================================================
 
-router.post("/reset-password", async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
+router.post(
+  "/reset-password",
+  async (req, res) => {
+    try {
+      const {
+        email,
+        otp,
+        newPassword,
+      } = req.body;
 
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Email, OTP and new password are all required",
+      // ------------------------------------------
+      // VALIDATION
+      // ------------------------------------------
+
+      if (
+        !email ||
+        !otp ||
+        !newPassword
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Email, OTP and new password are all required",
+          });
+      }
+
+      const normalizedEmail =
+        String(email)
+          .trim()
+          .toLowerCase();
+
+      if (
+        !emailRegex.test(
+          normalizedEmail
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Please enter a valid email address",
+          });
+      }
+
+      if (
+        String(newPassword)
+          .length < 6
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Password must be at least 6 characters long",
+          });
+      }
+
+      // ------------------------------------------
+      // FIND USER
+      // ------------------------------------------
+
+      const user =
+        await User.findOne({
+          email: normalizedEmail,
+        });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid or expired OTP",
+          });
+      }
+
+      // ------------------------------------------
+      // VERIFY OTP
+      // ------------------------------------------
+
+      const otpMatches =
+        otpHashesMatch(
+          user.resetOTPHash,
+          otp
+        );
+
+      const notExpired =
+        user.resetOTPExpiry &&
+        new Date(
+          user.resetOTPExpiry
+        ).getTime() >
+          Date.now();
+
+      if (
+        !otpMatches ||
+        !notExpired
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid or expired OTP",
+          });
+      }
+
+      // ------------------------------------------
+      // HASH NEW PASSWORD
+      // ------------------------------------------
+
+      const passwordHash =
+        hashPassword(
+          String(newPassword)
+        );
+
+      // ------------------------------------------
+      // UPDATE USER
+      // ------------------------------------------
+
+      user.passwordHash =
+        passwordHash;
+
+      // Clear OTP after successful reset
+      user.resetOTPHash = null;
+      user.resetOTPExpiry = null;
+      user.resetOTPRequestedAt =
+        null;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message:
+          "Password reset successful. You can now log in.",
       });
+    } catch (error) {
+      console.error(
+        "Reset-password error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Something went wrong. Please try again.",
+        });
     }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters long",
-      });
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const pool = await connectDB();
-
-    const userResult = await pool
-      .request()
-      .input("Email", sql.NVarChar(150), normalizedEmail)
-      .query(`
-        SELECT Id, ResetOTP, ResetOTPExpiry
-        FROM dbo.Users
-        WHERE Email = @Email
-      `);
-
-    if (userResult.recordset.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired OTP",
-      });
-    }
-
-    const user = userResult.recordset[0];
-
-    const otpMatches =
-      user.ResetOTP && user.ResetOTP === otp.trim();
-
-    const notExpired =
-      user.ResetOTPExpiry && new Date(user.ResetOTPExpiry) > new Date();
-
-    if (!otpMatches || !notExpired) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired OTP",
-      });
-    }
-
-    const passwordHash = hashPassword(newPassword);
-
-    await pool
-      .request()
-      .input("Email", sql.NVarChar(150), normalizedEmail)
-      .input("PasswordHash", sql.NVarChar(255), passwordHash)
-      .query(`
-        UPDATE dbo.Users
-        SET PasswordHash = @PasswordHash,
-            ResetOTP = NULL,
-            ResetOTPExpiry = NULL
-        WHERE Email = @Email
-      `);
-
-    return res.json({
-      success: true,
-      message: "Password reset successful. You can now log in.",
-    });
-  } catch (error) {
-    console.error("Reset-password error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-    });
   }
-});
+);
 
 module.exports = router;

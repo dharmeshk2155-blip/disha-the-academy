@@ -1,5 +1,7 @@
 const express = require("express");
-const { sql, connectDB } = require("../db");
+const mongoose = require("mongoose");
+
+const FAQ = require("../models/FAQ");
 
 const router = express.Router();
 
@@ -10,7 +12,10 @@ const router = express.Router();
 function requireAdminKey(req, res, next) {
   const adminKey = req.header("x-admin-key");
 
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  if (
+    !adminKey ||
+    adminKey !== process.env.ADMIN_KEY
+  ) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized",
@@ -21,45 +26,56 @@ function requireAdminKey(req, res, next) {
 }
 
 // ======================================================
+// FORMAT FAQ
+// Keeps frontend response structure consistent
+// ======================================================
+
+function formatFAQ(faq) {
+  return {
+    id: faq._id.toString(),
+    question: faq.question,
+    answer: faq.answer,
+    isActive: Boolean(faq.isActive),
+    sortOrder:
+      Number(faq.sortOrder) || 0,
+    createdAt: faq.createdAt,
+    updatedAt: faq.updatedAt,
+  };
+}
+
+// ======================================================
 // PUBLIC - GET ACTIVE FAQS
 // GET /api/faq
 // ======================================================
 
 router.get("/", async (req, res) => {
   try {
-    const pool = await connectDB();
+    const faqDocuments =
+      await FAQ.find({
+        isActive: true,
+      })
+        .sort({
+          sortOrder: 1,
+          _id: 1,
+        })
+        .lean();
 
-    const result = await pool.request().query(`
-      SELECT
-        Id,
-        Question,
-        Answer,
-        IsActive,
-        SortOrder,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.FAQs
-      WHERE IsActive = 1
-      ORDER BY SortOrder ASC, Id ASC
-    `);
-
-    const faqs = result.recordset.map((faq) => ({
-      id: faq.Id,
-      question: faq.Question,
-      answer: faq.Answer,
-      isActive: Boolean(faq.IsActive),
-      sortOrder: Number(faq.SortOrder) || 0,
-      createdAt: faq.CreatedAt,
-      updatedAt: faq.UpdatedAt,
-    }));
+    const faqs =
+      faqDocuments.map(
+        formatFAQ
+      );
 
     return res.json(faqs);
   } catch (error) {
-    console.error("Get FAQs error:", error);
+    console.error(
+      "MongoDB get FAQs error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Unable to load FAQs",
+      message:
+        "Unable to load FAQs",
     });
   }
 });
@@ -69,280 +85,322 @@ router.get("/", async (req, res) => {
 // GET /api/faq/admin/all
 // ======================================================
 
-router.get("/admin/all", requireAdminKey, async (req, res) => {
-  try {
-    const pool = await connectDB();
+router.get(
+  "/admin/all",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const faqDocuments =
+        await FAQ.find({})
+          .sort({
+            sortOrder: 1,
+            _id: 1,
+          })
+          .lean();
 
-    const result = await pool.request().query(`
-      SELECT
-        Id,
-        Question,
-        Answer,
-        IsActive,
-        SortOrder,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.FAQs
-      ORDER BY SortOrder ASC, Id ASC
-    `);
+      const faqs =
+        faqDocuments.map(
+          formatFAQ
+        );
 
-    const faqs = result.recordset.map((faq) => ({
-      id: faq.Id,
-      question: faq.Question,
-      answer: faq.Answer,
-      isActive: Boolean(faq.IsActive),
-      sortOrder: Number(faq.SortOrder) || 0,
-      createdAt: faq.CreatedAt,
-      updatedAt: faq.UpdatedAt,
-    }));
+      return res.json({
+        success: true,
+        faqs,
+      });
+    } catch (error) {
+      console.error(
+        "MongoDB admin get FAQs error:",
+        error
+      );
 
-    return res.json({
-      success: true,
-      faqs,
-    });
-  } catch (error) {
-    console.error("Admin get FAQs error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load FAQs",
-    });
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to load FAQs",
+        });
+    }
   }
-});
+);
 
 // ======================================================
 // ADMIN - CREATE FAQ
 // POST /api/faq
 // ======================================================
 
-router.post("/", requireAdminKey, async (req, res) => {
-  try {
-    const {
-      question,
-      answer,
-      isActive = true,
-      sortOrder = 0,
-    } = req.body;
+router.post(
+  "/",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const {
+        question,
+        answer,
+        isActive = true,
+        sortOrder = 0,
+      } = req.body;
 
-    const cleanQuestion = String(question || "").trim();
-    const cleanAnswer = String(answer || "").trim();
+      const cleanQuestion =
+        String(
+          question || ""
+        ).trim();
 
-    if (!cleanQuestion || !cleanAnswer) {
-      return res.status(400).json({
-        success: false,
-        message: "Question and answer are required",
-      });
+      const cleanAnswer =
+        String(
+          answer || ""
+        ).trim();
+
+      if (
+        !cleanQuestion ||
+        !cleanAnswer
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Question and answer are required",
+          });
+      }
+
+      const cleanSortOrder =
+        Number.isFinite(
+          Number(sortOrder)
+        )
+          ? Math.trunc(
+              Number(sortOrder)
+            )
+          : 0;
+
+      const createdFAQ =
+        await FAQ.create({
+          question:
+            cleanQuestion,
+
+          answer:
+            cleanAnswer,
+
+          isActive:
+            Boolean(isActive),
+
+          sortOrder:
+            cleanSortOrder,
+        });
+
+      return res
+        .status(201)
+        .json({
+          success: true,
+          message:
+            "FAQ created successfully",
+
+          faq:
+            formatFAQ(
+              createdFAQ
+            ),
+        });
+    } catch (error) {
+      console.error(
+        "MongoDB create FAQ error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to create FAQ",
+        });
     }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input("Question", sql.NVarChar(500), cleanQuestion)
-      .input("Answer", sql.NVarChar(sql.MAX), cleanAnswer)
-      .input("IsActive", sql.Bit, Boolean(isActive))
-      .input(
-        "SortOrder",
-        sql.Int,
-        Number.isFinite(Number(sortOrder))
-          ? Number(sortOrder)
-          : 0
-      )
-      .query(`
-        INSERT INTO dbo.FAQs
-        (
-          Question,
-          Answer,
-          IsActive,
-          SortOrder
-        )
-        OUTPUT
-          INSERTED.Id,
-          INSERTED.Question,
-          INSERTED.Answer,
-          INSERTED.IsActive,
-          INSERTED.SortOrder,
-          INSERTED.CreatedAt,
-          INSERTED.UpdatedAt
-        VALUES
-        (
-          @Question,
-          @Answer,
-          @IsActive,
-          @SortOrder
-        )
-      `);
-
-    const faq = result.recordset[0];
-
-    return res.status(201).json({
-      success: true,
-      message: "FAQ created successfully",
-      faq: {
-        id: faq.Id,
-        question: faq.Question,
-        answer: faq.Answer,
-        isActive: Boolean(faq.IsActive),
-        sortOrder: Number(faq.SortOrder) || 0,
-        createdAt: faq.CreatedAt,
-        updatedAt: faq.UpdatedAt,
-      },
-    });
-  } catch (error) {
-    console.error("Create FAQ error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to create FAQ",
-    });
   }
-});
+);
 
 // ======================================================
 // ADMIN - UPDATE FAQ
 // PUT /api/faq/:id
 // ======================================================
 
-router.put("/:id", requireAdminKey, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.put(
+  "/:id",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const id =
+        String(
+          req.params.id || ""
+        ).trim();
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid FAQ ID",
+      if (
+        !mongoose.isValidObjectId(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid FAQ ID",
+          });
+      }
+
+      const {
+        question,
+        answer,
+        isActive = true,
+        sortOrder = 0,
+      } = req.body;
+
+      const cleanQuestion =
+        String(
+          question || ""
+        ).trim();
+
+      const cleanAnswer =
+        String(
+          answer || ""
+        ).trim();
+
+      if (
+        !cleanQuestion ||
+        !cleanAnswer
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Question and answer are required",
+          });
+      }
+
+      const cleanSortOrder =
+        Number.isFinite(
+          Number(sortOrder)
+        )
+          ? Math.trunc(
+              Number(sortOrder)
+            )
+          : 0;
+
+      const faq =
+        await FAQ.findById(id);
+
+      if (!faq) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "FAQ not found",
+          });
+      }
+
+      faq.question =
+        cleanQuestion;
+
+      faq.answer =
+        cleanAnswer;
+
+      faq.isActive =
+        Boolean(isActive);
+
+      faq.sortOrder =
+        cleanSortOrder;
+
+      await faq.save();
+
+      return res.json({
+        success: true,
+        message:
+          "FAQ updated successfully",
+
+        faq:
+          formatFAQ(faq),
       });
+    } catch (error) {
+      console.error(
+        "MongoDB update FAQ error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to update FAQ",
+        });
     }
-
-    const {
-      question,
-      answer,
-      isActive = true,
-      sortOrder = 0,
-    } = req.body;
-
-    const cleanQuestion = String(question || "").trim();
-    const cleanAnswer = String(answer || "").trim();
-
-    if (!cleanQuestion || !cleanAnswer) {
-      return res.status(400).json({
-        success: false,
-        message: "Question and answer are required",
-      });
-    }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input("Id", sql.Int, id)
-      .input("Question", sql.NVarChar(500), cleanQuestion)
-      .input("Answer", sql.NVarChar(sql.MAX), cleanAnswer)
-      .input("IsActive", sql.Bit, Boolean(isActive))
-      .input(
-        "SortOrder",
-        sql.Int,
-        Number.isFinite(Number(sortOrder))
-          ? Number(sortOrder)
-          : 0
-      )
-      .query(`
-        UPDATE dbo.FAQs
-        SET
-          Question = @Question,
-          Answer = @Answer,
-          IsActive = @IsActive,
-          SortOrder = @SortOrder,
-          UpdatedAt = SYSDATETIME()
-        OUTPUT
-          INSERTED.Id,
-          INSERTED.Question,
-          INSERTED.Answer,
-          INSERTED.IsActive,
-          INSERTED.SortOrder,
-          INSERTED.CreatedAt,
-          INSERTED.UpdatedAt
-        WHERE Id = @Id
-      `);
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "FAQ not found",
-      });
-    }
-
-    const faq = result.recordset[0];
-
-    return res.json({
-      success: true,
-      message: "FAQ updated successfully",
-      faq: {
-        id: faq.Id,
-        question: faq.Question,
-        answer: faq.Answer,
-        isActive: Boolean(faq.IsActive),
-        sortOrder: Number(faq.SortOrder) || 0,
-        createdAt: faq.CreatedAt,
-        updatedAt: faq.UpdatedAt,
-      },
-    });
-  } catch (error) {
-    console.error("Update FAQ error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to update FAQ",
-    });
   }
-});
+);
 
 // ======================================================
 // ADMIN - DELETE FAQ
 // DELETE /api/faq/:id
 // ======================================================
 
-router.delete("/:id", requireAdminKey, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.delete(
+  "/:id",
+  requireAdminKey,
+  async (req, res) => {
+    try {
+      const id =
+        String(
+          req.params.id || ""
+        ).trim();
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid FAQ ID",
+      if (
+        !mongoose.isValidObjectId(
+          id
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid FAQ ID",
+          });
+      }
+
+      const deletedFAQ =
+        await FAQ.findByIdAndDelete(
+          id
+        );
+
+      if (!deletedFAQ) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              "FAQ not found",
+          });
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "FAQ deleted successfully",
       });
+    } catch (error) {
+      console.error(
+        "MongoDB delete FAQ error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to delete FAQ",
+        });
     }
-
-    const pool = await connectDB();
-
-    const result = await pool
-      .request()
-      .input("Id", sql.Int, id)
-      .query(`
-        DELETE FROM dbo.FAQs
-        OUTPUT DELETED.Id
-        WHERE Id = @Id
-      `);
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "FAQ not found",
-      });
-    }
-
-    return res.json({
-      success: true,
-      message: "FAQ deleted successfully",
-    });
-  } catch (error) {
-    console.error("Delete FAQ error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to delete FAQ",
-    });
   }
-});
+);
 
 module.exports = router;
