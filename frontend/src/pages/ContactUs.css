@@ -1,0 +1,1164 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500;600;700&display=swap");
+
+.contact-fit-page,
+.contact-fit-page * {
+  box-sizing: border-box;
+}
+
+.contact-fit-page {
+  --cf-navy: #071f4b;
+  --cf-blue: #547199;
+  --cf-gold: #f2a000;
+  --cf-border: #dfe8f2;
+
+  width: 100%;
+  min-height: 670px;
+  padding: 13px 18px 14px;
+
+  color: var(--cf-navy);
+  font-family: "Poppins", sans-serif;
+
+  background:
+    radial-gradient(circle at 73% 7%, rgba(255, 203, 91, 0.13), transparent 145px),
+    radial-gradient(circle at 89% 5%, rgba(101, 169, 239, 0.12), transparent 185px),
+    linear-gradient(135deg, #f8fbff 0%, #fff 46%, #f6fbff 100%);
+
+  overflow: hidden;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.contact-fit-hero {
+  width: min(100%, 1330px);
+  height: 238px;
+  margin: 0 auto 12px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 385px;
+  align-items: center;
+  gap: 24px;
+}
+
+.contact-fit-hero-copy {
+  min-width: 0;
+}
+
+.contact-fit-badge {
+  width: fit-content;
+  height: 32px;
+  padding: 0 15px;
+  margin-bottom: 7px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #111f35;
+  background: #fff2d5;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.contact-fit-badge svg {
+  width: 18px;
+  height: 18px;
+  color: #1d2c42;
+}
+
+.contact-fit-hero h1 {
+  margin: 0;
+
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.8px;
+
+  color: var(--cf-navy);
+}
+
+.contact-fit-hero h1 span {
+  color: var(--cf-gold);
+  font-family: "DM Serif Display", Georgia, serif;
+}
+
+.contact-fit-hero-copy > p {
+  margin: 8px 0 11px;
+
+  color: #4f6d97;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.contact-fit-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.contact-fit-quick-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-fit-quick-icon {
+  width: 49px;
+  height: 49px;
+  min-width: 49px;
+
+  display: grid;
+  place-items: center;
+
+  color: #c37a00;
+  background: #fff0ce;
+  border-radius: 50%;
+}
+
+.contact-fit-quick-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.contact-fit-quick-item strong,
+.contact-fit-quick-item span {
+  display: block;
+}
+
+.contact-fit-quick-item strong {
+  margin-bottom: 2px;
+  color: #0a2654;
+  font-size: 12.5px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.contact-fit-quick-item span {
+  color: #617da4;
+  font-size: 10.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.contact-fit-art-wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.contact-fit-hero-art {
+  width: 100%;
+  max-width: 385px;
+  height: auto;
+  display: block;
+}
+
+/* =====================================================
+   MAIN 3-COLUMN AREA
+===================================================== */
+
+.contact-fit-main-grid {
+  width: min(100%, 1330px);
+  height: 422px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 0.88fr 1.02fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.contact-fit-left-column,
+.contact-fit-right-column {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.contact-fit-left-column {
+  grid-template-rows: 1fr 148px;
+}
+
+.contact-fit-right-column {
+  grid-template-rows: 190px 1fr;
+}
+
+.contact-fit-card {
+  min-width: 0;
+  min-height: 0;
+  padding: 13px 16px;
+
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid var(--cf-border);
+  border-radius: 12px;
+
+  box-shadow: 0 7px 22px rgba(11, 48, 95, 0.045);
+  overflow: hidden;
+}
+
+.contact-fit-card h2 {
+  margin: 0 0 10px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1;
+
+  color: #092451;
+}
+
+.contact-fit-card h2 i {
+  display: block;
+  width: 5px;
+  height: 27px;
+  min-width: 5px;
+
+  border-radius: 999px;
+  background: #f1a000;
+}
+
+/* =====================================================
+   LEFT INFO
+===================================================== */
+
+.contact-fit-info-card {
+  padding-bottom: 8px;
+}
+
+.contact-fit-info-row {
+  min-height: 64px;
+  padding: 7px 0;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border-bottom: 1px solid #e7edf4;
+}
+
+.contact-fit-info-row:last-child {
+  border-bottom: 0;
+}
+
+.contact-fit-info-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+
+  display: grid;
+  place-items: center;
+
+  color: #0c3a78;
+  background: #edf5ff;
+  border-radius: 50%;
+}
+
+.contact-fit-info-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.contact-fit-info-row > div:last-child {
+  min-width: 0;
+}
+
+.contact-fit-info-row strong,
+.contact-fit-info-row a,
+.contact-fit-info-row span {
+  display: block;
+}
+
+.contact-fit-info-row strong {
+  color: #0d2b5a;
+  font-size: 12.5px;
+  line-height: 1.2;
+}
+
+.contact-fit-info-row a,
+.contact-fit-primary-text {
+  margin: 2px 0 1px;
+  color: #53719a;
+  font-size: 12px;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.contact-fit-info-row span:not(.contact-fit-primary-text) {
+  color: #758dad;
+  font-size: 9.8px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.contact-fit-map-card {
+  padding-top: 11px;
+}
+
+.contact-fit-map-card h2 {
+  margin-bottom: 8px;
+}
+
+.contact-fit-map-svg {
+  width: 100%;
+  height: 96px;
+  display: block;
+  border-radius: 10px;
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.contact-fit-form-card {
+  padding: 13px 20px;
+}
+
+.contact-fit-form-card h2 {
+  margin-bottom: 10px;
+}
+
+.contact-fit-form-card form {
+  height: calc(100% - 34px);
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-fit-form-card label {
+  margin: 0 0 4px;
+  color: #0e2c5b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.contact-fit-form-card label:not(:first-child) {
+  margin-top: 6px;
+}
+
+.contact-fit-form-card label b {
+  color: #e52d2d;
+}
+
+.contact-fit-field,
+.contact-fit-textarea {
+  position: relative;
+  width: 100%;
+
+  color: #8194ad;
+  background: #fff;
+  border: 1px solid #cedae8;
+  border-radius: 8px;
+}
+
+.contact-fit-field {
+  height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.contact-fit-field > svg {
+  width: 19px;
+  height: 19px;
+  margin-left: 12px;
+  flex: 0 0 auto;
+}
+
+.contact-fit-field input,
+.contact-fit-field select {
+  width: 100%;
+  height: 100%;
+  padding: 0 12px;
+
+  color: #334d70;
+  background: transparent;
+  border: 0;
+  outline: 0;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 11.5px;
+}
+
+.contact-fit-field select {
+  cursor: pointer;
+}
+
+.contact-fit-textarea {
+  height: 93px;
+  flex: 0 0 93px;
+}
+
+.contact-fit-textarea > svg {
+  position: absolute;
+  top: 11px;
+  left: 12px;
+
+  width: 19px;
+  height: 19px;
+}
+
+.contact-fit-textarea textarea {
+  width: 100%;
+  height: 100%;
+  padding: 10px 34px 22px 41px;
+
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  color: #334d70;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.contact-fit-textarea > span {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+
+  color: #8a99ad;
+  font-size: 9px;
+}
+
+.contact-fit-field:focus-within,
+.contact-fit-textarea:focus-within {
+  border-color: #5a8bc8;
+  box-shadow: 0 0 0 2px rgba(38, 105, 189, 0.07);
+}
+
+.contact-fit-status {
+  margin-top: 5px;
+  color: #4f6c90;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.contact-fit-send {
+  width: 100%;
+  height: 45px;
+  margin-top: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  color: #082556;
+  background: linear-gradient(135deg, #ffc84c, #ffba2e);
+
+  border: 0;
+  border-radius: 8px;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.contact-fit-send svg {
+  width: 21px;
+  height: 21px;
+}
+
+.contact-fit-send strong {
+  font-size: 17px;
+}
+
+.contact-fit-send:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* =====================================================
+   SOCIAL
+===================================================== */
+
+.contact-fit-social-card {
+  padding: 12px 14px;
+}
+
+.contact-fit-social-card h2 {
+  margin-bottom: 8px;
+}
+
+.contact-fit-social-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.contact-fit-social-item {
+  min-height: 59px;
+  padding: 8px 8px;
+
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 8px;
+
+  color: inherit;
+  text-decoration: none;
+
+  border: 1px solid #d9e4ef;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.contact-fit-social-logo {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  color: #fff;
+  border-radius: 10px;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.contact-fit-social-logo.whatsapp {
+  background: #20bd68;
+}
+
+.contact-fit-social-logo.telegram {
+  background: #2f9ad5;
+}
+
+.contact-fit-social-logo.instagram {
+  background: linear-gradient(135deg, #7b2cff, #e43d8c 50%, #ffad31);
+}
+
+.contact-fit-social-logo.youtube {
+  background: #ef2d34;
+}
+
+.contact-fit-social-item strong,
+.contact-fit-social-item span {
+  display: block;
+}
+
+.contact-fit-social-item strong {
+  margin-bottom: 2px;
+  color: #0b2957;
+  font-size: 10.6px;
+  line-height: 1.2;
+}
+
+.contact-fit-social-item span {
+  color: #617ca1;
+  font-size: 9.4px;
+  line-height: 1.2;
+}
+
+.contact-fit-social-arrow {
+  width: 25px;
+  height: 25px;
+
+  display: grid !important;
+  place-items: center;
+
+  color: #1a579b;
+  background: #e7f2ff;
+  border-radius: 50%;
+}
+
+.contact-fit-social-arrow svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* =====================================================
+   FAQ TOPICS
+===================================================== */
+
+.contact-fit-topics-card {
+  padding: 12px 14px;
+}
+
+.contact-fit-topics-card h2 {
+  margin-bottom: 7px;
+}
+
+.contact-fit-topic-list {
+  border: 1px solid #dce6f0;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.contact-fit-topic-row {
+  height: 35px;
+  padding: 0 10px;
+
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 15px;
+  align-items: center;
+  gap: 8px;
+
+  color: #173762;
+  text-decoration: none;
+
+  background: #fbfdff;
+  border-bottom: 1px solid #e4ebf3;
+
+  font-size: 10.5px;
+}
+
+.contact-fit-topic-row:last-child {
+  border-bottom: 0;
+}
+
+.contact-fit-topic-icon {
+  width: 24px;
+  height: 24px;
+
+  display: grid;
+  place-items: center;
+
+  color: #e99a00;
+}
+
+.contact-fit-topic-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.contact-fit-topic-row > svg {
+  width: 13px;
+  height: 13px;
+  justify-self: end;
+  color: #52739c;
+}
+
+/* =====================================================
+   FIT DESKTOP HEIGHT — NO CONTACT-PAGE SCROLL NEEDED
+===================================================== */
+
+@media (min-width: 1101px) and (max-height: 850px) {
+  .contact-fit-page {
+    min-height: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .contact-fit-hero {
+    height: 210px;
+    margin-bottom: 9px;
+  }
+
+  .contact-fit-hero h1 {
+    font-size: 49px;
+  }
+
+  .contact-fit-hero-copy > p {
+    margin: 6px 0 8px;
+    font-size: 13.5px;
+  }
+
+  .contact-fit-quick-icon {
+    width: 43px;
+    height: 43px;
+    min-width: 43px;
+  }
+
+  .contact-fit-quick-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .contact-fit-hero-art {
+    max-width: 350px;
+  }
+
+  .contact-fit-main-grid {
+    height: 390px;
+  }
+
+  .contact-fit-left-column {
+    grid-template-rows: 1fr 134px;
+  }
+
+  .contact-fit-right-column {
+    grid-template-rows: 176px 1fr;
+  }
+
+  .contact-fit-info-row {
+    min-height: 58px;
+  }
+
+  .contact-fit-info-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+
+  .contact-fit-map-svg {
+    height: 84px;
+  }
+
+  .contact-fit-textarea {
+    height: 78px;
+    flex-basis: 78px;
+  }
+
+  .contact-fit-send {
+    height: 40px;
+  }
+
+  .contact-fit-topic-row {
+    height: 31px;
+  }
+}
+
+/* =====================================================
+   WIDTH RESPONSIVE
+===================================================== */
+
+@media (max-width: 1200px) {
+  .contact-fit-page {
+    overflow: visible;
+  }
+
+  .contact-fit-hero {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .contact-fit-hero-art {
+    max-width: 300px;
+  }
+
+  .contact-fit-quick-grid {
+    gap: 8px;
+  }
+
+  .contact-fit-quick-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+
+  .contact-fit-main-grid {
+    grid-template-columns: 0.9fr 1.1fr 1fr;
+  }
+}
+
+@media (max-width: 1000px) {
+  .contact-fit-page {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .contact-fit-hero {
+    height: auto;
+    grid-template-columns: 1fr;
+    padding-bottom: 12px;
+  }
+
+  .contact-fit-art-wrap {
+    display: none;
+  }
+
+  .contact-fit-main-grid {
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .contact-fit-form-card {
+    grid-row: span 2;
+  }
+
+  .contact-fit-left-column,
+  .contact-fit-right-column {
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .contact-fit-page {
+    padding: 16px 12px 24px;
+  }
+
+  .contact-fit-hero h1 {
+    font-size: 43px;
+  }
+
+  .contact-fit-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contact-fit-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-fit-form-card {
+    grid-row: auto;
+  }
+}
+
+/* =====================================================
+   CONTACT HERO FIX
+   Left align + no overlap
+===================================================== */
+
+@media (max-width: 1000px) {
+  .contact-fit-hero {
+    height: auto;
+
+    display: block;
+
+    padding:
+      18px 18px
+      28px;
+
+    margin-bottom: 18px;
+
+    text-align: left;
+  }
+
+  .contact-fit-hero-copy {
+    width: 100%;
+
+    text-align: left !important;
+  }
+
+  .contact-fit-badge {
+    margin:
+      0 0
+      12px 0;
+
+    text-align: left;
+  }
+
+  .contact-fit-hero h1 {
+    margin: 0;
+
+    text-align: left !important;
+
+    font-size: 50px;
+
+    line-height: 1;
+  }
+
+  .contact-fit-hero-copy > p {
+    max-width: 720px;
+
+    margin:
+      12px 0
+      18px;
+
+    text-align: left !important;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+  }
+
+  /* Right illustration hidden on this width */
+  .contact-fit-art-wrap {
+    display: none;
+  }
+
+  /* Quick features */
+  .contact-fit-quick-grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap:
+      14px 22px;
+
+    margin-top: 8px;
+  }
+
+  .contact-fit-quick-item {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+  }
+
+  .contact-fit-quick-icon {
+    width: 48px;
+    height: 48px;
+
+    min-width: 48px;
+  }
+
+  .contact-fit-quick-item > div:last-child {
+    min-width: 0;
+  }
+
+  .contact-fit-quick-item strong {
+    white-space: normal;
+
+    font-size: 13px;
+
+    line-height: 1.2;
+  }
+
+  .contact-fit-quick-item span {
+    white-space: normal;
+
+    font-size: 11px;
+
+    line-height: 1.3;
+  }
+
+  /* Main section ko hero se proper gap */
+  .contact-fit-main-grid {
+    margin-top: 0;
+
+    position: relative;
+
+    clear: both;
+
+    height: auto;
+  }
+}
+@media (max-width: 700px) {
+  .contact-fit-hero {
+    padding:
+      15px 4px
+      24px;
+  }
+
+  .contact-fit-hero h1 {
+    font-size: 43px;
+  }
+
+  .contact-fit-quick-grid {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+  }
+}
+/* =====================================================
+   FINAL CONTACT PAGE FIX
+   Left aligned hero + no overlap
+===================================================== */
+
+/* ---------- DESKTOP ---------- */
+
+.contact-fit-hero {
+  width: min(calc(100% - 40px), 1330px);
+  margin-left: auto;
+  margin-right: auto;
+
+  text-align: left !important;
+}
+
+.contact-fit-hero-copy {
+  min-width: 0;
+  width: 100%;
+  text-align: left !important;
+}
+
+.contact-fit-badge {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.contact-fit-hero h1 {
+  text-align: left !important;
+}
+
+.contact-fit-hero-copy > p {
+  text-align: left !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+
+/* ---------- QUICK FEATURES ---------- */
+
+.contact-fit-quick-grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.contact-fit-quick-item {
+  min-width: 0;
+}
+
+.contact-fit-quick-item > div:last-child {
+  min-width: 0;
+}
+
+.contact-fit-quick-item strong,
+.contact-fit-quick-item span {
+  white-space: normal !important;
+}
+
+
+/* =====================================================
+   MEDIUM SCREEN
+   Prevent hero/quick items overlapping
+===================================================== */
+
+@media (max-width: 1150px) {
+
+  .contact-fit-hero {
+    height: auto;
+
+    grid-template-columns: minmax(0, 1fr) 300px;
+
+    gap: 20px;
+
+    padding-top: 15px;
+    padding-bottom: 22px;
+
+    margin-bottom: 16px;
+  }
+
+  .contact-fit-hero-copy {
+    text-align: left !important;
+  }
+
+  .contact-fit-hero h1 {
+    text-align: left !important;
+    font-size: 50px;
+  }
+
+  .contact-fit-hero-copy > p {
+    text-align: left !important;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .contact-fit-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
+  }
+
+  .contact-fit-hero-art {
+    max-width: 290px;
+  }
+
+  .contact-fit-main-grid {
+    margin-top: 0 !important;
+    height: auto;
+    clear: both;
+  }
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+
+  .contact-fit-hero {
+    display: block;
+
+    width: 100%;
+
+    padding: 18px 20px 24px;
+
+    margin-bottom: 16px;
+  }
+
+  .contact-fit-art-wrap {
+    display: none;
+  }
+
+  .contact-fit-hero-copy {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .contact-fit-badge {
+    margin: 0 0 10px 0 !important;
+  }
+
+  .contact-fit-hero h1 {
+    margin: 0;
+    font-size: 48px;
+    line-height: 1;
+    text-align: left !important;
+  }
+
+  .contact-fit-hero-copy > p {
+    max-width: 700px;
+
+    margin: 10px 0 18px;
+
+    text-align: left !important;
+  }
+
+  .contact-fit-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 14px 20px;
+
+    margin-top: 5px;
+  }
+
+  .contact-fit-main-grid {
+    width: 100%;
+    height: auto;
+
+    margin-top: 0 !important;
+
+    position: relative;
+    clear: both;
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+  .contact-fit-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .contact-fit-hero {
+    padding: 12px 2px 20px;
+  }
+
+  .contact-fit-hero h1 {
+    font-size: 42px;
+  }
+
+  .contact-fit-hero-copy > p {
+    font-size: 13px;
+  }
+
+  .contact-fit-quick-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .contact-fit-quick-item {
+    width: 100%;
+  }
+}

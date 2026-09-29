@@ -30,6 +30,7 @@ import BlogDetails from "./pages/BlogDetails";
 
 import FAQ from "./pages/FAQ";
 import ContactUs from "./pages/ContactUs";
+
 import SearchResults from "./pages/SearchResults";
 import TestAttempt from "./pages/TestAttempt";
 
@@ -207,6 +208,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
 
           {/* ==================================================
               LEADERBOARD

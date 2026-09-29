@@ -1,0 +1,322 @@
+/* =====================================================
+   NOTE CATEGORY PAGE (subcategory grid) — redesign
+   Navy + Gold, all classes prefixed with "ncp-"
+===================================================== */
+
+.ncp-page {
+  --ncp-navy: #0b1f4d;
+  --ncp-blue: #1747b8;
+  --ncp-gold: #f2b52e;
+  --ncp-gold-dark: #e8920c;
+  --ncp-muted: #5b6784;
+  --ncp-serif: "Fraunces", Georgia, "Times New Roman", serif;
+
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 70px;
+  overflow: hidden;
+}
+
+.ncp-page * {
+  box-sizing: border-box;
+}
+
+/* soft background blobs, same family as the Notes page */
+.ncp-page::before,
+.ncp-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.ncp-page::before {
+  top: -60px;
+  left: -100px;
+  width: 260px;
+  height: 260px;
+  background: rgba(23, 71, 184, 0.08);
+}
+
+.ncp-page::after {
+  bottom: -80px;
+  right: -100px;
+  width: 320px;
+  height: 320px;
+  background: rgba(242, 181, 46, 0.12);
+}
+
+/* =====================================================
+   BACK LINK
+===================================================== */
+
+.ncp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-bottom: 26px;
+  color: var(--ncp-muted);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ncp-back:hover {
+  color: var(--ncp-blue);
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.ncp-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ncp-header h1 {
+  margin: 0;
+  color: var(--ncp-navy);
+  font-family: var(--ncp-serif);
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.ncp-title-gold {
+  background: linear-gradient(180deg, #ffe08a 0%, #eeaa1c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.ncp-header p {
+  margin: 12px 0 0;
+  color: var(--ncp-muted);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 17px;
+}
+
+.ncp-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 20px auto 0;
+  width: 220px;
+  color: var(--ncp-gold-dark);
+}
+
+.ncp-divider span {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ncp-gold), transparent);
+}
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.ncp-status {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ncp-muted);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+}
+
+/* =====================================================
+   CARD GRID
+===================================================== */
+
+.ncp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ncp-card {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #eef1f8;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(11, 31, 77, 0.06);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ncp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(11, 31, 77, 0.12);
+}
+
+/* faint corner glow, alternating tone */
+.ncp-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  transform: translate(30%, -35%);
+  pointer-events: none;
+}
+
+.ncp-card.gold::before {
+  background: radial-gradient(
+    circle,
+    rgba(247, 200, 90, 0.35),
+    transparent 70%
+  );
+}
+
+.ncp-card.blue::before {
+  background: radial-gradient(
+    circle,
+    rgba(120, 165, 240, 0.32),
+    transparent 70%
+  );
+}
+
+.ncp-card-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.ncp-card-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ncp-card-icon.gold {
+  background: linear-gradient(145deg, #fbd977 0%, #f2b52e 100%);
+  color: var(--ncp-navy);
+  box-shadow: 0 6px 12px rgba(242, 181, 46, 0.32);
+}
+
+.ncp-card-icon.blue {
+  background: linear-gradient(145deg, #3a76ff 0%, #1747b8 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 12px rgba(23, 71, 184, 0.28);
+}
+
+.ncp-card-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.ncp-card-body h3 {
+  margin: 0 0 2px;
+  color: var(--ncp-navy);
+  font-family: var(--ncp-serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ncp-card-body p {
+  margin: 0;
+  color: #5b6784;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+   line-clamp: 1;           
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ncp-card-foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ncp-card-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #6b7690;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.ncp-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #12306f 0%, #071a49 100%);
+  color: #ffffff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 5px 10px rgba(7, 26, 73, 0.26);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ncp-card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(7, 26, 73, 0.34);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 980px) {
+  .ncp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .ncp-header h1 {
+    font-size: 32px;
+  }
+
+  .ncp-header p {
+    font-size: 15px;
+  }
+
+  .ncp-grid {
+    grid-template-columns: 1fr;
+  }
+}

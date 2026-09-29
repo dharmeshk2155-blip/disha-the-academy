@@ -1,0 +1,1871 @@
+@import url(
+  "https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500;600;700;800&display=swap"
+);
+
+
+/* ======================================================
+   BASE
+====================================================== */
+
+.mth-page,
+.mth-page * {
+  box-sizing: border-box;
+}
+
+
+.mth-page {
+  width: 100%;
+  min-height: 100vh;
+
+  padding:
+    0
+    15px
+    28px;
+
+  overflow-x: hidden;
+
+  color: #082b5b;
+
+  font-family:
+    "Poppins",
+    sans-serif;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f8fbff 0%,
+      #f3f8fe 100%
+    );
+}
+
+
+/* ======================================================
+   HERO
+====================================================== */
+
+.mth-hero {
+  position: relative;
+
+  width: 100%;
+  min-height: 255px;
+
+  padding:
+    14px
+    28px
+    18px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(560px, 1.06fr)
+    minmax(460px, 0.94fr);
+
+  align-items: center;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 55% 28%,
+      rgba(
+        255,
+        205,
+        80,
+        0.22
+      ),
+      transparent 155px
+    ),
+    radial-gradient(
+      circle at 90% 20%,
+      rgba(
+        90,
+        163,
+        240,
+        0.15
+      ),
+      transparent 250px
+    ),
+    linear-gradient(
+      115deg,
+      #fbfdff 0%,
+      #f3f9ff 55%,
+      #edf6ff 100%
+    );
+}
+
+
+.mth-hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 520px;
+  height: 520px;
+
+  right: -180px;
+  top: -330px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.5
+    );
+}
+
+
+/* ======================================================
+   HERO LEFT
+====================================================== */
+
+.mth-hero-left {
+  position: relative;
+
+  z-index: 4;
+
+  min-width: 0;
+}
+
+
+.mth-back {
+  margin-bottom: 15px;
+
+  padding: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  cursor: pointer;
+
+  color: #193c68;
+
+  border: 0;
+
+  background: transparent;
+
+  font-family: inherit;
+
+  font-size: 10px;
+
+  font-weight: 500;
+}
+
+
+.mth-back svg {
+  width: 15px;
+  height: 15px;
+}
+
+
+.mth-hero h1 {
+  margin: 0;
+
+  color: #082858;
+
+  font-family:
+    "DM Serif Display",
+    Georgia,
+    serif;
+
+  font-size:
+    clamp(
+      42px,
+      4vw,
+      57px
+    );
+
+  font-weight: 400;
+
+  line-height: 0.95;
+
+  letter-spacing: -1px;
+}
+
+
+.mth-hero h1 span {
+  color: #dfa000;
+}
+
+
+.mth-subtitle {
+  margin:
+    7px 0
+    20px;
+
+  color: #647fa0;
+
+  font-size: 13px;
+}
+
+
+/* ======================================================
+   FEATURES
+====================================================== */
+
+.mth-features {
+  display: flex;
+
+  align-items: center;
+
+  gap: 0;
+}
+
+
+.mth-feature {
+  min-width: 145px;
+
+  padding:
+    0
+    15px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  border-right:
+    1px solid #ccd8e6;
+}
+
+
+.mth-feature:first-child {
+  padding-left: 0;
+}
+
+
+.mth-feature:last-child {
+  border-right: 0;
+}
+
+
+.mth-feature-icon {
+  width: 39px;
+  height: 39px;
+
+  flex-shrink: 0;
+
+  display: grid;
+
+  place-items: center;
+
+  color: #b37700;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff8e6,
+      #ffedc4
+    );
+}
+
+
+.mth-feature-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+
+.mth-feature p {
+  margin: 0;
+
+  color: #345579;
+
+  font-size: 8px;
+
+  line-height: 1.35;
+}
+
+
+.mth-feature strong {
+  display: block;
+
+  color: #153967;
+
+  font-size: 9px;
+
+  font-weight: 500;
+}
+
+
+/* ======================================================
+   HERO ART
+====================================================== */
+
+.mth-hero-art {
+  position: relative;
+
+  z-index: 3;
+
+  height: 220px;
+}
+
+
+/* glow */
+
+.mth-art-glow {
+  position: absolute;
+
+  width: 230px;
+  height: 230px;
+
+  top: 0;
+  left: 18%;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        255,
+        200,
+        66,
+        0.3
+      ),
+      transparent 70%
+    );
+}
+
+
+/* ======================================================
+   CLIPBOARD
+====================================================== */
+
+.mth-clipboard {
+  position: absolute;
+
+  z-index: 5;
+
+  width: 170px;
+  height: 190px;
+
+  top: 6px;
+  left: 35%;
+
+  padding:
+    35px
+    18px
+    15px;
+
+  border:
+    8px solid #0a4289;
+
+  border-radius:
+    13px
+    13px
+    18px
+    18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #eaf5ff
+    );
+
+  box-shadow:
+    0 15px 27px
+    rgba(
+      8,
+      53,
+      109,
+      0.15
+    );
+
+  transform:
+    rotate(4deg);
+}
+
+
+.mth-clipboard-top {
+  position: absolute;
+
+  width: 74px;
+  height: 27px;
+
+  top: -17px;
+  left: 39px;
+
+  border-radius:
+    13px
+    13px
+    6px
+    6px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffc94d,
+      #e7a317
+    );
+
+  box-shadow:
+    0 4px 8px
+    rgba(
+      181,
+      117,
+      0,
+      0.18
+    );
+}
+
+
+.mth-clipboard strong {
+  display: block;
+
+  margin-bottom: 15px;
+
+  color: #0b2f64;
+
+  text-align: center;
+
+  font-size: 12px;
+}
+
+
+.mth-check-row {
+  display: grid;
+
+  grid-template-columns:
+    21px
+    1fr;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 11px;
+}
+
+
+.mth-check-row > span,
+.mth-check-row > b {
+  width: 20px;
+  height: 20px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: 4px;
+
+  background: #dfe9f3;
+}
+
+
+.mth-check-row > span {
+  color: #ffffff;
+
+  background: #25af68;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+
+.mth-check-row i {
+  width: 100%;
+  height: 6px;
+
+  border-radius: 999px;
+
+  background: #b5c6da;
+}
+
+
+/* ======================================================
+   CLOCK
+====================================================== */
+
+.mth-clock {
+  position: absolute;
+
+  z-index: 7;
+
+  width: 92px;
+  height: 92px;
+
+  left: 24%;
+  bottom: 8px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    9px solid #e8a21c;
+
+  border-radius: 50%;
+
+  color: #093875;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 19px
+    rgba(
+      6,
+      48,
+      96,
+      0.16
+    );
+}
+
+
+.mth-clock svg {
+  width: 52px;
+  height: 52px;
+
+  stroke-width: 1.6;
+}
+
+
+/* ======================================================
+   BOOKS
+====================================================== */
+
+.mth-books {
+  position: absolute;
+
+  z-index: 2;
+
+  width: 150px;
+  height: 90px;
+
+  right: 7%;
+  bottom: 9px;
+}
+
+
+.mth-book {
+  position: absolute;
+
+  right: 0;
+
+  height: 26px;
+
+  border-right:
+    6px solid #f5f7f9;
+
+  border-radius:
+    5px
+    2px
+    2px
+    5px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #073672,
+      #0b58a1
+    );
+}
+
+
+.mth-book-1 {
+  width: 130px;
+
+  bottom: 52px;
+}
+
+
+.mth-book-2 {
+  width: 143px;
+
+  bottom: 26px;
+}
+
+
+.mth-book-3 {
+  width: 155px;
+
+  bottom: 0;
+}
+
+
+/* ======================================================
+   LEAVES
+====================================================== */
+
+.mth-art-leaf {
+  position: absolute;
+
+  z-index: 1;
+
+  width: 27px;
+  height: 67px;
+
+  border-radius:
+    100%
+    0
+    100%
+    0;
+
+  background:
+    linear-gradient(
+      140deg,
+      #1266a3,
+      #073a75
+    );
+}
+
+
+.mth-leaf-1 {
+  left: 14%;
+  top: 60px;
+
+  transform:
+    rotate(-43deg);
+}
+
+
+.mth-leaf-2 {
+  left: 18%;
+  top: 31px;
+
+  transform:
+    rotate(-19deg);
+}
+
+
+.mth-leaf-3 {
+  right: 14%;
+  top: 35px;
+
+  transform:
+    rotate(35deg);
+}
+
+
+.mth-leaf-4 {
+  right: 9%;
+  top: 70px;
+
+  transform:
+    rotate(58deg);
+}
+
+
+/* ======================================================
+   PENCIL + TAGLINE
+====================================================== */
+
+.mth-art-pencil {
+  position: absolute;
+
+  z-index: 8;
+
+  width: 120px;
+  height: 9px;
+
+  left: 45%;
+  bottom: 0;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #0d65a6,
+      #0c3d7b 75%,
+      #efa72a 75%
+    );
+
+  transform:
+    rotate(4deg);
+}
+
+
+.mth-art-tagline {
+  position: absolute;
+
+  z-index: 5;
+
+  right: 0;
+  top: 45px;
+
+  color: #0a3977;
+
+  font-family:
+    "DM Serif Display",
+    cursive;
+
+  font-size: 17px;
+
+  font-style: italic;
+
+  line-height: 1.05;
+
+  text-align: center;
+
+  transform:
+    rotate(-5deg);
+}
+
+
+.mth-art-tagline span {
+  width: 60px;
+  height: 3px;
+
+  display: block;
+
+  margin:
+    7px auto
+    0;
+
+  border-radius: 999px;
+
+  background: #efa600;
+
+  transform:
+    rotate(-8deg);
+}
+
+
+/* ======================================================
+   TOOLBAR
+====================================================== */
+
+.mth-toolbar {
+  width: 100%;
+
+  margin:
+    0 auto
+    16px;
+
+  padding:
+    12px
+    18px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(380px, 1fr)
+    1px
+    minmax(620px, auto);
+
+  align-items: center;
+
+  gap: 18px;
+
+  border:
+    1px solid #e2e9f1;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 20px
+    rgba(
+      15,
+      52,
+      91,
+      0.04
+    );
+}
+
+
+/* ======================================================
+   SEARCH
+====================================================== */
+
+.mth-search {
+  min-width: 0;
+
+  min-height: 43px;
+
+  padding:
+    3px
+    4px
+    3px
+    13px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border:
+    1px solid #dce5ef;
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f8fbfe
+    );
+}
+
+
+.mth-search > svg {
+  width: 19px;
+  height: 19px;
+
+  flex-shrink: 0;
+
+  color: #163b6c;
+}
+
+
+.mth-search input {
+  min-width: 0;
+
+  flex: 1;
+
+  height: 35px;
+
+  border: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  color: #173963;
+
+  font-family: inherit;
+
+  font-size: 10px;
+}
+
+
+.mth-search input::placeholder {
+  color: #7388a3;
+}
+
+
+.mth-search button {
+  align-self: stretch;
+
+  min-width: 95px;
+
+  cursor: pointer;
+
+  border: 0;
+
+  border-radius: 7px;
+
+  color: #182948;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffd04f,
+      #f5ad1e
+    );
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  font-weight: 700;
+}
+
+
+.mth-toolbar-divider {
+  width: 1px;
+  height: 38px;
+
+  background: #dce4ed;
+}
+
+
+/* ======================================================
+   CATEGORY PILLS
+====================================================== */
+
+.mth-pills {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    flex-end;
+
+  gap: 7px;
+
+  min-width: 0;
+}
+
+
+.mth-pills-label {
+  flex-shrink: 0;
+
+  margin-right: 4px;
+
+  color: #6c81a0;
+
+  font-size: 7px;
+
+  line-height: 1.2;
+}
+
+
+.mth-pills-label span,
+.mth-pills-label strong {
+  display: block;
+}
+
+
+.mth-pills-label strong {
+  color: #0b3267;
+
+  font-size: 8px;
+}
+
+
+.mth-pills > button {
+  min-height: 39px;
+
+  padding:
+    0
+    17px;
+
+  flex-shrink: 0;
+
+  cursor: pointer;
+
+  color: #153866;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 999px;
+
+  background: #f4f8fc;
+
+  font-family: inherit;
+
+  font-size: 8px;
+
+  white-space: nowrap;
+}
+
+
+.mth-pills > button:hover {
+  background: #eaf2fa;
+}
+
+
+.mth-pills > button.active {
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #062b61,
+      #0b4687
+    );
+
+  box-shadow:
+    0 5px 13px
+    rgba(
+      7,
+      51,
+      105,
+      0.15
+    );
+}
+
+
+/* ======================================================
+   MORE SELECT
+====================================================== */
+
+.mth-more-select {
+  position: relative;
+
+  min-width: 95px;
+
+  flex-shrink: 0;
+
+  border-radius: 999px;
+
+  background: #f4f8fc;
+}
+
+
+.mth-more-select select {
+  width: 100%;
+  height: 39px;
+
+  padding:
+    0
+    30px
+    0
+    15px;
+
+  appearance: none;
+
+  cursor: pointer;
+
+  border: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  color: #153866;
+
+  font-family: inherit;
+
+  font-size: 8px;
+}
+
+
+.mth-more-select svg {
+  position: absolute;
+
+  width: 13px;
+  height: 13px;
+
+  right: 12px;
+  top: 13px;
+
+  pointer-events: none;
+}
+
+
+/* ======================================================
+   EXAM GRID
+====================================================== */
+
+.mth-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap:
+    11px
+    14px;
+}
+
+
+/* ======================================================
+   EXAM CARD
+====================================================== */
+
+.mth-card {
+  position: relative;
+
+  min-width: 0;
+  min-height: 104px;
+
+  padding:
+    12px
+    16px;
+
+  display: grid;
+
+  grid-template-columns:
+    76px
+    minmax(0, 1fr)
+    150px;
+
+  align-items: center;
+
+  gap: 13px;
+
+  overflow: hidden;
+
+  border:
+    1px solid #e1e8f0;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 19px
+    rgba(
+      15,
+      50,
+      91,
+      0.035
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+
+.mth-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color: #cad9e8;
+
+  box-shadow:
+    0 10px 24px
+    rgba(
+      15,
+      50,
+      91,
+      0.08
+    );
+}
+
+
+.mth-card-featured {
+  border-color: #efb439;
+
+  background:
+    linear-gradient(
+      100deg,
+      #fffdf9,
+      #ffffff
+    );
+}
+
+
+/* ======================================================
+   CARD LOGO
+====================================================== */
+
+.mth-card-logo {
+  width: 70px;
+  height: 70px;
+
+  overflow: hidden;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffaf0,
+      #fff0d3
+    );
+}
+
+
+.mth-card-logo img {
+  width: 82%;
+  height: 82%;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+
+.mth-card-logo > span {
+  font-size: 36px;
+}
+
+
+/* ======================================================
+   CARD CONTENT
+====================================================== */
+
+.mth-card-content {
+  min-width: 0;
+}
+
+
+.mth-card-content h2 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #082b5d;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+.mth-card-content > p {
+  margin:
+    2px 0
+    9px;
+
+  color: #6880a0;
+
+  font-size: 9px;
+}
+
+
+.mth-card-stats {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap:
+    7px
+    18px;
+}
+
+
+.mth-card-stats span {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  color: #6480a4;
+
+  font-size: 7.5px;
+
+  white-space: nowrap;
+}
+
+
+.mth-card-stats svg {
+  width: 13px;
+  height: 13px;
+
+  color: #416b9c;
+}
+
+
+/* ======================================================
+   CARD BUTTON
+====================================================== */
+
+.mth-card-btn {
+  min-height: 36px;
+
+  padding:
+    0
+    13px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  justify-self: end;
+
+  cursor: pointer;
+
+  border: 0;
+
+  border-radius: 7px;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #062a5c,
+      #073e7e
+    );
+
+  font-family: inherit;
+
+  font-size: 8px;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.mth-card-btn:hover {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 6px 14px
+    rgba(
+      7,
+      50,
+      104,
+      0.16
+    );
+}
+
+
+.mth-card-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+
+/* ======================================================
+   EMPTY
+====================================================== */
+
+.mth-empty {
+  min-height: 250px;
+
+  margin-top: 14px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border:
+    1px solid #e0e7ef;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #7185a0;
+
+  text-align: center;
+}
+
+
+.mth-empty > svg {
+  width: 35px;
+  height: 35px;
+
+  color: #1b65aa;
+}
+
+
+.mth-empty h3 {
+  margin:
+    10px 0
+    3px;
+
+  color: #0b3165;
+}
+
+
+.mth-empty p {
+  margin: 0;
+
+  font-size: 9px;
+}
+
+
+.mth-empty button {
+  min-height: 34px;
+
+  margin-top: 12px;
+
+  padding:
+    0
+    14px;
+
+  cursor: pointer;
+
+  border: 0;
+
+  border-radius: 7px;
+
+  color: #ffffff;
+
+  background: #0a3976;
+
+  font-family: inherit;
+
+  font-size: 8px;
+}
+
+
+/* ======================================================
+   MEDIUM DESKTOP
+====================================================== */
+
+@media (max-width: 1200px) {
+
+  .mth-hero {
+    grid-template-columns:
+      1.15fr
+      0.85fr;
+
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+
+  .mth-feature {
+    min-width: 125px;
+
+    padding:
+      0
+      9px;
+  }
+
+
+  .mth-hero-art {
+    transform:
+      scale(0.88);
+
+    transform-origin:
+      center right;
+  }
+
+
+  .mth-toolbar {
+    grid-template-columns:
+      minmax(330px, 0.8fr)
+      1px
+      minmax(0, 1.2fr);
+
+    gap: 10px;
+  }
+
+
+  .mth-pills {
+    overflow-x: auto;
+
+    justify-content:
+      flex-start;
+
+    scrollbar-width: none;
+  }
+
+
+  .mth-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+
+  .mth-card {
+    grid-template-columns:
+      65px
+      minmax(0, 1fr)
+      135px;
+
+    padding:
+      10px
+      12px;
+  }
+
+
+  .mth-card-logo {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+
+/* ======================================================
+   TABLET
+====================================================== */
+
+@media (max-width: 950px) {
+
+  .mth-page {
+    padding:
+      0
+      10px
+      25px;
+  }
+
+
+  .mth-hero {
+    min-height: auto;
+
+    grid-template-columns:
+      1fr;
+
+    padding:
+      20px
+      18px;
+  }
+
+
+  .mth-hero-art {
+    display: none;
+  }
+
+
+  .mth-features {
+    overflow-x: auto;
+
+    scrollbar-width: none;
+  }
+
+
+  .mth-features::-webkit-scrollbar {
+    display: none;
+  }
+
+
+  .mth-feature {
+    flex-shrink: 0;
+  }
+
+
+  .mth-toolbar {
+    grid-template-columns:
+      1fr;
+
+    gap: 10px;
+  }
+
+
+  .mth-toolbar-divider {
+    display: none;
+  }
+
+
+  .mth-pills {
+    justify-content:
+      flex-start;
+
+    overflow-x: auto;
+  }
+
+
+  .mth-grid {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+
+/* ======================================================
+   MOBILE
+====================================================== */
+
+@media (max-width: 650px) {
+
+  .mth-page {
+    padding:
+      0
+      7px
+      22px;
+  }
+
+
+  .mth-hero {
+    padding:
+      16px
+      12px;
+  }
+
+
+  .mth-back {
+    margin-bottom: 11px;
+
+    font-size: 8px;
+  }
+
+
+  .mth-hero h1 {
+    font-size: 36px;
+  }
+
+
+  .mth-subtitle {
+    margin-bottom: 14px;
+
+    font-size: 10px;
+  }
+
+
+  .mth-feature {
+    min-width: 135px;
+  }
+
+
+  .mth-toolbar {
+    padding:
+      9px;
+  }
+
+
+  .mth-search {
+    min-height: 40px;
+  }
+
+
+  .mth-search input {
+    font-size: 8.5px;
+  }
+
+
+  .mth-search button {
+    min-width: 75px;
+  }
+
+
+  .mth-pills-label {
+    display: none;
+  }
+
+
+  .mth-card {
+    min-height: 130px;
+
+    grid-template-columns:
+      58px
+      minmax(0, 1fr);
+
+    gap: 10px;
+  }
+
+
+  .mth-card-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+
+  .mth-card-content h2 {
+    font-size: 11px;
+  }
+
+
+  .mth-card-btn {
+    grid-column:
+      1 / -1;
+
+    width: 100%;
+
+    justify-self: stretch;
+  }
+}
+/* ======================================================
+   EXAM GROUPS FIX
+   1) Browse category cut issue fix
+   2) Hero 25% thinner
+====================================================== */
+
+/* ---------------- HERO THINNER ---------------- */
+
+.mth-hero {
+  min-height: 190px; /* pehle 255px tha */
+  padding: 12px 24px 14px;
+
+  grid-template-columns:
+    minmax(540px, 1.08fr)
+    minmax(400px, 0.92fr);
+}
+
+.mth-back {
+  margin-bottom: 10px;
+  font-size: 9px;
+}
+
+.mth-back svg {
+  width: 14px;
+  height: 14px;
+}
+
+.mth-hero h1 {
+  font-size: clamp(38px, 3.5vw, 50px);
+  line-height: 0.95;
+}
+
+.mth-subtitle {
+  margin: 6px 0 14px;
+  font-size: 11px;
+}
+
+.mth-features {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.mth-feature {
+  min-width: 130px;
+  padding: 0 12px;
+}
+
+.mth-feature-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.mth-feature-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mth-feature p {
+  font-size: 7px;
+}
+
+.mth-feature strong {
+  font-size: 8px;
+}
+
+/* hero art smaller */
+
+.mth-hero-art {
+  height: 180px;
+  transform: scale(0.88);
+  transform-origin: center right;
+}
+
+.mth-art-tagline {
+  font-size: 14px;
+}
+
+
+/* ---------------- TOOLBAR CUT FIX ---------------- */
+
+.mth-toolbar {
+  grid-template-columns:
+    minmax(320px, 0.95fr)
+    1px
+    minmax(0, 1.05fr);
+
+  gap: 14px;
+
+  padding: 14px 16px;
+
+  overflow: hidden;
+}
+
+/* right side category area */
+
+.mth-pills {
+  min-width: 0;
+  max-width: 100%;
+
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+
+  row-gap: 10px;
+  column-gap: 8px;
+
+  overflow: visible;
+}
+
+.mth-pills-label {
+  flex-shrink: 0;
+  margin-right: 8px;
+
+  white-space: nowrap;
+}
+
+.mth-pills > button {
+  flex-shrink: 0;
+}
+
+.mth-more-select {
+  flex-shrink: 0;
+  min-width: 110px;
+}
+
+/* optional: More button ko right me push karega jab space ho */
+.mth-more-select {
+  margin-left: auto;
+}
+
+
+/* search thoda compact */
+
+.mth-search {
+  min-height: 40px;
+}
+
+.mth-search input {
+  font-size: 9px;
+}
+
+.mth-search button {
+  min-width: 90px;
+  font-size: 8px;
+}
+
+
+/* ---------------- LARGE TABLET / SMALL DESKTOP ---------------- */
+
+@media (max-width: 1200px) {
+  .mth-hero {
+    min-height: 180px;
+    padding: 12px 18px 14px;
+  }
+
+  .mth-hero h1 {
+    font-size: 42px;
+  }
+
+  .mth-hero-art {
+    transform: scale(0.78);
+  }
+
+  .mth-toolbar {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mth-toolbar-divider {
+    display: none;
+  }
+
+  .mth-pills {
+    justify-content: flex-start;
+  }
+
+  .mth-more-select {
+    margin-left: 0;
+  }
+}
+
+
+/* ---------------- TABLET ---------------- */
+
+@media (max-width: 950px) {
+  .mth-hero {
+    min-height: auto;
+    padding: 18px 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .mth-hero h1 {
+    font-size: 36px;
+  }
+
+  .mth-subtitle {
+    font-size: 10px;
+  }
+
+  .mth-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    row-gap: 0;
+  }
+
+  .mth-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mth-more-select {
+    margin-left: 0;
+  }
+}
