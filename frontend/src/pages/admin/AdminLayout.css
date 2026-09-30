@@ -2125,3 +2125,19 @@ body:has(.admin-shell) .admin-shell {
   font-size: 8px;
   font-weight: 700;
 }
+/* =========================================================
+   Keep the Admin Panel's own clean sans-serif look.
+   The main site now uses a serif (Fraunces) font for h1/h2
+   globally (see index.css) — this override stops that from
+   leaking into the admin panel, which was designed around
+   Arial/sans-serif throughout.
+========================================================= */
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-lock-page h1,
+.admin-lock-page h2 {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
