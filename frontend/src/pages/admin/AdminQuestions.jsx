@@ -39,7 +39,7 @@ const INITIAL_FORM = {
 function AdminQuestions() {
   const { testId } = useParams();
   const navigate = useNavigate();
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -70,7 +70,7 @@ function AdminQuestions() {
         )}/questions`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -94,13 +94,13 @@ function AdminQuestions() {
     } finally {
       setLoading(false);
     }
-  }, [adminKey, testId]);
+  }, [adminToken, testId]);
 
   useEffect(() => {
-    if (adminKey && testId) {
+    if (adminToken && testId) {
       fetchQuestions();
     }
-  }, [adminKey, testId, fetchQuestions]);
+  }, [adminToken, testId, fetchQuestions]);
 
   // ---------------------------------------------------
   // FORM
@@ -210,7 +210,7 @@ function AdminQuestions() {
 
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": adminKey,
+        Authorization: `Bearer ${adminToken}`,
       },
 
       body: JSON.stringify(payload),
@@ -300,7 +300,7 @@ const handleDeleteQuestion = async (question) => {
       {
         method: "DELETE",
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );

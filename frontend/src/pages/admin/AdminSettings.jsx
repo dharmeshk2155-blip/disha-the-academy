@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function AdminSettings() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [form, setForm] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function AdminSettings() {
 
       const response = await fetch(`${API_BASE}/api/settings/admin`, {
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 
@@ -80,7 +80,7 @@ export default function AdminSettings() {
 
   useEffect(() => {
     loadSettings();
-  }, [adminKey]);
+  }, [adminToken]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -108,7 +108,7 @@ export default function AdminSettings() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           siteName: form.siteName.trim(),

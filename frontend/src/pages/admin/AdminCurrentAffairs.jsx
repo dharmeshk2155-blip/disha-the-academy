@@ -61,7 +61,7 @@ function formatDate(value) {
 }
 
 export default function AdminCurrentAffairs() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
   const fileInputRef = useRef(null);
 
   const [entries, setEntries] = useState([]);
@@ -260,7 +260,7 @@ export default function AdminCurrentAffairs() {
         {
           method: "POST",
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
           body: formData,
         }
@@ -325,7 +325,7 @@ export default function AdminCurrentAffairs() {
 
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
 
         body: JSON.stringify({
@@ -448,7 +448,7 @@ export default function AdminCurrentAffairs() {
           method: "DELETE",
 
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );

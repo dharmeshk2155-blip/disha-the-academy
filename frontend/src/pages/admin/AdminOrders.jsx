@@ -32,7 +32,7 @@ const EMPTY_SUMMARY = {
 };
 
 export default function AdminOrders() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [orders, setOrders] = useState([]);
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
@@ -98,7 +98,7 @@ export default function AdminOrders() {
         `${API_BASE}/api/admin/orders-summary`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -129,7 +129,7 @@ export default function AdminOrders() {
     } finally {
       setSummaryLoading(false);
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   /* =====================================================
      LOAD ORDERS
@@ -158,7 +158,7 @@ export default function AdminOrders() {
 
       const response = await fetch(url, {
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 
@@ -184,14 +184,14 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  }, [adminKey, status, search]);
+  }, [adminToken, status, search]);
 
   useEffect(() => {
-    if (!adminKey) return;
+    if (!adminToken) return;
 
     loadOrders();
     loadSummary();
-  }, [adminKey, loadOrders, loadSummary]);
+  }, [adminToken, loadOrders, loadSummary]);
 
   function refreshEverything() {
     loadOrders();

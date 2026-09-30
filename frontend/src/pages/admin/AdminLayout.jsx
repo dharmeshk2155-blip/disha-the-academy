@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   NavLink,
@@ -129,23 +129,51 @@ const PAGE_TITLES = {
   "/admin/settings": "Settings",
 };
 
+const TOKEN_KEY = "adminToken";
+
+// Reads the expiry time (ms) out of the token so the panel can lock
+// itself the moment the session ends. (Only for the UI - the server
+// always re-checks the token on every request.)
+function tokenExpiryMs(token) {
+  try {
+    const payload = JSON.parse(
+      atob(
+        token
+          .split(".")[1]
+          .replace(/-/g, "+")
+          .replace(/_/g, "/")
+      )
+    );
+
+    return Number(payload.exp) * 1000 || 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const storedAdminKey =
-    sessionStorage.getItem("adminKey") || "";
+  const storedToken =
+    sessionStorage.getItem(TOKEN_KEY) || "";
 
-  const [adminKey, setAdminKey] =
-    useState(storedAdminKey);
+  const [adminToken, setAdminToken] =
+    useState(storedToken);
+
+  const [adminName, setAdminName] =
+    useState("");
 
   const [unlocked, setUnlocked] =
     useState(false);
 
   const [checkingSession, setCheckingSession] =
-    useState(Boolean(storedAdminKey));
+    useState(Boolean(storedToken));
 
-  const [keyInput, setKeyInput] =
+  const [emailInput, setEmailInput] =
+    useState("");
+
+  const [passwordInput, setPasswordInput] =
     useState("");
 
   const [sidebarOpen, setSidebarOpen] =
@@ -162,21 +190,42 @@ export default function AdminLayout() {
     "Admin Dashboard";
 
   // =========================================
+  // LOCK ADMIN (logout / expired session)
+  // =========================================
+
+  const lockAdmin = useCallback(
+    (message = "") => {
+      sessionStorage.removeItem(TOKEN_KEY);
+
+      setAdminToken("");
+      setAdminName("");
+      setUnlocked(false);
+      setCheckingSession(false);
+      setEmailInput("");
+      setPasswordInput("");
+      setError(message);
+    },
+    []
+  );
+
+  // =========================================
   // VERIFY SAVED ADMIN SESSION
   // =========================================
 
   useEffect(() => {
     let cancelled = false;
 
-    async function verifySavedSession() {
-      const savedKey =
-        sessionStorage.getItem("adminKey");
+    // The old shared admin key is no longer used.
+    // Remove any copy left in this browser.
+    sessionStorage.removeItem("adminKey");
 
-      if (!savedKey) {
+    async function verifySavedSession() {
+      const savedToken =
+        sessionStorage.getItem(TOKEN_KEY);
+
+      if (!savedToken) {
         if (!cancelled) {
-          setAdminKey("");
-          setUnlocked(false);
-          setCheckingSession(false);
+          lockAdmin();
         }
 
         return;
@@ -184,13 +233,10 @@ export default function AdminLayout() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/admin/verify-key`,
+          `${API_BASE}/api/admin/session`,
           {
-            method: "POST",
             headers: {
-              "Content-Type":
-                "application/json",
-              "x-admin-key": savedKey,
+              Authorization: `Bearer ${savedToken}`,
             },
           }
         );
@@ -207,18 +253,13 @@ export default function AdminLayout() {
           !response.ok ||
           !data.success
         ) {
-          sessionStorage.removeItem(
-            "adminKey"
-          );
-
-          setAdminKey("");
-          setUnlocked(false);
-          setCheckingSession(false);
+          lockAdmin();
 
           return;
         }
 
-        setAdminKey(savedKey);
+        setAdminToken(savedToken);
+        setAdminName(data.admin?.name || "");
         setUnlocked(true);
         setCheckingSession(false);
       } catch (err) {
@@ -227,17 +268,9 @@ export default function AdminLayout() {
           err
         );
 
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          lockAdmin();
         }
-
-        sessionStorage.removeItem(
-          "adminKey"
-        );
-
-        setAdminKey("");
-        setUnlocked(false);
-        setCheckingSession(false);
       }
     }
 
@@ -246,20 +279,50 @@ export default function AdminLayout() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [lockAdmin]);
 
   // =========================================
-  // UNLOCK ADMIN
+  // AUTO-LOCK WHEN THE SESSION EXPIRES
+  // =========================================
+
+  useEffect(() => {
+    if (!unlocked || !adminToken) {
+      return undefined;
+    }
+
+    const message =
+      "Your admin session expired. Please log in again.";
+
+    const msLeft =
+      tokenExpiryMs(adminToken) - Date.now();
+
+    if (msLeft <= 0) {
+      lockAdmin(message);
+
+      return undefined;
+    }
+
+    // setTimeout cannot handle values above ~24 days
+    const timer = setTimeout(
+      () => lockAdmin(message),
+      Math.min(msLeft, 2147483647)
+    );
+
+    return () => clearTimeout(timer);
+  }, [unlocked, adminToken, lockAdmin]);
+
+  // =========================================
+  // ADMIN LOGIN
   // =========================================
 
   async function handleUnlock(e) {
     e.preventDefault();
 
-    const key = keyInput.trim();
+    const email = emailInput.trim();
 
-    if (!key) {
+    if (!email || !passwordInput) {
       setError(
-        "Please enter your admin key."
+        "Please enter your email and password."
       );
       return;
     }
@@ -269,14 +332,17 @@ export default function AdminLayout() {
       setError("");
 
       const response = await fetch(
-        `${API_BASE}/api/admin/verify-key`,
+        `${API_BASE}/api/admin/login`,
         {
           method: "POST",
           headers: {
             "Content-Type":
               "application/json",
-            "x-admin-key": key,
           },
+          body: JSON.stringify({
+            email,
+            password: passwordInput,
+          }),
         }
       );
 
@@ -286,33 +352,38 @@ export default function AdminLayout() {
 
       if (
         !response.ok ||
-        !data.success
+        !data.success ||
+        !data.token
       ) {
         setError(
           data.message ||
-            "Invalid admin key."
+            "Login failed. Please try again."
         );
+
+        setPasswordInput("");
 
         return;
       }
 
       sessionStorage.setItem(
-        "adminKey",
-        key
+        TOKEN_KEY,
+        data.token
       );
 
-      setAdminKey(key);
+      setAdminToken(data.token);
+      setAdminName(data.admin?.name || "");
       setUnlocked(true);
-      setKeyInput("");
+      setEmailInput("");
+      setPasswordInput("");
       setError("");
     } catch (err) {
       console.error(
-        "Admin verification error:",
+        "Admin login error:",
         err
       );
 
       setError(
-        "Unable to verify admin key. Please check the server and try again."
+        "Unable to reach the server. Please check your connection and try again."
       );
     } finally {
       setVerifying(false);
@@ -320,18 +391,11 @@ export default function AdminLayout() {
   }
 
   // =========================================
-  // LOCK ADMIN
+  // LOGOUT
   // =========================================
 
   function handleLogout() {
-    sessionStorage.removeItem(
-      "adminKey"
-    );
-
-    setAdminKey("");
-    setUnlocked(false);
-    setKeyInput("");
-    setError("");
+    lockAdmin();
     setSidebarOpen(false);
 
     navigate("/admin");
@@ -405,21 +469,21 @@ export default function AdminLayout() {
           </h2>
 
           <p>
-            Enter your admin key to
-            continue.
+            Log in with your admin
+            account to continue.
           </p>
 
-          <label htmlFor="adminKey">
-            Admin Key
+          <label htmlFor="adminEmail">
+            Email
           </label>
 
           <input
-            id="adminKey"
-            type="password"
-            placeholder="Enter admin key"
-            value={keyInput}
+            id="adminEmail"
+            type="email"
+            placeholder="Enter admin email"
+            value={emailInput}
             onChange={(e) => {
-              setKeyInput(
+              setEmailInput(
                 e.target.value
               );
 
@@ -427,7 +491,30 @@ export default function AdminLayout() {
                 setError("");
               }
             }}
-            autoComplete="off"
+            autoComplete="username"
+            disabled={verifying}
+            required
+          />
+
+          <label htmlFor="adminPassword">
+            Password
+          </label>
+
+          <input
+            id="adminPassword"
+            type="password"
+            placeholder="Enter password"
+            value={passwordInput}
+            onChange={(e) => {
+              setPasswordInput(
+                e.target.value
+              );
+
+              if (error) {
+                setError("");
+              }
+            }}
+            autoComplete="current-password"
             disabled={verifying}
             required
           />
@@ -456,8 +543,8 @@ export default function AdminLayout() {
             <ShieldCheck size={18} />
 
             {verifying
-              ? "Verifying..."
-              : "Unlock Dashboard"}
+              ? "Logging in..."
+              : "Log In"}
           </button>
 
           <div className="admin-lock-security">
@@ -642,7 +729,9 @@ export default function AdminLayout() {
             </div>
 
             <div className="admin-avatar">
-              A
+              {(adminName || "A")
+                .charAt(0)
+                .toUpperCase()}
             </div>
           </div>
         </header>
@@ -652,7 +741,7 @@ export default function AdminLayout() {
         <main className="admin-main">
           <Outlet
             context={{
-              adminKey,
+              adminToken,
             }}
           />
         </main>

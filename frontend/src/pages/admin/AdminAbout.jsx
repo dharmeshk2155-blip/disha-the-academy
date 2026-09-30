@@ -26,7 +26,7 @@ const EMPTY_FORM = {
 };
 
 function AdminAbout() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ function AdminAbout() {
 
       const response = await fetch(`${API_BASE}/api/about/admin`, {
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 
@@ -78,7 +78,7 @@ function AdminAbout() {
 
   useEffect(() => {
     loadAboutPage();
-  }, [adminKey]);
+  }, [adminToken]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -106,7 +106,7 @@ function AdminAbout() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           title: form.title.trim(),

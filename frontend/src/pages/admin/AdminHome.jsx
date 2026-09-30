@@ -25,7 +25,7 @@ const API_BASE =
   "http://localhost:5000";
 
 export default function AdminHome() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -59,7 +59,7 @@ export default function AdminHome() {
           method: "GET",
 
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -111,10 +111,10 @@ export default function AdminHome() {
   }
 
   useEffect(() => {
-    if (adminKey) {
+    if (adminToken) {
       loadDashboard();
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   /* =====================================================
      HELPERS

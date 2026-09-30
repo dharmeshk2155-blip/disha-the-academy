@@ -20,7 +20,7 @@ const API_BASE =
   "https://disha-the-academy.onrender.com";
 
 export default function AdminContactSubmissions() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function AdminContactSubmissions() {
         `${API_BASE}/api/contact`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -80,11 +80,11 @@ export default function AdminContactSubmissions() {
   }
 
   useEffect(() => {
-    if (adminKey) {
+    if (adminToken) {
       loadSubmissions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminKey]);
+  }, [adminToken]);
 
   // =====================================================
   // SEARCH
@@ -134,7 +134,7 @@ export default function AdminContactSubmissions() {
         {
           method: "DELETE",
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );

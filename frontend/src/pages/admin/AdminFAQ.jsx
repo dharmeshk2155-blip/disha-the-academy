@@ -15,7 +15,7 @@ const emptyForm = {
 };
 
 export default function AdminFAQ() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [faqs, setFaqs] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -30,7 +30,7 @@ export default function AdminFAQ() {
 
       const response = await fetch(`${API_BASE}/api/faq/admin/all`, {
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 
@@ -49,10 +49,10 @@ export default function AdminFAQ() {
   }
 
   useEffect(() => {
-    if (adminKey) {
+    if (adminToken) {
       loadFaqs();
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   function handleChange(event) {
     const { name, value, type, checked } = event.target;
@@ -103,7 +103,7 @@ export default function AdminFAQ() {
         method: editingId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           question: form.question.trim(),
@@ -147,7 +147,7 @@ export default function AdminFAQ() {
       const response = await fetch(`${API_BASE}/api/faq/${id}`, {
         method: "DELETE",
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 

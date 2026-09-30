@@ -41,7 +41,7 @@ const INITIAL_FORM = {
 };
 
 function AdminTests() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +65,7 @@ function AdminTests() {
       const response = await fetch(`${API_BASE}/api/admin/tests`, {
         method: "GET",
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       });
 
@@ -86,7 +86,7 @@ function AdminTests() {
 
   useEffect(() => {
     fetchTests();
-  }, [adminKey]);
+  }, [adminToken]);
 
   const categories = useMemo(() => {
     return [
@@ -309,7 +309,7 @@ function AdminTests() {
 
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": adminKey,
+        Authorization: `Bearer ${adminToken}`,
       },
 
       body: JSON.stringify({
@@ -420,7 +420,7 @@ const handleDeleteTest = async (test) => {
       {
         method: "DELETE",
         headers: {
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );

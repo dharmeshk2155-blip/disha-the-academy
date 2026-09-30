@@ -150,7 +150,7 @@ function escapeHtml(value) {
 
 export default function AdminNotes() {
 
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
 
 
@@ -290,9 +290,7 @@ export default function AdminNotes() {
 
             headers: {
 
-              "x-admin-key":
-
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
 
             },
 
@@ -358,13 +356,13 @@ export default function AdminNotes() {
 
   useEffect(() => {
 
-    if (adminKey) {
+    if (adminToken) {
 
       loadNotes();
 
     }
 
-  }, [adminKey]);
+  }, [adminToken]);
 
 
 
@@ -1472,9 +1470,7 @@ export default function AdminNotes() {
 
               headers: {
 
-                "x-admin-key":
-
-                  adminKey,
+                Authorization: `Bearer ${adminToken}`,
 
               },
 
@@ -1788,9 +1784,7 @@ export default function AdminNotes() {
 
 
 
-              "x-admin-key":
-
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
 
             },
 
@@ -1976,9 +1970,7 @@ export default function AdminNotes() {
 
             headers: {
 
-              "x-admin-key":
-
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
 
             },
 
@@ -2090,9 +2082,7 @@ export default function AdminNotes() {
 
 
 
-              "x-admin-key":
-
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
 
             },
 

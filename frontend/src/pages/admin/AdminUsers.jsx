@@ -18,7 +18,7 @@ const API_BASE =
   "https://disha-the-academy.onrender.com";
 
 export default function AdminUsers() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -41,7 +41,7 @@ export default function AdminUsers() {
         `${API_BASE}/api/admin/users${query}`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -61,10 +61,10 @@ export default function AdminUsers() {
   }
 
   useEffect(() => {
-    if (adminKey) {
+    if (adminToken) {
       loadUsers();
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   async function handleSearch(event) {
     event.preventDefault();
@@ -80,7 +80,7 @@ export default function AdminUsers() {
         `${API_BASE}/api/admin/users/${userId}`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );

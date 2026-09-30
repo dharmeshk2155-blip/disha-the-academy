@@ -18,7 +18,7 @@ const emptyForm = {
 };
 
 export default function AdminBlog() {
-  const { adminKey } = useOutletContext();
+  const { adminToken } = useOutletContext();
 
   const [blogs, setBlogs] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -42,7 +42,7 @@ export default function AdminBlog() {
         `${API_BASE}/api/blog/admin/all`,
         {
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
@@ -60,7 +60,7 @@ export default function AdminBlog() {
     } finally {
       setLoading(false);
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   useEffect(() => {
     loadBlogs();
@@ -102,7 +102,7 @@ export default function AdminBlog() {
         {
           method: "POST",
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
           body: imageData,
         }
@@ -148,7 +148,7 @@ export default function AdminBlog() {
 
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          Authorization: `Bearer ${adminToken}`,
         },
 
         body: JSON.stringify(payload),
@@ -231,7 +231,7 @@ export default function AdminBlog() {
           method: "DELETE",
 
           headers: {
-            "x-admin-key": adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
         }
       );
