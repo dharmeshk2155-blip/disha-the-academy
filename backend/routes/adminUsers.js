@@ -10,21 +10,7 @@ const router = express.Router();
 // ADMIN KEY SECURITY
 // ======================================================
 
-function requireAdminKey(req, res, next) {
-  const adminKey = req.header("x-admin-key");
-
-  if (
-    !adminKey ||
-    adminKey !== process.env.ADMIN_KEY
-  ) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
-  }
-
-  next();
-}
+const requireAdmin = require("../middleware/requireAdmin");
 
 // ======================================================
 // HELPER
@@ -45,7 +31,7 @@ function escapeRegex(value) {
 
 router.get(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const search =
@@ -156,7 +142,7 @@ router.get(
 
 router.get(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const userId =

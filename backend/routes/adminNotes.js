@@ -7,21 +7,7 @@ const router = express.Router();
 // ADMIN SECURITY
 // ======================================================
 
-function requireAdminKey(req, res, next) {
-  const adminKey = req.header("x-admin-key");
-
-  if (
-    !adminKey ||
-    adminKey !== process.env.ADMIN_KEY
-  ) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
-  }
-
-  next();
-}
+const requireAdmin = require("../middleware/requireAdmin");
 
 // ======================================================
 // FORMAT NOTE
@@ -73,7 +59,7 @@ function formatNote(note) {
 
 router.get(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const notes =
@@ -110,7 +96,7 @@ router.get(
 
 router.post(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const {
@@ -307,7 +293,7 @@ router.post(
 
 router.put(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const noteId =
@@ -493,7 +479,7 @@ router.put(
 
 router.delete(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const noteId =

@@ -41,6 +41,8 @@ const adminUsersRoutes = require("./routes/adminUsers");
 const aboutRoutes = require("./routes/about");
 const settingsRoutes = require("./routes/settings");
 const adminNotesRoutes = require("./routes/adminNotes");
+const adminAuthRoutes = require("./routes/adminAuth");
+const requireAdmin = require("./middleware/requireAdmin");
 
 
 // ======================================================
@@ -52,6 +54,23 @@ app.set("trust proxy", 1);
 
 app.use(cors());
 app.use(express.json());
+
+// Safety net for every /api/admin/* endpoint. Guessing a token is not
+// realistic (it is signed), so this mainly stops abuse/floods.
+const adminApiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many admin requests. Please slow down.",
+  },
+});
+
+app.use("/api/admin", adminApiLimiter);
+// Admin login + session check (/api/admin/login, /api/admin/session)
+app.use("/api/admin", adminAuthRoutes);
 app.use("/api/tests", testsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/contact", contactRouter);
@@ -1636,25 +1655,13 @@ app.get(
 
 app.get(
   "/api/admin/dashboard",
+  requireAdmin,
   async (req, res) => {
     try {
       // =================================================
       // ADMIN SECURITY
       // =================================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Unauthorized",
-        });
-      }
 
       // =================================================
       // TOTAL USERS - MONGODB
@@ -1855,20 +1862,9 @@ const totalTests =
 
 app.get(
   "/api/admin/orders-summary",
+  requireAdmin,
   async (req, res) => {
     try {
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       const totalOrders =
         await Order.countDocuments();
@@ -1937,24 +1933,13 @@ app.get(
 
 app.get(
   "/api/admin/orders",
+  requireAdmin,
   async (req, res) => {
     try {
       // =================================================
       // ADMIN SECURITY
       // =================================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // =================================================
       // FILTERS
@@ -2158,20 +2143,9 @@ app.get(
 
 app.get(
   "/api/admin/tests",
+  requireAdmin,
   async (req, res) => {
     try {
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // MongoDB se saare tests
       const testDocuments =
@@ -2275,24 +2249,13 @@ app.get(
 
 app.post(
   "/api/admin/tests",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // FORM DATA
@@ -2553,24 +2516,13 @@ app.post(
 
 app.put(
   "/api/admin/tests/:testId",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // TEST ID
@@ -2796,20 +2748,9 @@ app.put(
 
 app.get(
   "/api/admin/tests/:testId/questions",
+  requireAdmin,
   async (req, res) => {
     try {
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       const testId =
         String(
@@ -2979,24 +2920,13 @@ app.get(
 
 app.post(
   "/api/admin/tests/:testId/questions",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // TEST ID
@@ -3281,24 +3211,13 @@ app.post(
 
 app.put(
   "/api/admin/tests/:testId/questions/:questionId",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // PARAMS
@@ -3578,24 +3497,13 @@ app.put(
 
 app.delete(
   "/api/admin/tests/:testId/questions/:questionId",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // PARAMS
@@ -3695,24 +3603,13 @@ app.delete(
 
 app.delete(
   "/api/admin/tests/:testId",
+  requireAdmin,
   async (req, res) => {
     try {
       // ===============================================
       // ADMIN SECURITY
       // ===============================================
 
-      const adminKey =
-        req.header("x-admin-key");
-
-      if (
-        !adminKey ||
-        adminKey !== process.env.ADMIN_KEY
-      ) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
 
       // ===============================================
       // TEST ID
@@ -3815,44 +3712,6 @@ app.delete(
     }
   }
 );
-const adminVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message:
-      "Too many admin login attempts. Please try again after 15 minutes.",
-  },
-});
-
-
-
-// =====================================================
-// ADMIN KEY VERIFY
-// =====================================================
-
-app.post(
-  "/api/admin/verify-key",
-  adminVerifyLimiter,
-  (req, res) => {
-    const adminKey = req.headers["x-admin-key"];
-
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid admin key",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Admin key verified",
-    });
-  }
-);
-
 // ======================================================
 // 404 ROUTE
 // ======================================================

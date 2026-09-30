@@ -22,21 +22,7 @@ cloudinary.config({
    ADMIN SECURITY
 ========================================================= */
 
-function requireAdminKey(req, res, next) {
-  const adminKey = req.headers["x-admin-key"];
-
-  if (
-    !adminKey ||
-    adminKey !== process.env.ADMIN_KEY
-  ) {
-    return res.status(401).json({
-      message:
-        "Unauthorized admin request",
-    });
-  }
-
-  next();
-}
+const requireAdmin = require("../middleware/requireAdmin");
 
 /* =========================================================
    FORMAT BLOG
@@ -128,7 +114,7 @@ const upload = multer({
 
 router.post(
   "/upload-image",
-  requireAdminKey,
+  requireAdmin,
   upload.single("image"),
   async (req, res) => {
     try {
@@ -261,7 +247,7 @@ router.get("/", async (req, res) => {
 
 router.get(
   "/admin/all",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const blogDocuments =
@@ -364,7 +350,7 @@ router.get(
 
 router.post(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const {
@@ -515,7 +501,7 @@ router.post(
 
 router.put(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const id =
@@ -690,7 +676,7 @@ router.put(
 
 router.delete(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const id =

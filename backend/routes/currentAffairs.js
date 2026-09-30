@@ -52,17 +52,7 @@ const upload = multer({
 // ADMIN PROTECTION
 // =====================================================
 
-function requireAdminKey(req, res, next) {
-  const key = req.header("x-admin-key");
-
-  if (!key || key !== process.env.ADMIN_KEY) {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
-
-  next();
-}
+const requireAdmin = require("../middleware/requireAdmin");
 
 // =====================================================
 // HELPERS
@@ -111,7 +101,7 @@ function formatCurrentAffair(article) {
 
 router.post(
   "/upload-image",
-  requireAdminKey,
+  requireAdmin,
   upload.single("image"),
   async (req, res) => {
     try {
@@ -294,7 +284,7 @@ router.get("/:id", async (req, res) => {
 
 router.post(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const {
@@ -462,7 +452,7 @@ router.post(
 
 router.put(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const id =
@@ -664,7 +654,7 @@ router.put(
 
 router.delete(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const id =

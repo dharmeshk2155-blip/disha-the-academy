@@ -9,17 +9,7 @@ const router = express.Router();
 // ADMIN KEY SECURITY
 // =====================================================
 
-function requireAdminKey(req, res, next) {
-  const key = req.header("x-admin-key");
-
-  if (!key || key !== process.env.ADMIN_KEY) {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
-
-  next();
-}
+const requireAdmin = require("../middleware/requireAdmin");
 
 const emailRegex =
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -119,7 +109,7 @@ router.post("/", async (req, res) => {
 
 router.get(
   "/",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const contacts =
@@ -176,7 +166,7 @@ router.get(
 
 router.delete(
   "/:id",
-  requireAdminKey,
+  requireAdmin,
   async (req, res) => {
     try {
       const id =
