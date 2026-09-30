@@ -2141,3 +2141,23 @@ body:has(.admin-shell) .admin-shell {
 .admin-lock-page h2 {
   font-family: Arial, Helvetica, sans-serif !important;
 }
+/* =========================================================
+   FIX ADMIN PANEL SIDE GAPS
+   index.css caps #root at 1126px and centers it (for the
+   regular site). That constraint was squeezing the admin
+   panel's content area too, leaving gaps on the sides even
+   though the sidebar (position: fixed) looked full width.
+   This removes that cap specifically when an admin page is
+   showing, using the same body:has() pattern already used
+   elsewhere in this file for admin isolation.
+========================================================= */
+
+body:has(.admin-shell) #root,
+body:has(.admin-lock-page) #root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-inline: none;
+  text-align: left;
+  display: block;
+}
