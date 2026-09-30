@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -7,19 +8,55 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import "./Account.css";
+
 const API_BASE = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
   : import.meta.env.VITE_API_BASE ||
     "https://disha-the-academy.onrender.com";
 
-function Account() {
-  const navigate =
-    useNavigate();
+function getInitials(name) {
+  const cleanName = String(name || "").trim();
 
-  const [
-    user,
-    setUser,
-  ] = useState(null);
+  if (!cleanName) {
+    return "U";
+  }
+
+  return cleanName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase();
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleDateString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }
+  );
+}
+
+export default function Account() {
+  const navigate = useNavigate();
+
+  const [user, setUser] =
+    useState(null);
 
   const [
     purchasedNotes,
@@ -36,8 +73,28 @@ function Account() {
     setNotesError,
   ] = useState("");
 
+  const [
+    activeTab,
+    setActiveTab,
+  ] = useState("notes");
+
+  const [
+    search,
+    setSearch,
+  ] = useState("");
+
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState("all");
+
+  const [
+    downloadingId,
+    setDownloadingId,
+  ] = useState(null);
+
   // =====================================================
-  // LOAD USER FROM LOCAL STORAGE
+  // LOAD USER
   // =====================================================
 
   useEffect(() => {
@@ -49,14 +106,10 @@ function Account() {
 
       const parsedUser =
         savedUser
-          ? JSON.parse(
-              savedUser
-            )
+          ? JSON.parse(savedUser)
           : null;
 
-      setUser(
-        parsedUser
-      );
+      setUser(parsedUser);
     } catch (error) {
       console.error(
         "User data error:",
@@ -144,9 +197,7 @@ function Account() {
         }
 
         setPurchasedNotes(
-          Array.isArray(
-            data.notes
-          )
+          Array.isArray(data.notes)
             ? data.notes
             : []
         );
@@ -168,7 +219,12 @@ function Account() {
             "Unable to load purchased notes."
         );
       } finally {
-        setLoadingNotes(false);
+        if (
+          !controller.signal
+            .aborted
+        ) {
+          setLoadingNotes(false);
+        }
       }
     }
 
@@ -192,674 +248,584 @@ function Account() {
       "dishaToken"
     );
 
-    navigate(
-      "/login"
-    );
+    navigate("/login");
   }
 
   // =====================================================
-  // DATE FORMAT
+  // DOWNLOAD PDF
   // =====================================================
 
-  function formatDate(
-    value
+  async function handleDownload(
+    note
   ) {
-    if (!value) {
-      return "";
+    if (!note?.orderId) {
+      return;
     }
 
-    const date =
-      new Date(value);
+    try {
+      setDownloadingId(
+        note.orderId
+      );
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "";
-    }
+      const token =
+        localStorage.getItem(
+          "dishaToken"
+        );
 
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
+      if (!token) {
+        throw new Error(
+          "Please log in again."
+        );
       }
-    );
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/pdf/download/${encodeURIComponent(
+            note.orderId
+          )}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      if (!response.ok) {
+        const errorData =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        throw new Error(
+          errorData.error ||
+            "Unable to download PDF."
+        );
+      }
+
+      const blob =
+        await response.blob();
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+      const anchor =
+        document.createElement(
+          "a"
+        );
+
+      anchor.href = url;
+
+      anchor.download =
+        `${note.title || "note"}.pdf`;
+
+      document.body.appendChild(
+        anchor
+      );
+
+      anchor.click();
+
+      anchor.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(
+        "PDF download error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Unable to download PDF."
+      );
+    } finally {
+      setDownloadingId(null);
+    }
   }
 
   // =====================================================
-  // NO LOGIN
+  // CATEGORIES
+  // =====================================================
+
+  const categories =
+    useMemo(() => {
+      const values =
+        purchasedNotes
+          .map(
+            (note) =>
+              note.categoryTitle ||
+              note.category ||
+              ""
+          )
+          .filter(Boolean);
+
+      return [
+        ...new Set(values),
+      ];
+    }, [purchasedNotes]);
+
+  // =====================================================
+  // FILTER NOTES
+  // =====================================================
+
+  const filteredNotes =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      return purchasedNotes.filter(
+        (note) => {
+          const category =
+            String(
+              note.categoryTitle ||
+                note.category ||
+                ""
+            );
+
+          const categoryMatch =
+            selectedCategory ===
+              "all" ||
+            category ===
+              selectedCategory;
+
+          if (!categoryMatch) {
+            return false;
+          }
+
+          if (!query) {
+            return true;
+          }
+
+          const text = [
+            note.title,
+            note.categoryTitle,
+            note.subcategoryTitle,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          return text.includes(
+            query
+          );
+        }
+      );
+    }, [
+      purchasedNotes,
+      search,
+      selectedCategory,
+    ]);
+
+  // =====================================================
+  // LOGIN REQUIRED
   // =====================================================
 
   if (!user) {
     return (
-      <div
-        style={{
-          minHeight:
-            "80vh",
-
-          display:
-            "flex",
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-
-          padding:
-            "30px 20px",
-
-          textAlign:
-            "center",
-        }}
-      >
-
-        <div
-          style={{
-            maxWidth:
-              "500px",
-
-            width:
-              "100%",
-
-            padding:
-              "40px 30px",
-
-            background:
-              "#ffffff",
-
-            borderRadius:
-              "16px",
-
-            boxShadow:
-              "0 8px 30px rgba(0,0,0,0.08)",
-          }}
-        >
-
-          <div
-            style={{
-              fontSize:
-                "48px",
-
-              marginBottom:
-                "15px",
-            }}
-          >
+      <div className="account-login-page">
+        <div className="account-login-card">
+          <div className="account-lock-icon">
             🔐
           </div>
 
-          <h1
-            style={{
-              color:
-                "#071a49",
-
-              marginBottom:
-                "10px",
-            }}
-          >
+          <h1>
             Please Login
           </h1>
 
-          <p
-            style={{
-              color:
-                "#667085",
-
-              lineHeight:
-                "1.6",
-
-              marginBottom:
-                "25px",
-            }}
-          >
+          <p>
             You need to login to
-            view your account and
-            purchased notes.
+            view your account,
+            purchased notes and
+            test activity.
           </p>
 
           <button
             type="button"
             onClick={() =>
-              navigate(
-                "/login"
-              )
+              navigate("/login")
             }
-            style={{
-              padding:
-                "12px 25px",
-
-              border:
-                "none",
-
-              borderRadius:
-                "8px",
-
-              background:
-                "#f5b82e",
-
-              color:
-                "#071a49",
-
-              fontWeight:
-                "700",
-
-              cursor:
-                "pointer",
-            }}
           >
             Go to Login
           </button>
-
         </div>
-
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        minHeight:
-          "80vh",
+    <main className="account-page">
+      {/* ==============================================
+          HERO
+      ============================================== */}
 
-        padding:
-          "50px 20px",
-
-        background:
-          "#f5f7fb",
-      }}
-    >
-
-      <div
-        style={{
-          maxWidth:
-            "1000px",
-
-          margin:
-            "0 auto",
-        }}
-      >
-
-        {/* =================================================
-            PROFILE
-        ================================================= */}
-
-        <div
-          style={{
-            background:
-              "#ffffff",
-
-            padding:
-              "35px",
-
-            borderRadius:
-              "16px",
-
-            boxShadow:
-              "0 5px 25px rgba(0,0,0,0.06)",
-
-            marginBottom:
-              "30px",
-          }}
-        >
-
-          <h1
-            style={{
-              textAlign:
-                "center",
-
-              color:
-                "#071a49",
-
-              margin:
-                "0 0 30px",
-            }}
-          >
-            My Account
+      <section className="account-hero">
+        <div className="account-hero-copy">
+          <h1>
+            My{" "}
+            <span>
+              Account
+            </span>
           </h1>
 
-          {/* PROFILE ICON */}
-
-          <div
-            style={{
-              width:
-                "90px",
-
-              height:
-                "90px",
-
-              borderRadius:
-                "50%",
-
-              background:
-                "#f5b82e",
-
-              color:
-                "#071a49",
-
-              display:
-                "flex",
-
-              alignItems:
-                "center",
-
-              justifyContent:
-                "center",
-
-              fontSize:
-                "36px",
-
-              fontWeight:
-                "700",
-
-              margin:
-                "0 auto 30px",
-            }}
-          >
-            {user.fullName
-              ? user.fullName
-                  .charAt(0)
-                  .toUpperCase()
-              : "U"}
-          </div>
-
-          <div
-            style={{
-              display:
-                "grid",
-
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(200px, 1fr))",
-
-              gap:
-                "18px",
-
-              marginBottom:
-                "25px",
-            }}
-          >
-
-            {/* NAME */}
-
-            <div
-              style={{
-                padding:
-                  "16px",
-
-                background:
-                  "#f8fafc",
-
-                borderRadius:
-                  "10px",
-
-                border:
-                  "1px solid #e7ecf3",
-              }}
-            >
-              <strong
-                style={{
-                  color:
-                    "#667085",
-
-                  fontSize:
-                    "13px",
-                }}
-              >
-                Full Name
-              </strong>
-
-              <p
-                style={{
-                  margin:
-                    "7px 0 0",
-
-                  fontSize:
-                    "17px",
-
-                  fontWeight:
-                    "600",
-
-                  color:
-                    "#1d2939",
-                }}
-              >
-                {user.fullName ||
-                  "—"}
-              </p>
-            </div>
-
-            {/* EMAIL */}
-
-            <div
-              style={{
-                padding:
-                  "16px",
-
-                background:
-                  "#f8fafc",
-
-                borderRadius:
-                  "10px",
-
-                border:
-                  "1px solid #e7ecf3",
-              }}
-            >
-              <strong
-                style={{
-                  color:
-                    "#667085",
-
-                  fontSize:
-                    "13px",
-                }}
-              >
-                Email Address
-              </strong>
-
-              <p
-                style={{
-                  margin:
-                    "7px 0 0",
-
-                  fontSize:
-                    "17px",
-
-                  fontWeight:
-                    "600",
-
-                  color:
-                    "#1d2939",
-
-                  wordBreak:
-                    "break-word",
-                }}
-              >
-                {user.email ||
-                  "—"}
-              </p>
-            </div>
-
-            {/* MOBILE */}
-
-            <div
-              style={{
-                padding:
-                  "16px",
-
-                background:
-                  "#f8fafc",
-
-                borderRadius:
-                  "10px",
-
-                border:
-                  "1px solid #e7ecf3",
-              }}
-            >
-              <strong
-                style={{
-                  color:
-                    "#667085",
-
-                  fontSize:
-                    "13px",
-                }}
-              >
-                Mobile Number
-              </strong>
-
-              <p
-                style={{
-                  margin:
-                    "7px 0 0",
-
-                  fontSize:
-                    "17px",
-
-                  fontWeight:
-                    "600",
-
-                  color:
-                    "#1d2939",
-                }}
-              >
-                {user.mobile ||
-                  "—"}
-              </p>
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            onClick={
-              handleLogout
-            }
-            style={{
-              width:
-                "100%",
-
-              padding:
-                "13px",
-
-              border:
-                "none",
-
-              borderRadius:
-                "8px",
-
-              background:
-                "#071a49",
-
-              color:
-                "#ffffff",
-
-              fontSize:
-                "15px",
-
-              fontWeight:
-                "700",
-
-              cursor:
-                "pointer",
-            }}
-          >
-            Logout
-          </button>
-
+          <p>
+            Manage your profile,
+            purchases and account
+            settings.
+          </p>
         </div>
 
-        {/* =================================================
-            PURCHASED NOTES
-        ================================================= */}
-
-        <div
-          style={{
-            background:
-              "#ffffff",
-
-            padding:
-              "35px",
-
-            borderRadius:
-              "16px",
-
-            boxShadow:
-              "0 5px 25px rgba(0,0,0,0.06)",
-          }}
-        >
-
-          <div
-            style={{
-              marginBottom:
-                "25px",
-            }}
-          >
-            <span
-              style={{
-                color:
-                  "#b78300",
-
-                fontSize:
-                  "12px",
-
-                fontWeight:
-                  "800",
-
-                letterSpacing:
-                  "1px",
-              }}
-            >
-              MY LIBRARY
-            </span>
-
-            <h2
-              style={{
-                margin:
-                  "5px 0",
-
-                color:
-                  "#071a49",
-
-                fontSize:
-                  "27px",
-              }}
-            >
-              My Purchased Notes
-            </h2>
-
-            <p
-              style={{
-                margin:
-                  "6px 0 0",
-
-                color:
-                  "#667085",
-
-                lineHeight:
-                  "1.6",
-              }}
-            >
-              Access all study notes
-              purchased from your
-              account.
-            </p>
+        <div className="account-hero-art">
+          <div className="account-art-leaf">
+            🌿
           </div>
 
-          {/* LOADING */}
+          <div className="account-art-profile">
+            <span>
+              👤
+            </span>
+
+            <div className="account-cap">
+              🎓
+            </div>
+          </div>
+
+          <div className="account-books">
+            📚
+          </div>
+
+          <div className="account-success-card">
+            <span>
+              ✓ Learn
+            </span>
+
+            <span>
+              ✓ Practice
+            </span>
+
+            <span>
+              ✓ Improve
+            </span>
+
+            <strong>
+              Succeed
+            </strong>
+          </div>
+        </div>
+
+        {/* ==============================================
+            PROFILE CARD
+        ============================================== */}
+
+        <div className="account-profile-card">
+          <div className="account-profile-top">
+            <div className="account-profile-user">
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt=""
+                  className="account-avatar-image"
+                />
+              ) : (
+                <div className="account-avatar">
+                  {getInitials(
+                    user.fullName
+                  )}
+                </div>
+              )}
+
+              <div className="account-profile-name">
+                <h2>
+                  {user.fullName ||
+                    "Student"}
+                </h2>
+
+                <p>
+                  {user.email}
+                </p>
+
+                <span className="account-student-badge">
+                  👥 Registered
+                  Student
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="account-edit-btn"
+              onClick={() =>
+                setActiveTab(
+                  "settings"
+                )
+              }
+            >
+              ✎ Edit Profile
+            </button>
+          </div>
+
+          <div className="account-info-grid">
+            <div className="account-info-card">
+              <div className="account-info-icon">
+                ♙
+              </div>
+
+              <div>
+                <span>
+                  Full Name
+                </span>
+
+                <strong>
+                  {user.fullName ||
+                    "—"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="account-info-card">
+              <div className="account-info-icon">
+                ✉
+              </div>
+
+              <div>
+                <span>
+                  Email Address
+                </span>
+
+                <strong>
+                  {user.email ||
+                    "—"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="account-info-card">
+              <div className="account-info-icon">
+                ☎
+              </div>
+
+              <div className="account-mobile-data">
+                <div>
+                  <span>
+                    Mobile Number
+                  </span>
+
+                  <strong>
+                    {user.mobile ||
+                      "—"}
+                  </strong>
+                </div>
+
+                {!user.mobile && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveTab(
+                        "settings"
+                      )
+                    }
+                  >
+                    Add Number
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==============================================
+          ACCOUNT NAVIGATION
+      ============================================== */}
+
+      <nav className="account-navigation">
+        <button
+          type="button"
+          className={
+            activeTab === "notes"
+              ? "active"
+              : ""
+          }
+          onClick={() =>
+            setActiveTab("notes")
+          }
+        >
+          <span>▣</span>
+          My Purchased Notes
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              "/take-mock-test"
+            )
+          }
+        >
+          <span>▤</span>
+          My Tests
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              "/my-results"
+            )
+          }
+        >
+          <span>▥</span>
+          My Results
+        </button>
+
+        <button
+          type="button"
+          className={
+            activeTab ===
+            "settings"
+              ? "active"
+              : ""
+          }
+          onClick={() =>
+            setActiveTab(
+              "settings"
+            )
+          }
+        >
+          <span>⚙</span>
+          Account Settings
+        </button>
+
+        <button
+          type="button"
+          className="account-logout-nav"
+          onClick={
+            handleLogout
+          }
+        >
+          <span>↪</span>
+          Logout
+        </button>
+      </nav>
+
+      {/* ==============================================
+          PURCHASED NOTES
+      ============================================== */}
+
+      {activeTab ===
+        "notes" && (
+        <section className="account-library">
+          <div className="account-library-header">
+            <div className="account-library-title">
+              <div className="account-title-line" />
+
+              <div>
+                <h2>
+                  My Purchased
+                  Notes
+                </h2>
+
+                <p>
+                  Access all the
+                  study notes you
+                  have purchased
+                  from your account.
+                </p>
+              </div>
+            </div>
+
+            <div className="account-library-tools">
+              <div className="account-search">
+                <span>
+                  ⌕
+                </span>
+
+                <input
+                  type="text"
+                  value={search}
+                  placeholder="Search your notes..."
+                  onChange={(e) =>
+                    setSearch(
+                      e.target
+                        .value
+                    )
+                  }
+                />
+              </div>
+
+              <div className="account-category-select">
+                <span>
+                  ▽
+                </span>
+
+                <select
+                  value={
+                    selectedCategory
+                  }
+                  onChange={(e) =>
+                    setSelectedCategory(
+                      e.target
+                        .value
+                    )
+                  }
+                >
+                  <option value="all">
+                    All Categories
+                  </option>
+
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={
+                          category
+                        }
+                        value={
+                          category
+                        }
+                      >
+                        {
+                          category
+                        }
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
 
           {loadingNotes && (
-            <div
-              style={{
-                padding:
-                  "35px 20px",
-
-                textAlign:
-                  "center",
-
-                color:
-                  "#667085",
-              }}
-            >
+            <div className="account-message">
               Loading purchased
               notes...
             </div>
           )}
 
-          {/* ERROR */}
-
           {!loadingNotes &&
             notesError && (
-
-              <div
-                style={{
-                  padding:
-                    "16px",
-
-                  border:
-                    "1px solid #f1c0c0",
-
-                  borderRadius:
-                    "10px",
-
-                  background:
-                    "#fff2f2",
-
-                  color:
-                    "#a52727",
-
-                  marginBottom:
-                    "20px",
-                }}
-              >
+              <div className="account-error">
                 {notesError}
               </div>
-
             )}
-
-          {/* NO PURCHASE */}
 
           {!loadingNotes &&
             !notesError &&
             purchasedNotes.length ===
               0 && (
-
-              <div
-                style={{
-                  padding:
-                    "45px 20px",
-
-                  textAlign:
-                    "center",
-
-                  border:
-                    "1px dashed #cfd7e4",
-
-                  borderRadius:
-                    "12px",
-
-                  background:
-                    "#fafbfd",
-                }}
-              >
-
-                <div
-                  style={{
-                    fontSize:
-                      "42px",
-
-                    marginBottom:
-                      "12px",
-                  }}
-                >
+              <div className="account-empty">
+                <div>
                   📚
                 </div>
 
-                <h3
-                  style={{
-                    margin:
-                      "0 0 8px",
-
-                    color:
-                      "#253858",
-                  }}
-                >
-                  No Purchased Notes
+                <h3>
+                  No Purchased
+                  Notes
                 </h3>
 
-                <p
-                  style={{
-                    margin:
-                      "0 0 20px",
-
-                    color:
-                      "#758195",
-                  }}
-                >
+                <p>
                   Notes you purchase
                   will appear here.
                 </p>
@@ -871,365 +837,232 @@ function Account() {
                       "/notes"
                     )
                   }
-                  style={{
-                    padding:
-                      "11px 20px",
-
-                    border:
-                      "none",
-
-                    borderRadius:
-                      "8px",
-
-                    background:
-                      "#f5b82e",
-
-                    color:
-                      "#071a49",
-
-                    fontWeight:
-                      "700",
-
-                    cursor:
-                      "pointer",
-                  }}
                 >
                   Browse Notes
                 </button>
-
               </div>
-
             )}
-
-          {/* PURCHASE LIST */}
 
           {!loadingNotes &&
             !notesError &&
             purchasedNotes.length >
+              0 &&
+            filteredNotes.length ===
               0 && (
+              <div className="account-empty account-filter-empty">
+                <div>
+                  🔎
+                </div>
 
-              <div
-                style={{
-                  display:
-                    "grid",
+                <h3>
+                  No matching notes
+                </h3>
 
-                  gap:
-                    "15px",
-                }}
-              >
+                <p>
+                  Try another search
+                  or category.
+                </p>
+              </div>
+            )}
 
-                {purchasedNotes.map(
+          {!loadingNotes &&
+            !notesError &&
+            filteredNotes.length >
+              0 && (
+              <div className="account-notes-list">
+                {filteredNotes.map(
                   (note) => (
-
-                    <div
+                    <article
                       key={
                         note.orderId
                       }
-                      style={{
-                        display:
-                          "flex",
-
-                        alignItems:
-                          "center",
-
-                        justifyContent:
-                          "space-between",
-
-                        gap:
-                          "20px",
-
-                        padding:
-                          "20px",
-
-                        border:
-                          "1px solid #e2e8f0",
-
-                        borderRadius:
-                          "12px",
-
-                        background:
-                          "#ffffff",
-                      }}
+                      className="account-note-card"
                     >
+                      <div className="account-note-main">
+                        <div className="account-note-thumbnail">
+                          <div className="account-thumbnail-shape">
+                            📘
+                          </div>
 
-                      <div
-                        style={{
-                          display:
-                            "flex",
-
-                          gap:
-                            "15px",
-
-                          alignItems:
-                            "flex-start",
-
-                          minWidth:
-                            "0",
-                        }}
-                      >
-
-                        <div
-                          style={{
-                            width:
-                              "48px",
-
-                            height:
-                              "48px",
-
-                            flexShrink:
-                              "0",
-
-                            borderRadius:
-                              "10px",
-
-                            display:
-                              "flex",
-
-                            alignItems:
-                              "center",
-
-                            justifyContent:
-                              "center",
-
-                            background:
-                              "#eef4ff",
-
-                            fontSize:
-                              "24px",
-                          }}
-                        >
-                          📖
+                          <span className="account-pdf-tag">
+                            PDF
+                          </span>
                         </div>
 
-                        <div
-                          style={{
-                            minWidth:
-                              "0",
-                          }}
-                        >
+                        <div className="account-note-content">
+                          <div className="account-note-category">
+                            {note.categoryTitle ||
+                              "Study Note"}
+                          </div>
 
-                          <h3
-                            style={{
-                              margin:
-                                "0 0 5px",
-
-                              color:
-                                "#15294c",
-
-                              fontSize:
-                                "18px",
-                            }}
-                          >
-                            {note.title}
+                          <h3>
+                            {
+                              note.title
+                            }
                           </h3>
 
-                          <p
-                            style={{
-                              margin:
-                                "0 0 7px",
+                          {note.subcategoryTitle && (
+                            <strong className="account-note-subcategory">
+                              {
+                                note.subcategoryTitle
+                              }
+                            </strong>
+                          )}
 
-                              color:
-                                "#667085",
-
-                              fontSize:
-                                "13px",
-                            }}
-                          >
-                            {note.categoryTitle}
-
-                            {note.subcategoryTitle
-                              ? ` · ${note.subcategoryTitle}`
-                              : ""}
+                          <p>
+                            Complete study
+                            material for
+                            competitive exam
+                            preparation.
                           </p>
 
-                          <div
-                            style={{
-                              display:
-                                "flex",
-
-                              flexWrap:
-                                "wrap",
-
-                              gap:
-                                "8px",
-
-                              alignItems:
-                                "center",
-                            }}
-                          >
-
-                            <span
-                              style={{
-                                display:
-                                  "inline-block",
-
-                                padding:
-                                  "4px 8px",
-
-                                borderRadius:
-                                  "999px",
-
-                                background:
-                                  "#eaf8ef",
-
-                                color:
-                                  "#14743a",
-
-                                fontSize:
-                                  "11px",
-
-                                fontWeight:
-                                  "700",
-                              }}
-                            >
+                          <div className="account-note-meta">
+                            <span className="account-purchased-badge">
                               ✓ Purchased
                             </span>
 
                             {note.purchasedAt && (
-
-                              <span
-                                style={{
-                                  color:
-                                    "#8994a5",
-
-                                  fontSize:
-                                    "11px",
-                                }}
-                              >
+                              <span>
+                                ▣{" "}
                                 {formatDate(
                                   note.purchasedAt
                                 )}
                               </span>
-
                             )}
 
+                            <span>
+                              ▤ PDF Note
+                            </span>
                           </div>
-
                         </div>
-
                       </div>
 
-                      <div
-                        style={{
-                          display:
-                            "flex",
-
-                          flexDirection:
-                            "column",
-
-                          alignItems:
-                            "flex-end",
-
-                          gap:
-                            "10px",
-
-                          flexShrink:
-                            "0",
-                        }}
-                      >
-
-                        <strong
-                          style={{
-                            color:
-                              "#071a49",
-
-                            fontSize:
-                              "17px",
-                          }}
-                        >
-                          ₹{note.price}
+                      <div className="account-note-actions">
+                        <strong className="account-note-price">
+                          ₹
+                          {
+                            note.price
+                          }
                         </strong>
 
-                        {note.hasContent ? (
+                        <div className="account-note-buttons">
+                          {note.hasContent ? (
+                            <button
+                              type="button"
+                              className="account-read-btn"
+                              onClick={() =>
+                                navigate(
+                                  `/read-note/${note.noteId}?orderId=${encodeURIComponent(
+                                    note.orderId
+                                  )}`
+                                )
+                              }
+                            >
+                              ◉ Read Note
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="account-read-btn disabled"
+                            >
+                              Unavailable
+                            </button>
+                          )}
 
                           <button
                             type="button"
+                            className="account-download-btn"
+                            disabled={
+                              downloadingId ===
+                              note.orderId
+                            }
                             onClick={() =>
-                              navigate(
-                                `/read-note/${note.noteId}?orderId=${encodeURIComponent(
-                                  note.orderId
-                                )}`
+                              handleDownload(
+                                note
                               )
                             }
-                            style={{
-                              padding:
-                                "10px 16px",
-
-                              border:
-                                "none",
-
-                              borderRadius:
-                                "8px",
-
-                              background:
-                                "#071a49",
-
-                              color:
-                                "#ffffff",
-
-                              fontWeight:
-                                "700",
-
-                              cursor:
-                                "pointer",
-
-                              whiteSpace:
-                                "nowrap",
-                            }}
                           >
-                            Read Note →
+                            {downloadingId ===
+                            note.orderId
+                              ? "Downloading..."
+                              : "⇩ Download"}
                           </button>
-
-                        ) : (
-
-                          <button
-                            type="button"
-                            disabled
-                            style={{
-                              padding:
-                                "10px 16px",
-
-                              border:
-                                "none",
-
-                              borderRadius:
-                                "8px",
-
-                              background:
-                                "#e5e7eb",
-
-                              color:
-                                "#8a94a5",
-
-                              fontWeight:
-                                "700",
-
-                              cursor:
-                                "not-allowed",
-                            }}
-                          >
-                            Unavailable
-                          </button>
-
-                        )}
-
+                        </div>
                       </div>
-
-                    </div>
-
+                    </article>
                   )
                 )}
-
               </div>
-
             )}
+        </section>
+      )}
 
-        </div>
+      {/* ==============================================
+          SETTINGS
+      ============================================== */}
 
-      </div>
+      {activeTab ===
+        "settings" && (
+        <section className="account-settings-panel">
+          <div className="account-settings-heading">
+            <div className="account-title-line" />
 
-    </div>
+            <div>
+              <h2>
+                Account Settings
+              </h2>
+
+              <p>
+                Review your account
+                information.
+              </p>
+            </div>
+          </div>
+
+          <div className="account-settings-grid">
+            <div>
+              <span>
+                Full Name
+              </span>
+
+              <strong>
+                {user.fullName ||
+                  "—"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Email Address
+              </span>
+
+              <strong>
+                {user.email ||
+                  "—"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Mobile Number
+              </span>
+
+              <strong>
+                {user.mobile ||
+                  "Not added"}
+              </strong>
+            </div>
+          </div>
+
+          <div className="account-settings-note">
+            Profile editing can be
+            connected here when the
+            profile-update API is
+            added.
+          </div>
+        </section>
+      )}
+    </main>
   );
 }
-
-export default Account;
