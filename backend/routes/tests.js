@@ -3,6 +3,7 @@ const express = require("express");
 const Test = require("../models/Test");
 const Question = require("../models/Question");
 const Result = require("../models/Result");
+const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
 
@@ -125,6 +126,7 @@ router.get("/", async (req, res) => {
 
 router.get(
   "/results/:userId",
+  requireAuth,
   async (req, res) => {
     try {
       const userId =
@@ -136,6 +138,14 @@ router.get(
         return res.status(400).json({
           error:
             "User ID is required",
+        });
+      }
+
+      // Users can only read their OWN results
+      if (userId !== req.user.id) {
+        return res.status(403).json({
+          error:
+            "You can only view your own results.",
         });
       }
 
@@ -398,6 +408,7 @@ router.get(
 
 router.post(
   "/:id/submit",
+  requireAuth,
   async (req, res) => {
     try {
       const testId =
@@ -407,10 +418,17 @@ router.post(
           .trim()
           .toLowerCase();
 
-      const {
-        answers = {},
-        userId = null,
-      } = req.body;
+      const answers =
+        req.body &&
+        typeof req.body.answers ===
+          "object" &&
+        req.body.answers !== null
+          ? req.body.answers
+          : {};
+
+      // NEVER trust a userId sent by the browser.
+      // The result is always saved for the logged-in user.
+      const userId = req.user.id;
 
       const lang =
         req.query.lang === "hi"

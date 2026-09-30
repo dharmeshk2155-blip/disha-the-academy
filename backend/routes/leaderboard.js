@@ -7,7 +7,9 @@ const router = express.Router();
 
 // =====================================================
 // GET /api/leaderboard
-// Top 10 users by total score across all attempts
+// Top 10 users by total of their BEST score in each test.
+// Retaking the same test many times cannot raise a rank:
+// only the highest attempt per test counts.
 // =====================================================
 
 router.get("/", async (req, res) => {
@@ -29,14 +31,33 @@ router.get("/", async (req, res) => {
         },
 
         // -----------------------------------------
-        // GROUP RESULTS BY USER
+        // STEP 1: BEST SCORE PER USER PER TEST
+        // Many attempts of the same test collapse
+        // into a single row (the highest score).
         // -----------------------------------------
         {
           $group: {
-            _id: "$userId",
+            _id: {
+              userId: "$userId",
+              testId: "$testId",
+            },
+
+            bestScore: {
+              $max: "$score",
+            },
+          },
+        },
+
+        // -----------------------------------------
+        // STEP 2: TOTAL OF THOSE BEST SCORES PER USER
+        // testsTaken = number of DIFFERENT tests
+        // -----------------------------------------
+        {
+          $group: {
+            _id: "$_id.userId",
 
             totalScore: {
-              $sum: "$score",
+              $sum: "$bestScore",
             },
 
             testsTaken: {
@@ -84,9 +105,13 @@ router.get("/", async (req, res) => {
         // -----------------------------------------
         // SORT HIGHEST SCORE FIRST
         // -----------------------------------------
+        // Same score: fewer tests = ranked higher.
+        // _id keeps the order stable between requests.
         {
           $sort: {
             totalScore: -1,
+            testsTaken: 1,
+            _id: 1,
           },
         },
 

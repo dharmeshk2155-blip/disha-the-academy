@@ -219,20 +219,16 @@ export default function TestAttempt() {
               headers: {
                 "Content-Type":
                   "application/json",
+
+                Authorization: `Bearer ${localStorage.getItem(
+                  "dishaToken"
+                )}`,
               },
 
               body:
                 JSON.stringify({
                   answers:
                     submissionAnswers,
-
-                  userId:
-                    JSON.parse(
-                      localStorage.getItem(
-                        "dishaUser"
-                      ) ||
-                        "null"
-                    )?.id,
                 }),
             }
           );

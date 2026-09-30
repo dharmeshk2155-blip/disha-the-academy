@@ -45,6 +45,11 @@ resetOTPRequestedAt: {
   default: null,
 },
 
+    resetOTPAttempts: {
+      type: Number,
+      default: 0,
+    },
+
     loginOTPHash: {
       type: String,
       default: null,

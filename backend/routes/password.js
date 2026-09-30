@@ -1,5 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
@@ -9,6 +10,29 @@ const { sendOtpEmail } = require("../utils/mailer");
 
 const OTP_EXPIRY_MINUTES = 10;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
+const OTP_MAX_ATTEMPTS = 5;
+
+// Extra protection against spam / brute force (per IP)
+function limiter(max, minutes, message) {
+  return rateLimit({
+    windowMs: minutes * 60 * 1000,
+    limit: max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message },
+  });
+}
+
+const forgotLimiter = limiter(
+  10,
+  15,
+  "Too many OTP requests. Please try again after 15 minutes."
+);
+const resetLimiter = limiter(
+  20,
+  15,
+  "Too many attempts. Please try again after 15 minutes."
+);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -74,6 +98,7 @@ function otpHashesMatch(storedHash, providedOtp) {
 
 router.post(
   "/forgot-password",
+  forgotLimiter,
   async (req, res) => {
     try {
       const { email } = req.body;
@@ -182,6 +207,9 @@ router.post(
       user.resetOTPRequestedAt =
         new Date();
 
+      // New OTP = fresh set of attempts
+      user.resetOTPAttempts = 0;
+
       await user.save();
 
       // ------------------------------------------
@@ -252,6 +280,7 @@ router.post(
 
 router.post(
   "/reset-password",
+  resetLimiter,
   async (req, res) => {
     try {
       const {
@@ -333,12 +362,6 @@ router.post(
       // VERIFY OTP
       // ------------------------------------------
 
-      const otpMatches =
-        otpHashesMatch(
-          user.resetOTPHash,
-          otp
-        );
-
       const notExpired =
         user.resetOTPExpiry &&
         new Date(
@@ -346,16 +369,114 @@ router.post(
         ).getTime() >
           Date.now();
 
-      if (
-        !otpMatches ||
-        !notExpired
-      ) {
+      if (!user.resetOTPHash || !notExpired) {
         return res
           .status(400)
           .json({
             success: false,
             message:
               "Invalid or expired OTP",
+          });
+      }
+
+      // ------------------------------------------
+      // ATTEMPT LIMIT (max 5 tries per OTP)
+      // The attempt is counted atomically BEFORE the
+      // OTP is checked, so many parallel guesses
+      // cannot get around the limit.
+      // ------------------------------------------
+
+      const attemptedUser =
+        await User.findOneAndUpdate(
+          {
+            _id: user._id,
+            resetOTPHash:
+              user.resetOTPHash,
+          },
+          {
+            $inc: {
+              resetOTPAttempts: 1,
+            },
+          },
+          { new: true }
+        );
+
+      // OTP was replaced or cleared in the meantime
+      if (!attemptedUser) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Invalid or expired OTP",
+          });
+      }
+
+      const tooManyMessage =
+        "Too many wrong attempts. Please request a new OTP.";
+
+      async function lockOtp() {
+        // Keep resetOTPRequestedAt so the 60-second
+        // resend cooldown still applies.
+        await User.updateOne(
+          { _id: user._id },
+          {
+            $set: {
+              resetOTPHash: null,
+              resetOTPExpiry: null,
+              resetOTPAttempts: 0,
+            },
+          }
+        );
+      }
+
+      if (
+        attemptedUser.resetOTPAttempts >
+        OTP_MAX_ATTEMPTS
+      ) {
+        await lockOtp();
+
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: tooManyMessage,
+          });
+      }
+
+      // ------------------------------------------
+      // VERIFY OTP
+      // ------------------------------------------
+
+      const otpMatches =
+        otpHashesMatch(
+          user.resetOTPHash,
+          otp
+        );
+
+      if (!otpMatches) {
+        const attemptsLeft =
+          OTP_MAX_ATTEMPTS -
+          attemptedUser.resetOTPAttempts;
+
+        if (attemptsLeft <= 0) {
+          await lockOtp();
+
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: tooManyMessage,
+            });
+        }
+
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: `Invalid OTP. ${attemptsLeft} attempt${
+              attemptsLeft === 1 ? "" : "s"
+            } left.`,
           });
       }
 
@@ -380,6 +501,7 @@ router.post(
       user.resetOTPExpiry = null;
       user.resetOTPRequestedAt =
         null;
+      user.resetOTPAttempts = 0;
 
       await user.save();
 

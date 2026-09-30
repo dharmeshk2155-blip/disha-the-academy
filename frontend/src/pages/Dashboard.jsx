@@ -102,7 +102,14 @@ export default function Dashboard() {
         const response = await fetch(
           `${API_BASE}/api/tests/results/${encodeURIComponent(
             user.id
-          )}`
+          )}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem(
+                "dishaToken"
+              )}`,
+            },
+          }
         );
 
         if (!response.ok) {
