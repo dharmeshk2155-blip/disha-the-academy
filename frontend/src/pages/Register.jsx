@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import OtpStep from "../components/OtpStep";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://disha-the-academy.onrender.com";
+const API_BASE = import.meta.env.DEV
+  ? "http://127.0.0.1:5000"
+  : import.meta.env.VITE_API_BASE ||
+    "https://disha-the-academy.onrender.com";
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -18,6 +20,7 @@ function Register() {
   });
 
   const [message, setMessage] = useState("");
+  const [otpEmail, setOtpEmail] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] =
@@ -251,18 +254,10 @@ function Register() {
       const data =
         await response.json();
 
-      if (response.ok) {
-        setMessage(
-          "Account created successfully!"
+      if (response.ok && data.requiresOtp) {
+        setOtpEmail(
+          data.email || formData.email.trim().toLowerCase()
         );
-
-        setFormData({
-          name: "",
-          email: "",
-          mobile: "",
-          password: "",
-          confirmPassword: "",
-        });
       } else {
         setMessage(
           data.message ||
@@ -332,6 +327,16 @@ function Register() {
           Join Disha The Academy and start learning.
         </p>
 
+        {otpEmail ? (
+          <OtpStep
+            apiBase={API_BASE}
+            flow="register"
+            email={otpEmail}
+            onVerified={handleLoginSuccess}
+            onBack={() => setOtpEmail(null)}
+          />
+        ) : (
+          <>
         {/* GOOGLE */}
 
         <div className="google-login-wrapper login-animate-5">
@@ -622,6 +627,8 @@ function Register() {
           )}
 
         </form>
+          </>
+        )}
 
         {/* LOGIN */}
 

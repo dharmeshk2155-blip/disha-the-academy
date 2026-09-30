@@ -21,6 +21,7 @@ const Note = require("./models/Note");
 const Test = require("./models/Test");
 const Question = require("./models/Question");
 const authRoutes = require("./routes/auth");
+const otpAuthRoutes = require("./routes/otpAuth");
 const testsRouter = require("./routes/tests");
 const leaderboardRouter = require("./routes/leaderboard");
 const contactRouter = require("./routes/contact");
@@ -46,6 +47,9 @@ const adminNotesRoutes = require("./routes/adminNotes");
 // BASIC SETUP
 // ======================================================
 
+// Required on Render/Vercel/any proxy so rate limits use the real client IP
+app.set("trust proxy", 1);
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/tests", testsRouter);
@@ -55,6 +59,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/current-affairs", currentAffairsRoutes);
 app.use("/api", passwordRouter);
 app.use("/api/admin/users", adminUsersRoutes);
+app.use("/api", otpAuthRoutes);
 app.use("/api", authRoutes);
 
 

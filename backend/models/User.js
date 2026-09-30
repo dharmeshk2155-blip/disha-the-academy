@@ -45,6 +45,26 @@ resetOTPRequestedAt: {
   default: null,
 },
 
+    loginOTPHash: {
+      type: String,
+      default: null,
+    },
+
+    loginOTPExpiry: {
+      type: Date,
+      default: null,
+    },
+
+    loginOTPRequestedAt: {
+      type: Date,
+      default: null,
+    },
+
+    loginOTPAttempts: {
+      type: Number,
+      default: 0,
+    },
+
     authProvider: {
       type: String,
       enum: ["local", "google"],

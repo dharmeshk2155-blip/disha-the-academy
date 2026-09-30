@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import OtpStep from "../components/OtpStep";
 
 const API_BASE = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
@@ -16,6 +17,7 @@ function Login() {
   });
 
   const [message, setMessage] = useState("");
+  const [otpEmail, setOtpEmail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -128,7 +130,11 @@ function Login() {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.requiresOtp) {
+        setOtpEmail(
+          data.email || formData.email.trim().toLowerCase()
+        );
+      } else if (response.ok && data.success) {
         handleLoginSuccess(data);
       } else {
         setMessage(
@@ -202,6 +208,16 @@ function Login() {
           Login to continue your learning journey.
         </p>
 
+        {otpEmail ? (
+          <OtpStep
+            apiBase={API_BASE}
+            flow="login"
+            email={otpEmail}
+            onVerified={handleLoginSuccess}
+            onBack={() => setOtpEmail(null)}
+          />
+        ) : (
+          <>
         {/* GOOGLE SIGN IN */}
 
         <div className="google-login-wrapper login-animate-5">
@@ -397,6 +413,8 @@ function Login() {
           )}
 
         </form>
+          </>
+        )}
 
         {/* REGISTER */}
 

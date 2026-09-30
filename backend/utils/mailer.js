@@ -2,20 +2,43 @@
 // BREVO (formerly Sendinblue) TRANSACTIONAL EMAIL API
 // ======================================================
 // Render's free tier blocks outbound SMTP ports (465/587), so Gmail SMTP
-// via Nodemailer times out there. Brevo sends over plain HTTPS instead,
-// which is never blocked.
+// via Nodemailer times out there. Brevo sends over plain HTTPS instead.
 //
-// Setup (one-time):
-//   1. Sign up free at https://www.brevo.com
-//   2. Go to Senders & IP > Senders > add & verify the email address
-//      you want to send FROM (they email you a verification link)
-//   3. Go to SMTP & API > API Keys > create a new API key
-//   4. Set these env vars on Render:
-//        BREVO_API_KEY = the API key from step 3
-//        EMAIL_FROM    = the verified sender email from step 2
+// Env vars: BREVO_API_KEY, EMAIL_FROM (verified sender in Brevo)
 
-async function sendOtpEmail(toEmail, otp, name) {
-  const greetingName = name ? name : "there";
+const PURPOSES = {
+  reset: {
+    subject: "Your password reset OTP - Disha The Academy",
+    heading: "Password Reset Request",
+    intro:
+      "We received a request to reset your password. Use the OTP below to continue:",
+  },
+  signup: {
+    subject: "Verify your email - Disha The Academy",
+    heading: "Verify Your Email",
+    intro:
+      "Welcome to Disha The Academy! Use the OTP below to verify your email and finish creating your account:",
+  },
+  login: {
+    subject: "Your login OTP - Disha The Academy",
+    heading: "Login Verification",
+    intro:
+      "Someone is trying to log in to your account. Use the OTP below to continue:",
+  },
+};
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function sendOtpEmail(toEmail, otp, name, purpose = "reset") {
+  const config = PURPOSES[purpose] || PURPOSES.reset;
+  const greetingName = name ? escapeHtml(name) : "there";
 
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -30,16 +53,16 @@ async function sendOtpEmail(toEmail, otp, name) {
         email: process.env.EMAIL_FROM,
       },
       to: [{ email: toEmail }],
-      subject: "Your password reset OTP - Disha The Academy",
+      subject: config.subject,
       htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #eee; border-radius: 8px;">
-          <h2 style="color: #1a1a1a;">Password Reset Request</h2>
+          <h2 style="color: #1a1a1a;">${config.heading}</h2>
           <p>Hi ${greetingName},</p>
-          <p>We received a request to reset your password. Use the OTP below to continue:</p>
+          <p>${config.intro}</p>
           <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; background: #f5f5f5; padding: 16px; text-align: center; border-radius: 6px; margin: 16px 0;">
             ${otp}
           </div>
-          <p>This OTP is valid for <strong>10 minutes</strong>. If you did not request this, you can safely ignore this email.</p>
+          <p>This OTP is valid for <strong>10 minutes</strong>. Never share it with anyone. If this wasn't you, you can safely ignore this email.</p>
           <p style="color: #888; font-size: 12px; margin-top: 24px;">Disha The Academy</p>
         </div>
       `,
