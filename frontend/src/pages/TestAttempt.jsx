@@ -1,13 +1,13 @@
 import {
-  useEffect,
-  useState,
-  useRef,
   useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 
 import {
-  useParams,
   useNavigate,
+  useParams,
 } from "react-router-dom";
 
 import "./TestAttempt.css";
@@ -16,43 +16,86 @@ const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "http://localhost:5000";
 
-const LANGUAGES = [
-  "English",
-  "Hindi",
-];
+const LANGUAGES = ["English", "Hindi"];
 
-function formatTime(totalSeconds) {
-  const h = String(
-    Math.floor(totalSeconds / 3600)
-  ).padStart(2, "0");
+function getTimeParts(totalSeconds) {
+  const seconds = Math.max(
+    0,
+    Number(totalSeconds) || 0
+  );
 
-  const m = String(
-    Math.floor(
-      (totalSeconds % 3600) / 60
-    )
-  ).padStart(2, "0");
+  return {
+    hours: String(
+      Math.floor(seconds / 3600)
+    ).padStart(2, "0"),
 
-  const s = String(
-    totalSeconds % 60
-  ).padStart(2, "0");
+    minutes: String(
+      Math.floor((seconds % 3600) / 60)
+    ).padStart(2, "0"),
 
-  return `${h} : ${m} : ${s}`;
+    seconds: String(
+      seconds % 60
+    ).padStart(2, "0"),
+  };
+}
+
+function formatQuestionTime(totalSeconds) {
+  const seconds = Math.max(
+    0,
+    Number(totalSeconds) || 0
+  );
+
+  const minutes = Math.floor(
+    seconds / 60
+  );
+
+  const secs = seconds % 60;
+
+  return `${String(minutes).padStart(
+    2,
+    "0"
+  )}:${String(secs).padStart(2, "0")}`;
+}
+
+function getStoredUser() {
+  try {
+    return JSON.parse(
+      localStorage.getItem("dishaUser") ||
+        "null"
+    );
+  } catch {
+    return null;
+  }
+}
+
+function getInitials(name) {
+  const value = String(name || "").trim();
+
+  if (!value) {
+    return "S";
+  }
+
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 export default function TestAttempt() {
   const { testId } = useParams();
   const navigate = useNavigate();
 
-  const [test, setTest] =
-    useState(null);
+  const timerRef = useRef(null);
+  const questionTimerRef = useRef(null);
 
+  const [test, setTest] = useState(null);
   const [loading, setLoading] =
     useState(true);
+  const [error, setError] = useState(null);
 
-  const [error, setError] =
-    useState(null);
-
-  // Instructions / pre-start screen
   const [
     testStarted,
     setTestStarted,
@@ -61,30 +104,30 @@ export default function TestAttempt() {
   const [agreed, setAgreed] =
     useState(false);
 
-  const [
-    language,
-    setLanguage,
-  ] = useState("English");
+  const [language, setLanguage] =
+    useState("English");
 
   const [
     currentIndex,
     setCurrentIndex,
   ] = useState(0);
 
-  // Frontend internally stores:
-  // 0 = Option A
-  // 1 = Option B
-  // 2 = Option C
-  // 3 = Option D
+  // 0 = A
+  // 1 = B
+  // 2 = C
+  // 3 = D
   const [answers, setAnswers] =
     useState({});
 
   const [status, setStatus] =
     useState({});
 
+  const [timeLeft, setTimeLeft] =
+    useState(0);
+
   const [
-    timeLeft,
-    setTimeLeft,
+    questionTime,
+    setQuestionTime,
   ] = useState(0);
 
   const [
@@ -105,28 +148,42 @@ export default function TestAttempt() {
     setStartingTest,
   ] = useState(false);
 
-  const timerRef =
-    useRef(null);
+  const [paused, setPaused] =
+    useState(false);
+
+  const [
+    isFullscreen,
+    setIsFullscreen,
+  ] = useState(false);
+
+  const [
+    switchingLanguage,
+    setSwitchingLanguage,
+  ] = useState(false);
+
+  const currentUser = getStoredUser();
 
   // =====================================================
-  // FETCH BASIC TEST DATA
+  // FETCH TEST
   // =====================================================
 
   useEffect(() => {
-    fetch(
-      `${API_BASE}/api/tests/${testId}`
-    )
-      .then((res) => {
+    async function loadTest() {
+      try {
+        setLoading(true);
+
+        const res = await fetch(
+          `${API_BASE}/api/tests/${testId}`
+        );
+
         if (!res.ok) {
           throw new Error(
             "Test not found"
           );
         }
 
-        return res.json();
-      })
+        const data = await res.json();
 
-      .then((data) => {
         setTest(data);
 
         setTimeLeft(
@@ -136,34 +193,72 @@ export default function TestAttempt() {
         const initialStatus = {};
 
         data.questions.forEach(
-          (q, i) => {
+          (q, index) => {
             initialStatus[q.id] =
-              i === 0
+              index === 0
                 ? "notAnswered"
                 : "notVisited";
           }
         );
 
-        setStatus(
-          initialStatus
-        );
-
-        setLoading(false);
-      })
-
-      .catch((err) => {
+        setStatus(initialStatus);
+      } catch (err) {
         console.error(
           "Test loading error:",
           err
         );
 
-        setError(
-          err.message
-        );
-
+        setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadTest();
   }, [testId]);
+
+  // =====================================================
+  // FULLSCREEN STATE
+  // =====================================================
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(
+        Boolean(
+          document.fullscreenElement
+        )
+      );
+    }
+
+    document.addEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "fullscreenchange",
+        handleFullscreenChange
+      );
+    };
+  }, []);
+
+  async function toggleFullscreen() {
+    try {
+      if (
+        !document.fullscreenElement
+      ) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error(
+        "Fullscreen error:",
+        err
+      );
+    }
+  }
 
   // =====================================================
   // SUBMIT TEST
@@ -171,10 +266,7 @@ export default function TestAttempt() {
 
   const handleSubmit =
     useCallback(async () => {
-      if (
-        !test ||
-        submitting
-      ) {
+      if (!test || submitting) {
         return;
       }
 
@@ -184,15 +276,18 @@ export default function TestAttempt() {
         timerRef.current
       );
 
+      clearInterval(
+        questionTimerRef.current
+      );
+
       try {
         const langParam =
           language === "Hindi"
             ? "hi"
             : "en";
 
-        // IMPORTANT:
-        // Frontend stores options as 0,1,2,3
-        // Backend expects 1,2,3,4
+        // Frontend = 0,1,2,3
+        // Backend = 1,2,3,4
         const submissionAnswers =
           Object.fromEntries(
             Object.entries(
@@ -210,28 +305,33 @@ export default function TestAttempt() {
             )
           );
 
-        const res =
-          await fetch(
-            `${API_BASE}/api/tests/${testId}/submit?lang=${langParam}`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization: `Bearer ${localStorage.getItem(
-                  "dishaToken"
-                )}`,
-              },
-
-              body:
-                JSON.stringify({
-                  answers:
-                    submissionAnswers,
-                }),
-            }
+        const token =
+          localStorage.getItem(
+            "dishaToken"
           );
+
+        const res = await fetch(
+          `${API_BASE}/api/tests/${testId}/submit?lang=${langParam}`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              ...(token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                  }
+                : {}),
+            },
+
+            body: JSON.stringify({
+              answers:
+                submissionAnswers,
+            }),
+          }
+        );
 
         const data =
           await res.json();
@@ -244,10 +344,8 @@ export default function TestAttempt() {
           );
         }
 
-        setShowConfirm(
-          false
-        );
-
+        setShowConfirm(false);
+        setPaused(false);
         setResult(data);
       } catch (err) {
         console.error(
@@ -260,9 +358,7 @@ export default function TestAttempt() {
             "Failed to submit test. Please try again."
         );
 
-        setSubmitting(
-          false
-        );
+        setSubmitting(false);
       }
     }, [
       test,
@@ -274,7 +370,6 @@ export default function TestAttempt() {
 
   // =====================================================
   // START TEST
-  // Fetch questions in chosen language
   // =====================================================
 
   async function handleStartTest() {
@@ -286,10 +381,9 @@ export default function TestAttempt() {
           ? "hi"
           : "en";
 
-      const res =
-        await fetch(
-          `${API_BASE}/api/tests/${testId}?lang=${langParam}`
-        );
+      const res = await fetch(
+        `${API_BASE}/api/tests/${testId}?lang=${langParam}`
+      );
 
       if (!res.ok) {
         throw new Error(
@@ -307,24 +401,22 @@ export default function TestAttempt() {
       );
 
       setCurrentIndex(0);
-
+      setQuestionTime(0);
       setAnswers({});
+      setPaused(false);
 
       const initialStatus = {};
 
       data.questions.forEach(
-        (q, i) => {
+        (q, index) => {
           initialStatus[q.id] =
-            i === 0
+            index === 0
               ? "notAnswered"
               : "notVisited";
         }
       );
 
-      setStatus(
-        initialStatus
-      );
-
+      setStatus(initialStatus);
       setTestStarted(true);
     } catch (err) {
       console.error(
@@ -341,35 +433,34 @@ export default function TestAttempt() {
   }
 
   // =====================================================
-  // TIMER
+  // MAIN TIMER
   // =====================================================
 
   useEffect(() => {
     if (
       !test ||
       result ||
-      !testStarted
+      !testStarted ||
+      paused
     ) {
       return;
     }
 
     timerRef.current =
       setInterval(() => {
-        setTimeLeft(
-          (prev) => {
-            if (prev <= 1) {
-              clearInterval(
-                timerRef.current
-              );
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(
+              timerRef.current
+            );
 
-              handleSubmit();
+            handleSubmit();
 
-              return 0;
-            }
-
-            return prev - 1;
+            return 0;
           }
-        );
+
+          return prev - 1;
+        });
       }, 1000);
 
     return () =>
@@ -380,11 +471,95 @@ export default function TestAttempt() {
     test,
     result,
     testStarted,
+    paused,
     handleSubmit,
   ]);
 
   // =====================================================
-  // LOADING / ERROR
+  // CURRENT QUESTION TIMER
+  // =====================================================
+
+  useEffect(() => {
+    if (
+      !testStarted ||
+      result ||
+      paused
+    ) {
+      return;
+    }
+
+    questionTimerRef.current =
+      setInterval(() => {
+        setQuestionTime(
+          (prev) => prev + 1
+        );
+      }, 1000);
+
+    return () =>
+      clearInterval(
+        questionTimerRef.current
+      );
+  }, [
+    testStarted,
+    result,
+    paused,
+  ]);
+
+  // =====================================================
+  // LANGUAGE SWITCH
+  // =====================================================
+
+  async function handleLanguageChange(
+    event
+  ) {
+    const newLanguage =
+      event.target.value;
+
+    if (
+      newLanguage === language
+    ) {
+      return;
+    }
+
+    setSwitchingLanguage(true);
+
+    try {
+      const langParam =
+        newLanguage === "Hindi"
+          ? "hi"
+          : "en";
+
+      const res = await fetch(
+        `${API_BASE}/api/tests/${testId}?lang=${langParam}`
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "Unable to change language"
+        );
+      }
+
+      const data =
+        await res.json();
+
+      setTest(data);
+      setLanguage(newLanguage);
+    } catch (err) {
+      console.error(
+        "Language switch error:",
+        err
+      );
+
+      alert(
+        "Unable to change language."
+      );
+    } finally {
+      setSwitchingLanguage(false);
+    }
+  }
+
+  // =====================================================
+  // LOADING
   // =====================================================
 
   if (loading) {
@@ -412,7 +587,7 @@ export default function TestAttempt() {
   }
 
   // =====================================================
-  // INSTRUCTIONS SCREEN
+  // INSTRUCTIONS
   // =====================================================
 
   if (
@@ -422,19 +597,12 @@ export default function TestAttempt() {
     return (
       <div className="ta-instructions-page">
         <div className="ta-instructions-card">
-          <h2>
-            {test.title}
-          </h2>
+          <h2>{test.title}</h2>
 
           <p className="ta-instructions-sub">
-            {test.subject}
-            {" · "}
-            {
-              test.questions
-                .length
-            }{" "}
-            Questions
-            {" · "}
+            {test.subject} ·{" "}
+            {test.questions.length}{" "}
+            Questions ·{" "}
             {Math.floor(
               Number(
                 test.duration
@@ -450,80 +618,48 @@ export default function TestAttempt() {
           <ul className="ta-instructions-list">
             <li>
               The test contains{" "}
-              {
-                test.questions
-                  .length
-              }{" "}
-              questions, to be
-              answered in{" "}
-              {Math.floor(
-                Number(
-                  test.duration
-                ) / 60
-              )}{" "}
-              minutes.
-            </li>
-
-            <li>
-              Each question has
-              one correct answer.
-              Select the option you
-              think is correct.
+              {test.questions.length}{" "}
+              questions.
             </li>
 
             <li>
               Correct answer: +
-              {
-                test.marksPerCorrect
-              }{" "}
-              mark(s). Wrong answer:
-              -
-              {
-                test.negativeMarking
-              }{" "}
-              mark(s) (negative
-              marking).
+              {test.marksPerCorrect}{" "}
+              mark(s).
+            </li>
+
+            <li>
+              Wrong answer: -
+              {test.negativeMarking}{" "}
+              mark(s).
             </li>
 
             <li>
               Unanswered questions
-              carry no marks,
-              positive or negative.
+              carry no marks.
             </li>
 
             <li>
-              You can navigate
-              between questions
-              freely using the
-              question palette, and
-              change your answer any
-              time before submitting.
+              You can change your
+              answer before
+              submitting.
             </li>
 
             <li>
-              Use "Mark for Review
-              &amp; Next" to flag a
-              question and come back
-              to it later.
+              Use Mark for Review to
+              revisit questions.
             </li>
 
             <li>
-              The test will
-              auto-submit when the
-              timer reaches zero.
-            </li>
-
-            <li>
-              Do not refresh or
-              close the browser tab
-              during the test.
+              The test automatically
+              submits when the timer
+              reaches zero.
             </li>
           </ul>
 
           <div className="ta-language-select">
             <label htmlFor="ta-language">
-              Choose your language
-              for this test:
+              Choose language:
             </label>
 
             <select
@@ -554,20 +690,14 @@ export default function TestAttempt() {
               checked={agreed}
               onChange={(e) =>
                 setAgreed(
-                  e.target
-                    .checked
+                  e.target.checked
                 )
               }
             />
 
             I have read and
             understood the
-            instructions. I agree
-            that I will not engage
-            in any unfair practice
-            and understand that the
-            test may auto-submit
-            when time runs out.
+            instructions.
           </label>
 
           <button
@@ -590,7 +720,7 @@ export default function TestAttempt() {
   }
 
   // =====================================================
-  // RESULT VIEW
+  // RESULT
   // =====================================================
 
   if (result) {
@@ -610,7 +740,6 @@ export default function TestAttempt() {
               <span>
                 {result.score}
               </span>
-
               <label>
                 Score
               </label>
@@ -622,7 +751,6 @@ export default function TestAttempt() {
                   result.correctCount
                 }
               </span>
-
               <label>
                 Correct
               </label>
@@ -634,7 +762,6 @@ export default function TestAttempt() {
                   result.wrongCount
                 }
               </span>
-
               <label>
                 Wrong
               </label>
@@ -646,7 +773,6 @@ export default function TestAttempt() {
                   result.unansweredCount
                 }
               </span>
-
               <label>
                 Unanswered
               </label>
@@ -674,7 +800,7 @@ export default function TestAttempt() {
             result.review
           ) &&
             result.review.map(
-              (r, idx) => (
+              (r, index) => (
                 <div
                   key={
                     r.questionId
@@ -682,7 +808,7 @@ export default function TestAttempt() {
                   className={`ta-review-item ta-review-${r.status}`}
                 >
                   <p className="ta-review-q">
-                    Q{idx + 1}.{" "}
+                    Q{index + 1}.{" "}
                     {r.question}
                   </p>
 
@@ -692,17 +818,12 @@ export default function TestAttempt() {
                     ) &&
                       r.options.map(
                         (
-                          opt,
+                          option,
                           i
                         ) => {
-                          let cls =
+                          let className =
                             "ta-review-option";
 
-                          // Backend returns:
-                          // 1 = A
-                          // 2 = B
-                          // 3 = C
-                          // 4 = D
                           const optionNumber =
                             i + 1;
 
@@ -712,7 +833,7 @@ export default function TestAttempt() {
                               r.correctAnswer
                             )
                           ) {
-                            cls +=
+                            className +=
                               " correct";
                           }
 
@@ -726,7 +847,7 @@ export default function TestAttempt() {
                                 r.correctAnswer
                               )
                           ) {
-                            cls +=
+                            className +=
                               " wrong-selected";
                           }
 
@@ -736,11 +857,11 @@ export default function TestAttempt() {
                                 i
                               }
                               className={
-                                cls
+                                className
                               }
                             >
                               {
-                                opt
+                                option
                               }
                             </div>
                           );
@@ -763,7 +884,7 @@ export default function TestAttempt() {
   }
 
   // =====================================================
-  // TEST TAKING VIEW
+  // TEST VIEW
   // =====================================================
 
   const currentQ =
@@ -786,22 +907,24 @@ export default function TestAttempt() {
     Object.values(
       status
     ).reduce(
-      (acc, s) => {
+      (acc, currentStatus) => {
         if (
-          s === "answered"
+          currentStatus ===
+          "answered"
         ) {
           acc.answered++;
         } else if (
-          s === "marked"
+          currentStatus ===
+          "marked"
         ) {
           acc.marked++;
         } else if (
-          s ===
+          currentStatus ===
           "markedAnswered"
         ) {
           acc.markedAnswered++;
         } else if (
-          s ===
+          currentStatus ===
           "notAnswered"
         ) {
           acc.notAnswered++;
@@ -820,42 +943,34 @@ export default function TestAttempt() {
       }
     );
 
-  // =====================================================
-  // SELECT OPTION
-  // =====================================================
+  const timer =
+    getTimeParts(timeLeft);
 
   function selectOption(
     optionIndex
   ) {
-    setAnswers(
-      (prev) => ({
-        ...prev,
-        [currentQ.id]:
-          optionIndex,
-      })
-    );
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQ.id]:
+        optionIndex,
+    }));
   }
 
-  // =====================================================
-  // GO TO QUESTION
-  // =====================================================
-
-  function goToQuestion(
-    index
-  ) {
+  function goToQuestion(index) {
     setCurrentIndex(index);
+    setQuestionTime(0);
 
-    const q =
+    const question =
       test.questions[index];
 
     setStatus((prev) => {
       if (
-        prev[q.id] ===
+        prev[question.id] ===
         "notVisited"
       ) {
         return {
           ...prev,
-          [q.id]:
+          [question.id]:
             "notAnswered",
         };
       }
@@ -864,71 +979,53 @@ export default function TestAttempt() {
     });
   }
 
-  // =====================================================
-  // SAVE & NEXT
-  // =====================================================
-
   function saveAndNext() {
     const hasAnswer =
       answers[currentQ.id] !==
       undefined;
 
-    setStatus(
-      (prev) => ({
-        ...prev,
+    setStatus((prev) => ({
+      ...prev,
 
-        [currentQ.id]:
-          hasAnswer
-            ? "answered"
-            : "notAnswered",
-      })
-    );
+      [currentQ.id]:
+        hasAnswer
+          ? "answered"
+          : "notAnswered",
+    }));
 
     if (
       currentIndex <
-      test.questions.length -
-        1
+      test.questions.length - 1
     ) {
       goToQuestion(
         currentIndex + 1
       );
     }
   }
-
-  // =====================================================
-  // MARK FOR REVIEW
-  // =====================================================
 
   function markForReviewAndNext() {
     const hasAnswer =
       answers[currentQ.id] !==
       undefined;
 
-    setStatus(
-      (prev) => ({
-        ...prev,
+    setStatus((prev) => ({
+      ...prev,
 
-        [currentQ.id]:
-          hasAnswer
-            ? "markedAnswered"
-            : "marked",
-      })
-    );
+      [currentQ.id]:
+        hasAnswer
+          ? "markedAnswered"
+          : "marked",
+    }));
 
     if (
       currentIndex <
-      test.questions.length -
-        1
+      test.questions.length - 1
     ) {
       goToQuestion(
         currentIndex + 1
       );
     }
   }
-
-  // =====================================================
-  // CLEAR RESPONSE
-  // =====================================================
 
   function clearResponse() {
     setAnswers((prev) => {
@@ -943,231 +1040,434 @@ export default function TestAttempt() {
       return next;
     });
 
-    setStatus(
-      (prev) => ({
-        ...prev,
+    setStatus((prev) => ({
+      ...prev,
 
-        [currentQ.id]:
-          "notAnswered",
-      })
-    );
+      [currentQ.id]:
+        "notAnswered",
+    }));
   }
-
-  // =====================================================
-  // MAIN TEST UI
-  // =====================================================
 
   return (
     <div className="ta-page">
-      <div className="ta-topbar">
-        <div>
-          <span className="ta-test-title">
-            {test.title}
-          </span>
+      {/* ================= TOP HEADER ================= */}
 
-          <span className="ta-lang-badge">
-            {language}
-          </span>
+      <header className="ta-exam-header">
+        <div className="ta-header-title">
+          {test.title}
         </div>
 
-        <div className="ta-timer">
-          <span className="ta-timer-label">
+        <div className="ta-header-timer">
+          <span className="ta-clock-icon">
+            ◷
+          </span>
+
+          <span className="ta-time-label">
             Time Left
           </span>
 
-          <span className="ta-timer-value">
-            {formatTime(
-              timeLeft
-            )}
+          <span className="ta-time-box">
+            {timer.hours}
+          </span>
+
+          <strong>:</strong>
+
+          <span className="ta-time-box">
+            {timer.minutes}
+          </span>
+
+          <strong>:</strong>
+
+          <span className="ta-time-box">
+            {timer.seconds}
           </span>
         </div>
 
-        <button
-          className="ta-btn ta-btn-danger"
-          onClick={() =>
-            setShowConfirm(
-              true
-            )
-          }
-        >
-          Submit Test
+        <div className="ta-header-actions">
+          <button
+            className="ta-fullscreen-btn"
+            onClick={
+              toggleFullscreen
+            }
+          >
+            ⛶{" "}
+            {isFullscreen
+              ? "Exit Full Screen"
+              : "Switch Full Screen"}
+          </button>
+
+          <button
+            className="ta-pause-btn"
+            onClick={() =>
+              setPaused(
+                (prev) => !prev
+              )
+            }
+          >
+            {paused
+              ? "▶ Resume"
+              : "Ⅱ Pause"}
+          </button>
+        </div>
+      </header>
+
+      {/* ================= SECTION BAR ================= */}
+
+      <div className="ta-section-bar">
+        <span className="ta-section-heading">
+          SECTIONS
+        </span>
+
+        <button className="ta-section-tab active">
+          Test
         </button>
       </div>
 
-      <div className="ta-body">
-        <div className="ta-main">
-          <div className="ta-q-header">
-            <span>
+      {/* ================= BODY ================= */}
+
+      <div className="ta-exam-layout">
+        {/* LEFT MAIN */}
+
+        <main className="ta-question-panel">
+          <div className="ta-question-header">
+            <div className="ta-question-number">
               Question No.{" "}
               {currentIndex + 1}
-            </span>
+            </div>
 
-            <div className="ta-marks">
-              <span className="ta-mark-pos">
-                +
-                {
-                  test.marksPerCorrect
-                }
-              </span>
+            <div className="ta-question-tools">
+              <div className="ta-marks-block">
+                <span className="ta-meta-label">
+                  Marks
+                </span>
 
-              <span className="ta-mark-neg">
-                -
-                {
-                  test.negativeMarking
-                }
-              </span>
+                <span className="ta-positive-mark">
+                  +
+                  {
+                    test.marksPerCorrect
+                  }
+                </span>
+
+                <span className="ta-negative-mark">
+                  -
+                  {
+                    test.negativeMarking
+                  }
+                </span>
+              </div>
+
+              <div className="ta-question-time">
+                <span>
+                  Time
+                </span>
+
+                <strong>
+                  {formatQuestionTime(
+                    questionTime
+                  )}
+                </strong>
+              </div>
+
+              <div className="ta-language-tool">
+                <span>
+                  View in
+                </span>
+
+                <select
+                  value={language}
+                  onChange={
+                    handleLanguageChange
+                  }
+                  disabled={
+                    switchingLanguage
+                  }
+                >
+                  {LANGUAGES.map(
+                    (lang) => (
+                      <option
+                        key={lang}
+                        value={lang}
+                      >
+                        {lang}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
             </div>
           </div>
 
-          <p className="ta-q-text">
-            {
-              currentQ.question
-            }
-          </p>
+          {paused && (
+            <div className="ta-pause-overlay">
+              <div>
+                <div className="ta-pause-symbol">
+                  Ⅱ
+                </div>
 
-          <div className="ta-options">
-            {currentQ.options.map(
-              (opt, i) => (
-                <label
-                  key={i}
-                  className={`ta-option ${
-                    selectedOption ===
-                    i
-                      ? "selected"
-                      : ""
-                  }`}
+                <h2>
+                  Test Paused
+                </h2>
+
+                <p>
+                  Click Resume to
+                  continue your test.
+                </p>
+
+                <button
+                  className="ta-pause-resume"
+                  onClick={() =>
+                    setPaused(false)
+                  }
                 >
-                  <input
-                    type="radio"
-                    name={`q-${currentQ.id}`}
-                    checked={
-                      selectedOption ===
-                      i
-                    }
-                    onChange={() =>
-                      selectOption(
-                        i
-                      )
-                    }
-                  />
+                  Resume Test
+                </button>
+              </div>
+            </div>
+          )}
 
-                  {opt}
-                </label>
-              )
-            )}
+          <div className="ta-question-content">
+            <p className="ta-q-text">
+              {
+                currentQ.question
+              }
+            </p>
+
+            <div className="ta-options">
+              {currentQ.options.map(
+                (option, index) => (
+                  <label
+                    key={index}
+                    className={`ta-option ${
+                      selectedOption ===
+                      index
+                        ? "selected"
+                        : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`question-${currentQ.id}`}
+                      checked={
+                        selectedOption ===
+                        index
+                      }
+                      onChange={() =>
+                        selectOption(
+                          index
+                        )
+                      }
+                    />
+
+                    <span>
+                      {option}
+                    </span>
+                  </label>
+                )
+              )}
+
+              <label
+                className={`ta-option ta-not-attempted ${
+                  selectedOption ===
+                  undefined
+                    ? "selected"
+                    : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${currentQ.id}`}
+                  checked={
+                    selectedOption ===
+                    undefined
+                  }
+                  onChange={
+                    clearResponse
+                  }
+                />
+
+                <span>
+                  Question Not
+                  Attempted
+                </span>
+              </label>
+            </div>
           </div>
 
-          <div className="ta-actions">
-            <button
-              className="ta-btn ta-btn-outline"
-              onClick={
-                markForReviewAndNext
-              }
-            >
-              Mark for Review
-              &amp; Next
-            </button>
+          <div className="ta-bottom-actions">
+            <div className="ta-bottom-left">
+              <button
+                className="ta-action-outline"
+                onClick={
+                  markForReviewAndNext
+                }
+              >
+                ♧ Mark for Review
+                &amp; Next
+              </button>
+
+              <button
+                className="ta-action-outline"
+                onClick={
+                  clearResponse
+                }
+              >
+                ↻ Clear Response
+              </button>
+            </div>
 
             <button
-              className="ta-btn ta-btn-outline"
-              onClick={
-                clearResponse
-              }
-            >
-              Clear Response
-            </button>
-
-            <button
-              className="ta-btn ta-btn-primary"
+              className="ta-save-next"
               onClick={
                 saveAndNext
               }
             >
-              Save &amp; Next
+              Save &amp; Next →
             </button>
           </div>
-        </div>
+        </main>
 
-        <div className="ta-sidebar">
-          <div className="ta-status-summary">
-            <div className="ta-status-row">
-              <span className="ta-dot answered" />
+        {/* RIGHT SIDEBAR */}
 
-              Answered:{" "}
-              {counts.answered +
-                counts.markedAnswered}
-            </div>
-
-            <div className="ta-status-row">
-              <span className="ta-dot marked" />
-
-              Marked:{" "}
-              {counts.marked}
-            </div>
-
-            <div className="ta-status-row">
-              <span className="ta-dot not-visited" />
-
-              Not Visited:{" "}
-              {
-                counts.notVisited
-              }
-            </div>
-
-            <div className="ta-status-row">
-              <span className="ta-dot not-answered" />
-
-              Not Answered:{" "}
-              {
-                counts.notAnswered
-              }
-            </div>
-          </div>
-
-          <h4 className="ta-section-label">
-            Questions
-          </h4>
-
-          <div className="ta-q-grid">
-            {test.questions.map(
-              (q, i) => (
-                <button
-                  key={q.id}
-                  className={`ta-q-btn ${
-                    status[
-                      q.id
-                    ] ||
-                    "notVisited"
-                  } ${
-                    i ===
-                    currentIndex
-                      ? "current"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    goToQuestion(
-                      i
-                    )
-                  }
-                >
-                  {i + 1}
-                </button>
-              )
+        <aside className="ta-right-sidebar">
+          <div className="ta-student-card">
+            {currentUser?.picture ? (
+              <img
+                src={
+                  currentUser.picture
+                }
+                alt=""
+                className="ta-student-image"
+              />
+            ) : (
+              <div className="ta-student-avatar">
+                {getInitials(
+                  currentUser?.fullName
+                )}
+              </div>
             )}
+
+            <div>
+              <strong>
+                {currentUser?.fullName ||
+                  "Student"}
+              </strong>
+
+              <span>
+                Student
+              </span>
+            </div>
           </div>
 
-          <button
-            className="ta-btn ta-btn-danger ta-submit-wide"
-            onClick={() =>
-              setShowConfirm(
-                true
-              )
-            }
-          >
-            Submit Test
-          </button>
-        </div>
+          <div className="ta-summary-card">
+            <div className="ta-summary-item">
+              <span className="ta-summary-number answered">
+                {counts.answered}
+              </span>
+
+              <span>
+                Answered
+              </span>
+            </div>
+
+            <div className="ta-summary-item">
+              <span className="ta-summary-number marked">
+                {counts.marked}
+              </span>
+
+              <span>
+                Marked
+              </span>
+            </div>
+
+            <div className="ta-summary-item">
+              <span className="ta-summary-number not-visited">
+                {
+                  counts.notVisited
+                }
+              </span>
+
+              <span>
+                Not Visited
+              </span>
+            </div>
+
+            <div className="ta-summary-item">
+              <span className="ta-summary-number marked-answered">
+                {
+                  counts.markedAnswered
+                }
+              </span>
+
+              <span>
+                Marked and answered
+              </span>
+            </div>
+
+            <div className="ta-summary-item">
+              <span className="ta-summary-number not-answered">
+                {
+                  counts.notAnswered
+                }
+              </span>
+
+              <span>
+                Not Answered
+              </span>
+            </div>
+          </div>
+
+          <div className="ta-palette-card">
+            <div className="ta-palette-title">
+              SECTION : Test
+            </div>
+
+            <div className="ta-q-grid">
+              {test.questions.map(
+                (question, index) => (
+                  <button
+                    key={
+                      question.id
+                    }
+                    className={`ta-q-btn ${
+                      status[
+                        question.id
+                      ] ||
+                      "notVisited"
+                    } ${
+                      index ===
+                      currentIndex
+                        ? "current"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      goToQuestion(
+                        index
+                      )
+                    }
+                  >
+                    {index + 1}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          <div className="ta-sidebar-bottom">
+            <button
+              className="ta-submit-test-btn"
+              onClick={() =>
+                setShowConfirm(
+                  true
+                )
+              }
+            >
+              ➤ Submit Test
+            </button>
+          </div>
+        </aside>
       </div>
+
+      {/* ================= SUBMIT MODAL ================= */}
 
       {showConfirm && (
         <div className="ta-modal-overlay">
@@ -1185,6 +1485,7 @@ export default function TestAttempt() {
                 test.questions
                   .length
               }
+
               <br />
 
               Not Answered:{" "}
