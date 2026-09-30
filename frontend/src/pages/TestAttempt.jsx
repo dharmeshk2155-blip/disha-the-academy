@@ -1003,29 +1003,44 @@ export default function TestAttempt() {
     }
   }
 
-  function markForReviewAndNext() {
-    const hasAnswer =
-      answers[currentQ.id] !==
-      undefined;
+ function markForReviewAndNext() {
+  const hasAnswer =
+    answers[currentQ.id] !== undefined;
 
-    setStatus((prev) => ({
+  const nextIndex = currentIndex + 1;
+
+  setStatus((prev) => {
+    const updatedStatus = {
       ...prev,
 
-      [currentQ.id]:
-        hasAnswer
-          ? "markedAnswered"
-          : "marked",
-    }));
+      [currentQ.id]: hasAnswer
+        ? "markedAnswered"
+        : "marked",
+    };
 
-    if (
-      currentIndex <
-      test.questions.length - 1
-    ) {
-      goToQuestion(
-        currentIndex + 1
-      );
+    // Next question ko visited/not answered mark karo
+    if (nextIndex < test.questions.length) {
+      const nextQuestion =
+        test.questions[nextIndex];
+
+      if (
+        updatedStatus[nextQuestion.id] ===
+        "notVisited"
+      ) {
+        updatedStatus[nextQuestion.id] =
+          "notAnswered";
+      }
     }
+
+    return updatedStatus;
+  });
+
+  // Next question open karo
+  if (nextIndex < test.questions.length) {
+    setCurrentIndex(nextIndex);
+    setQuestionTime(0);
   }
+}
 
   function clearResponse() {
     setAnswers((prev) => {
@@ -1295,15 +1310,13 @@ export default function TestAttempt() {
 
           <div className="ta-bottom-actions">
             <div className="ta-bottom-left">
-              <button
-                className="ta-action-outline"
-                onClick={
-                  markForReviewAndNext
-                }
-              >
-                ♧ Mark for Review
-                &amp; Next
-              </button>
+             <button
+  type="button"
+  className="ta-action-outline"
+  onClick={markForReviewAndNext}
+>
+  ♧ Mark for Review &amp; Next
+</button>
 
               <button
                 className="ta-action-outline"
