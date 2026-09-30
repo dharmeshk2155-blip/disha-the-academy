@@ -1,50 +1,29 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { useEffect, useState } from "react";
 import {
   Link,
   useParams,
   useSearchParams,
 } from "react-router-dom";
 
+import "./OrderSuccess.css";
+
 const API_BASE = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
   : import.meta.env.VITE_API_BASE ||
     "https://disha-the-academy.onrender.com";
 
-function OrderSuccess() {
-  const { id } =
-    useParams();
+export default function OrderSuccess() {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
 
-  const [searchParams] =
-    useSearchParams();
+  const orderId = searchParams.get("orderId");
 
-  const orderId =
-    searchParams.get(
-      "orderId"
-    );
+  const [note, setNote] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [
-    note,
-    setNote,
-  ] = useState(null);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
-
-  const [
-    downloading,
-    setDownloading,
-  ] = useState(false);
+  const [downloading, setDownloading] =
+    useState(false);
 
   const [
     downloadError,
@@ -52,7 +31,7 @@ function OrderSuccess() {
   ] = useState("");
 
   // =====================================================
-  // LOAD NOTE INFORMATION
+  // LOAD NOTE
   // =====================================================
 
   useEffect(() => {
@@ -64,21 +43,19 @@ function OrderSuccess() {
         setLoading(true);
         setError("");
 
-        const response =
-          await fetch(
-            `${API_BASE}/api/notes/${encodeURIComponent(
-              id
-            )}`,
-            {
-              signal:
-                controller.signal,
-            }
-          );
+        const response = await fetch(
+          `${API_BASE}/api/notes/${encodeURIComponent(
+            id
+          )}`,
+          {
+            signal:
+              controller.signal,
+          }
+        );
 
-        const data =
-          await response
-            .json()
-            .catch(() => ({}));
+        const data = await response
+          .json()
+          .catch(() => ({}));
 
         if (!response.ok) {
           throw new Error(
@@ -90,8 +67,7 @@ function OrderSuccess() {
         setNote(data);
       } catch (err) {
         if (
-          err.name ===
-          "AbortError"
+          err.name === "AbortError"
         ) {
           return;
         }
@@ -108,7 +84,11 @@ function OrderSuccess() {
 
         setNote(null);
       } finally {
-        setLoading(false);
+        if (
+          !controller.signal.aborted
+        ) {
+          setLoading(false);
+        }
       }
     }
 
@@ -120,8 +100,7 @@ function OrderSuccess() {
   }, [id]);
 
   // =====================================================
-  // LEGACY PDF DOWNLOAD
-  // Only for old notes that still have PDFs
+  // PDF DOWNLOAD
   // =====================================================
 
   async function handleDownload() {
@@ -147,7 +126,6 @@ function OrderSuccess() {
 
     try {
       setDownloading(true);
-
       setDownloadError("");
 
       const response =
@@ -188,8 +166,7 @@ function OrderSuccess() {
           "a"
         );
 
-      link.href =
-        blobUrl;
+      link.href = blobUrl;
 
       link.download =
         `${note.title || "note"}.pdf`;
@@ -199,7 +176,6 @@ function OrderSuccess() {
       );
 
       link.click();
-
       link.remove();
 
       window.URL.revokeObjectURL(
@@ -227,43 +203,34 @@ function OrderSuccess() {
   if (loading) {
     return (
       <main className="success-page">
-
-        <div className="success-card">
-
-          <div className="success-icon">
-            ✓
+        <div className="success-center">
+          <div className="success-icon success-loading-icon">
+            …
           </div>
 
           <h1>
             Loading Purchase...
           </h1>
 
-          <p className="success-info">
+          <p>
             Please wait while we
             prepare your study
             material.
           </p>
-
         </div>
-
       </main>
     );
   }
 
   // =====================================================
-  // NOTE ERROR
+  // ERROR
   // =====================================================
 
-  if (
-    error ||
-    !note
-  ) {
+  if (error || !note) {
     return (
       <main className="success-page">
-
-        <div className="success-card">
-
-          <div className="success-icon">
+        <div className="success-center">
+          <div className="success-icon success-error-icon">
             !
           </div>
 
@@ -272,48 +239,36 @@ function OrderSuccess() {
             Unavailable
           </h1>
 
-          <p className="success-info">
+          <p>
             {error ||
               "We could not find this note."}
           </p>
 
           <Link
             to="/notes"
-            className="success-shopping-button"
+            className="success-secondary-btn"
           >
             ← Back to Notes
           </Link>
-
         </div>
-
       </main>
     );
   }
 
   return (
     <main className="success-page">
+      <div className="success-decoration success-decoration-one" />
+      <div className="success-decoration success-decoration-two" />
 
-      {/* CONFETTI */}
-
-      <span className="success-confetti confetti-1" />
-      <span className="success-confetti confetti-2" />
-      <span className="success-confetti confetti-3" />
-      <span className="success-confetti confetti-4" />
-      <span className="success-confetti confetti-5" />
-      <span className="success-confetti confetti-6" />
-      <span className="success-confetti confetti-7" />
-      <span className="success-confetti confetti-8" />
-
-      <div className="success-card">
-
-        {/* SUCCESS ICON */}
+      <section className="success-layout">
+        {/* SUCCESS */}
 
         <div className="success-icon">
           ✓
         </div>
 
         <div className="success-verified">
-          ✓ Payment Verified
+          ✓ PAYMENT VERIFIED
         </div>
 
         <h1>
@@ -321,189 +276,127 @@ function OrderSuccess() {
         </h1>
 
         <p className="success-message">
-          Thank you for your purchase.
-          Your study material is now
-          available.
+          Thank you for your
+          purchase. Your study
+          material is now available.
         </p>
 
-        {/* NOTE INFORMATION */}
+        {/* NOTE */}
 
-        <div className="success-note">
+        <div className="success-note-row">
+          <div className="success-note-info">
+            <span className="success-note-label">
+              PURCHASED NOTE
+            </span>
 
-          <h2>
-            {note.title}
-          </h2>
+            <h2>
+              {note.title}
+            </h2>
 
-          <p>
-            {note.categoryTitle}
+            <p>
+              {note.categoryTitle}
 
-            {note.subcategoryTitle
-              ? ` · ${note.subcategoryTitle}`
-              : ""}
-          </p>
+              {note.subcategoryTitle
+                ? ` · ${note.subcategoryTitle}`
+                : ""}
+            </p>
+          </div>
 
-          <strong>
+          <strong className="success-price">
             ₹{note.price}
           </strong>
-
         </div>
 
+        {/* ORDER ID */}
+
         {orderId && (
-          <p className="success-info">
-            Order ID:{" "}
+          <div className="success-order-id">
+            <span>
+              Order ID
+            </span>
+
             <strong>
               {orderId}
             </strong>
-          </p>
+          </div>
         )}
 
-        {/* =================================================
-            NEW ARTICLE NOTE
-        ================================================= */}
+        {/* ACTIONS */}
 
-        {note.hasContent &&
-          orderId && (
-
-            <>
-              <div className="success-ready">
-                📖 Your online study
-                note is ready
-              </div>
-
+        <div className="success-actions">
+          {note.hasContent &&
+            orderId && (
               <Link
                 to={`/read-note/${note.id}?orderId=${encodeURIComponent(
                   orderId
                 )}`}
-                className="success-download-button"
-                style={{
-                  textDecoration:
-                    "none",
-
-                  display:
-                    "flex",
-
-                  alignItems:
-                    "center",
-
-                  justifyContent:
-                    "center",
-
-                  gap:
-                    "8px",
-                }}
+                className="success-primary-btn"
               >
-                <span>
-                  📖
-                </span>
-
-                Read Your Note
+                📖 Read Your Note
               </Link>
+            )}
 
-              <p className="success-info">
-                Open the note online.
-                You can also print it
-                or save it as PDF from
-                the reader.
-              </p>
-            </>
-
-          )}
-
-        {/* =================================================
-            LEGACY PDF SUPPORT
-        ================================================= */}
-
-        {note.pdf &&
-          orderId && (
-
-            <>
+          {note.pdf &&
+            orderId && (
               <button
                 type="button"
                 onClick={
                   handleDownload
                 }
-                className="success-shopping-button"
                 disabled={
                   downloading
                 }
-                style={{
-                  marginTop:
-                    "10px",
-
-                  cursor:
-                    downloading
-                      ? "not-allowed"
-                      : "pointer",
-                }}
+                className="success-secondary-btn"
               >
                 {downloading
                   ? "Preparing PDF..."
-                  : "↓ Download Original PDF"}
+                  : "↓ Download PDF"}
               </button>
+            )}
 
-              {downloadError && (
-                <p
-                  className="success-info"
-                  style={{
-                    color:
-                      "#b42318",
-                  }}
-                >
-                  {downloadError}
-                </p>
-              )}
-            </>
+          <Link
+            to="/account"
+            className="success-secondary-btn"
+          >
+            My Account
+          </Link>
 
-          )}
+          <Link
+            to="/notes"
+            className="success-text-btn"
+          >
+            Continue Shopping →
+          </Link>
+        </div>
 
-        {/* NO ORDER ID */}
+        {downloadError && (
+          <p className="success-download-error">
+            {downloadError}
+          </p>
+        )}
 
         {!orderId && (
-
-          <p
-            className="success-info"
-            style={{
-              color:
-                "#b42318",
-            }}
-          >
+          <p className="success-download-error">
             Order ID is missing.
             Please open this purchase
             from your account.
           </p>
-
         )}
 
-        {/* CONTINUE */}
+        <div className="success-security">
+          <span>
+            🔒 Secure Payment
+          </span>
 
-        <div
-          style={{
-            marginTop:
-              "18px",
-          }}
-        >
-          <Link
-            to="/notes"
-            className="success-shopping-button"
-          >
-            ← Continue Shopping
-          </Link>
+          <span>
+            ✓ Payment Verified
+          </span>
+
+          <span>
+            ⚡ Instant Access
+          </span>
         </div>
-
-        {/* SECURITY */}
-
-        <p className="success-security">
-          🔒 Secure Payment
-          &nbsp;•&nbsp;
-          ✓ Payment Verified
-          &nbsp;•&nbsp;
-          ⚡ Instant Access
-        </p>
-
-      </div>
-
+      </section>
     </main>
   );
 }
-
-export default OrderSuccess;
