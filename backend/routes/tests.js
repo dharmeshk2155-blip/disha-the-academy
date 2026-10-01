@@ -4,6 +4,7 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const Result = require("../models/Result");
 const requireAuth = require("../middleware/requireAuth");
+const requireSubscription = require("../middleware/requireSubscription");
 
 const router = express.Router();
 
@@ -232,6 +233,8 @@ router.get(
 
 router.get(
   "/:id",
+  requireAuth,
+  requireSubscription,
   async (req, res) => {
     try {
       const testId =
@@ -409,6 +412,7 @@ router.get(
 router.post(
   "/:id/submit",
   requireAuth,
+  requireSubscription,
   async (req, res) => {
     try {
       const testId =

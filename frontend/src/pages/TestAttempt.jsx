@@ -18,6 +18,64 @@ const API_BASE =
 
 const LANGUAGES = ["English", "Hindi"];
 
+// Login token ke saath header (subscription check ke liye)
+function authHeaders() {
+  const token =
+    localStorage.getItem(
+      "dishaToken"
+    );
+
+  return token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+}
+
+// 403 NO_ACTIVE_SUBSCRIPTION ko alag pehchanne ke liye
+async function readTestResponse(res) {
+  const data =
+    await res
+      .json()
+      .catch(() => ({}));
+
+  if (
+    res.status === 403 &&
+    data?.code ===
+      "NO_ACTIVE_SUBSCRIPTION"
+  ) {
+    const err = new Error(
+      data.error ||
+        "Please subscribe to attempt mock tests."
+    );
+
+    err.code =
+      "NO_ACTIVE_SUBSCRIPTION";
+
+    throw err;
+  }
+
+  if (res.status === 401) {
+    const err = new Error(
+      data.error ||
+        "Please log in again."
+    );
+
+    err.code = "LOGIN_REQUIRED";
+
+    throw err;
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      data?.error ||
+        "Test not found"
+    );
+  }
+
+  return data;
+}
+
 function getTimeParts(totalSeconds) {
   const seconds = Math.max(
     0,
@@ -95,6 +153,7 @@ export default function TestAttempt() {
   const [loading, setLoading] =
     useState(true);
   const [error, setError] = useState(null);
+  const [needsSubscription, setNeedsSubscription] = useState(false);
 
   const [
     testStarted,
@@ -173,16 +232,14 @@ export default function TestAttempt() {
         setLoading(true);
 
         const res = await fetch(
-          `${API_BASE}/api/tests/${testId}`
+          `${API_BASE}/api/tests/${testId}`,
+          {
+            headers: authHeaders(),
+          }
         );
 
-        if (!res.ok) {
-          throw new Error(
-            "Test not found"
-          );
-        }
-
-        const data = await res.json();
+        const data =
+          await readTestResponse(res);
 
         setTest(data);
 
@@ -207,6 +264,13 @@ export default function TestAttempt() {
           "Test loading error:",
           err
         );
+
+        if (
+          err.code ===
+          "NO_ACTIVE_SUBSCRIPTION"
+        ) {
+          setNeedsSubscription(true);
+        }
 
         setError(err.message);
       } finally {
@@ -382,17 +446,14 @@ export default function TestAttempt() {
           : "en";
 
       const res = await fetch(
-        `${API_BASE}/api/tests/${testId}?lang=${langParam}`
+        `${API_BASE}/api/tests/${testId}?lang=${langParam}`,
+        {
+          headers: authHeaders(),
+        }
       );
 
-      if (!res.ok) {
-        throw new Error(
-          "Failed to load test"
-        );
-      }
-
       const data =
-        await res.json();
+        await readTestResponse(res);
 
       setTest(data);
 
@@ -423,6 +484,14 @@ export default function TestAttempt() {
         "Start test error:",
         err
       );
+
+      if (
+        err.code ===
+        "NO_ACTIVE_SUBSCRIPTION"
+      ) {
+        navigate("/pricing");
+        return;
+      }
 
       alert(
         "Failed to start test. Please try again."
@@ -530,17 +599,14 @@ export default function TestAttempt() {
           : "en";
 
       const res = await fetch(
-        `${API_BASE}/api/tests/${testId}?lang=${langParam}`
+        `${API_BASE}/api/tests/${testId}?lang=${langParam}`,
+        {
+          headers: authHeaders(),
+        }
       );
 
-      if (!res.ok) {
-        throw new Error(
-          "Unable to change language"
-        );
-      }
-
       const data =
-        await res.json();
+        await readTestResponse(res);
 
       setTest(data);
       setLanguage(newLanguage);
@@ -566,6 +632,32 @@ export default function TestAttempt() {
     return (
       <div className="ta-status">
         Loading test...
+      </div>
+    );
+  }
+
+  if (needsSubscription) {
+    return (
+      <div className="ta-status">
+        <h2>
+          Subscription required
+        </h2>
+
+        <p>
+          Mock tests are available
+          with an active
+          subscription. Plans start
+          at just ₹69.
+        </p>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate("/pricing")
+          }
+        >
+          View Plans
+        </button>
       </div>
     );
   }

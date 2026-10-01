@@ -42,6 +42,7 @@ const aboutRoutes = require("./routes/about");
 const settingsRoutes = require("./routes/settings");
 const adminNotesRoutes = require("./routes/adminNotes");
 const adminAuthRoutes = require("./routes/adminAuth");
+const subscriptionRoutes = require("./routes/subscription");
 const requireAdmin = require("./middleware/requireAdmin");
 
 
@@ -87,6 +88,7 @@ app.use("/api/faq", faqRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/admin/notes",adminNotesRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 // ======================================================
 // FILE PATHS
 // ======================================================

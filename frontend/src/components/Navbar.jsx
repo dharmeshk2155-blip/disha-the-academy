@@ -17,6 +17,7 @@ import {
   Menu,
   Search,
   Languages,
+  Crown,
 } from "lucide-react";
 
 import "../pages/ExtraPages.css";
@@ -101,6 +102,11 @@ function Navbar() {
           <NavLink to="/notes" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
             <BookOpen size={21} strokeWidth={1.8} />
             <span>Notes</span>
+          </NavLink>
+
+          <NavLink to="/pricing" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
+            <Crown size={21} strokeWidth={1.8} />
+            <span>Pricing</span>
           </NavLink>
 
           <NavLink to="/take-mock-test" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>

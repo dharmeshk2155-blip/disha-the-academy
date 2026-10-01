@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Account from "./pages/Account";
 import NoteDetails from "./pages/NoteDetails";
 import Checkout from "./pages/Checkout";
+import Pricing from "./pages/Pricing";
 import OrderSuccess from "./pages/OrderSuccess";
 
 import ExamGroups from "./pages/ExamGroups";
@@ -128,6 +129,11 @@ function App() {
           <Route
             path="/note/:id"
             element={<NoteDetails />}
+          />
+
+          <Route
+            path="/pricing"
+            element={<Pricing />}
           />
           <Route
   path="/read-note/:id"
