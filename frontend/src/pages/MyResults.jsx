@@ -866,6 +866,10 @@ export default function MyResults() {
                   <option>
                     Mock Test
                   </option>
+
+                  <option>
+                    Free Test
+                  </option>
                 </select>
 
                 <ChevronDown />

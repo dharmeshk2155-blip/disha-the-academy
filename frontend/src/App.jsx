@@ -15,6 +15,9 @@ import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+import FreeTests from "./pages/FreeTests";
+import FreeExamTests from "./pages/FreeExamTests";
+import FreeTestAttempt from "./pages/FreeTestAttempt";
 
 import PopularExamsSub from "./pages/PopularExamsSub";
 import PopularExamsTests from "./pages/PopularExamsTests";
@@ -138,6 +141,17 @@ function App() {
           <Route
   path="/read-note/:id"
   element={<ReadNote />}
+/>
+<Route path="/free-tests" element={<FreeTests />} />
+
+<Route
+  path="/free-tests/:categoryId/:examId"
+  element={<FreeExamTests />}
+/>
+
+<Route
+  path="/free-tests/attempt/:testId"
+  element={<FreeTestAttempt />}
 />
 
           {/* ==================================================

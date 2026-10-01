@@ -107,6 +107,11 @@ function Navbar() {
           <NavLink to="/pricing" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}> 
             <Crown size={21} strokeWidth={1.8} /> 
             <span>Pricing</span> 
+          </NavLink>
+
+          <NavLink to="/free-tests" onClick={closeMenu} className={({ isActive }) => isActive ? "active" : ""}>
+            <ClipboardList size={21} strokeWidth={1.8} />
+            <span>Free Tests</span>
           </NavLink> 
  
           <NavLink to="/take-mock-test" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}> 

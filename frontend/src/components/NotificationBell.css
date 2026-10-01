@@ -1,0 +1,284 @@
+/* ======================================================
+   NOTIFICATION BELL (top bar)
+   .xp-notif-wrapper / .xp-notif-btn come from ExtraPages.css
+   (position + icon colour); everything new is prefixed nb-.
+====================================================== */
+
+.nb {
+  position: relative;
+}
+
+.nb-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nb-btn:focus-visible,
+.nb-toast button:focus-visible,
+.nb-item:focus-visible {
+  outline: 3px solid #1a56db;
+  outline-offset: 2px;
+}
+
+/* unread count on the bell */
+.nb-badge {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: #d92626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 13px;
+  text-align: center;
+}
+
+/* ---------- the list ---------- */
+
+.nb-panel {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 400;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(70vh, 460px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e3e9f3;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(11, 31, 77, 0.18);
+  text-align: left;
+}
+
+.nb-panel-head {
+  position: sticky;
+  top: 0;
+  padding: 13px 16px;
+  background: #fff;
+  border-bottom: 1px solid #eef2f8;
+  color: #0b1f4d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.nb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nb-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nb-list li:last-child .nb-item {
+  border-bottom: 0;
+}
+
+.nb-item:hover {
+  background: #f6f9fe;
+}
+
+.nb-item.is-new {
+  background: #f1f6ff;
+}
+
+.nb-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+}
+
+.nb-item-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nb-item-text strong {
+  color: #0b1f4d;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.nb-item-text > span {
+  color: #3d4f73;
+  font-size: 12.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.nb-item-text small {
+  color: #6b7a96;
+  font-size: 11.5px;
+}
+
+.nb-new-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #1a56db;
+}
+
+.nb-empty {
+  margin: 0;
+  padding: 22px 18px;
+  color: #55657f;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---------- popup under the bell (after login) ---------- */
+
+.nb-toast {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 410;
+  display: flex;
+  align-items: stretch;
+  width: min(300px, calc(100vw - 24px));
+  background: #0b1f4d;
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(11, 31, 77, 0.32);
+  text-align: left;
+  animation: nb-toast-in 0.2s ease-out;
+}
+
+/* little arrow pointing at the bell */
+.nb-toast::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 14px;
+  width: 11px;
+  height: 11px;
+  background: #0b1f4d;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.nb-toast-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 6px 12px 12px;
+  background: none;
+  border: 0;
+  border-radius: 12px 0 0 12px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nb-toast-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #f7c04a;
+  color: #0b1f4d;
+}
+
+.nb-toast-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nb-toast-text strong {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.nb-toast-text small {
+  color: #c9d7f2;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.nb-toast-close {
+  align-self: flex-start;
+  margin: 6px 6px 0 0;
+  padding: 5px;
+  display: inline-flex;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: #c9d7f2;
+  cursor: pointer;
+}
+
+.nb-toast-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+@keyframes nb-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-toast {
+    animation: none;
+  }
+}
+
+/* On phones the bell is not at the screen edge, so pin the
+   list and the popup to the screen instead of to the bell. */
+@media (max-width: 600px) {
+  .nb-panel,
+  .nb-toast {
+    position: fixed;
+    top: 62px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .nb-toast::before {
+    display: none;
+  }
+}

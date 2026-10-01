@@ -1,133 +1,220 @@
 const express = require("express");
 
-const Test = require("../models/Test");
-const Question = require("../models/Question");
-const Result = require("../models/Result");
-const requireAuth = require("../middleware/requireAuth");
-const requireSubscription = require("../middleware/requireSubscription");
+const Test =
+  require("../models/Test");
 
-const router = express.Router();
+const Question =
+  require("../models/Question");
 
-// =====================================================
-// GET /api/tests
-// Public test list - metadata only
-// =====================================================
+const Result =
+  require("../models/Result");
 
-router.get("/", async (req, res) => {
-  try {
-    // -----------------------------------------
-    // LOAD ACTIVE TESTS
-    // -----------------------------------------
+const requireAuth =
+  require("../middleware/requireAuth");
 
-    const testDocuments =
-      await Test.find({
+const requireTestAccess =
+  require("../middleware/requireTestAccess");
+
+const router =
+  express.Router();
+
+/* =====================================================
+   GET /api/tests
+
+   Public test list.
+
+   Examples:
+
+   /api/tests
+   = all active tests
+
+   /api/tests?free=true
+   = free tests only
+
+   /api/tests?free=false
+   = premium tests only
+===================================================== */
+
+router.get(
+  "/",
+  async (req, res) => {
+    try {
+      const filter = {
         isActive: true,
-      })
-        .sort({
-          category: 1,
-          title: 1,
-        })
-        .lean();
+      };
 
-    // -----------------------------------------
-    // COUNT QUESTIONS
-    // -----------------------------------------
+      // ==============================
+      // FREE FILTER
+      // ==============================
 
-    const questionCounts =
-      await Question.aggregate([
-        {
-          $group: {
-            _id: "$testId",
+      if (
+        req.query.free === "true"
+      ) {
+        filter.isFree = true;
+      }
 
-            totalQuestions: {
-              $sum: 1,
+      if (
+        req.query.free === "false"
+      ) {
+        filter.isFree = {
+          $ne: true,
+        };
+      }
+
+      // ==============================
+      // LOAD TESTS
+      // ==============================
+
+      const testDocuments =
+        await Test.find(filter)
+          .sort({
+            topCategory: 1,
+            subExam: 1,
+            title: 1,
+          })
+          .lean();
+
+      // ==============================
+      // QUESTION COUNTS
+      // ==============================
+
+      const testIds =
+        testDocuments.map(
+          (test) =>
+            test.testId
+        );
+
+      let questionCountMap =
+        new Map();
+
+      if (testIds.length > 0) {
+        const questionCounts =
+          await Question.aggregate([
+            {
+              $match: {
+                testId: {
+                  $in: testIds,
+                },
+              },
             },
-          },
-        },
-      ]);
 
-    const questionCountMap =
-      new Map(
-        questionCounts.map(
-          (item) => [
-            String(item._id),
-            Number(
-              item.totalQuestions
-            ) || 0,
-          ]
-        )
+            {
+              $group: {
+                _id: "$testId",
+
+                totalQuestions: {
+                  $sum: 1,
+                },
+              },
+            },
+          ]);
+
+        questionCountMap =
+          new Map(
+            questionCounts.map(
+              (item) => [
+                String(item._id),
+
+                Number(
+                  item.totalQuestions
+                ) || 0,
+              ]
+            )
+          );
+      }
+
+      // ==============================
+      // RESPONSE
+      // ==============================
+
+      const tests =
+        testDocuments.map(
+          (test) => ({
+            id:
+              test.testId,
+
+            testId:
+              test.testId,
+
+            category:
+              test.category,
+
+            title:
+              test.title,
+
+            subject:
+              test.subject,
+
+            duration:
+              Number(
+                test.duration
+              ) || 0,
+
+            marksPerCorrect:
+              Number(
+                test.marksPerCorrect
+              ) || 0,
+
+            negativeMarking:
+              Number(
+                test.negativeMarking
+              ) || 0,
+
+            topCategory:
+              test.topCategory,
+
+            subExam:
+              test.subExam,
+
+            isFree:
+              test.isFree === true,
+
+            testType:
+              test.isFree === true
+                ? "Free Test"
+                : "Mock Test",
+
+            totalQuestions:
+              questionCountMap.get(
+                String(
+                  test.testId
+                )
+              ) || 0,
+          })
+        );
+
+      return res.json(
+        tests
+      );
+    } catch (error) {
+      console.error(
+        "MongoDB public tests error:",
+        error
       );
 
-    // -----------------------------------------
-    // FORMAT RESPONSE
-    // Same structure as old SQL API
-    // -----------------------------------------
-
-    const tests =
-      testDocuments.map(
-        (test) => ({
-          id:
-            test.testId,
-
-          category:
-            test.category,
-
-          title:
-            test.title,
-
-          subject:
-            test.subject,
-
-          duration:
-            Number(
-              test.duration
-            ) || 0,
-
-          marksPerCorrect:
-            Number(
-              test.marksPerCorrect
-            ) || 0,
-
-          negativeMarking:
-            Number(
-              test.negativeMarking
-            ) || 0,
-
-          topCategory:
-            test.topCategory,
-
-          subExam:
-            test.subExam,
-
-          totalQuestions:
-            questionCountMap.get(
-              String(test.testId)
-            ) || 0,
-        })
-      );
-
-    return res.json(tests);
-  } catch (error) {
-    console.error(
-      "MongoDB public tests error:",
-      error
-    );
-
-    return res.status(500).json({
-      error:
-        "Failed to load tests",
-    });
+      return res
+        .status(500)
+        .json({
+          error:
+            "Failed to load tests",
+        });
+    }
   }
-});
+);
 
-// =====================================================
-// GET /api/tests/results/:userId
-// User test history
-// =====================================================
+/* =====================================================
+   GET /api/tests/results/:userId
+
+   My Results
+
+   Free + premium results both returned.
+===================================================== */
 
 router.get(
   "/results/:userId",
+
   requireAuth,
+
   async (req, res) => {
     try {
       const userId =
@@ -136,19 +223,33 @@ router.get(
         ).trim();
 
       if (!userId) {
-        return res.status(400).json({
-          error:
-            "User ID is required",
-        });
+        return res
+          .status(400)
+          .json({
+            error:
+              "User ID is required",
+          });
       }
 
-      // Users can only read their OWN results
-      if (userId !== req.user.id) {
-        return res.status(403).json({
-          error:
-            "You can only view your own results.",
-        });
+      // ==============================
+      // USER CAN ONLY READ OWN RESULT
+      // ==============================
+
+      if (
+        userId !==
+        req.user.id
+      ) {
+        return res
+          .status(403)
+          .json({
+            error:
+              "You can only view your own results.",
+          });
       }
+
+      // ==============================
+      // LOAD RESULTS
+      // ==============================
 
       const resultDocuments =
         await Result.find({
@@ -159,124 +260,223 @@ router.get(
           })
           .lean();
 
-      const results =
-        resultDocuments.map(
-          (result) => ({
-            resultId:
-              result.resultId,
+      // ==============================
+      // FIND TEST METADATA
+      // ==============================
 
-            testId:
-              result.testId,
+      const testIds = [
+        ...new Set(
+          resultDocuments
+            .map(
+              (result) =>
+                result.testId
+            )
+            .filter(Boolean)
+        ),
+      ];
 
-            testTitle:
-              result.testTitle,
-
-            userId:
-              result.userId,
-
-            submittedAt:
-              result.submittedAt,
-
-            correctCount:
-              Number(
-                result.correctCount
-              ) || 0,
-
-            wrongCount:
-              Number(
-                result.wrongCount
-              ) || 0,
-
-            unansweredCount:
-              Number(
-                result.unansweredCount
-              ) || 0,
-
-            score:
-              Number(
-                result.score
-              ) || 0,
-
-            totalMarks:
-              Number(
-                result.totalMarks
-              ) || 0,
-
-            review:
-              Array.isArray(
-                result.review
+      const testDocuments =
+        testIds.length
+          ? await Test.find({
+              testId: {
+                $in: testIds,
+              },
+            })
+              .select(
+                [
+                  "testId",
+                  "category",
+                  "subject",
+                  "duration",
+                  "topCategory",
+                  "subExam",
+                  "isFree",
+                ].join(" ")
               )
-                ? result.review
-                : [],
-          })
+              .lean()
+          : [];
+
+      const testMap =
+        new Map(
+          testDocuments.map(
+            (test) => [
+              String(
+                test.testId
+              ),
+              test,
+            ]
+          )
         );
 
-      return res.json(results);
+      // ==============================
+      // FORMAT RESULTS
+      // ==============================
+
+      const results =
+        resultDocuments.map(
+          (result) => {
+            const test =
+              testMap.get(
+                String(
+                  result.testId
+                )
+              );
+
+            const isFree =
+              test?.isFree === true;
+
+            return {
+              resultId:
+                result.resultId,
+
+              testId:
+                result.testId,
+
+              testTitle:
+                result.testTitle,
+
+              userId:
+                result.userId,
+
+              submittedAt:
+                result.submittedAt,
+
+              correctCount:
+                Number(
+                  result.correctCount
+                ) || 0,
+
+              wrongCount:
+                Number(
+                  result.wrongCount
+                ) || 0,
+
+              unansweredCount:
+                Number(
+                  result.unansweredCount
+                ) || 0,
+
+              score:
+                Number(
+                  result.score
+                ) || 0,
+
+              totalMarks:
+                Number(
+                  result.totalMarks
+                ) || 0,
+
+              review:
+                Array.isArray(
+                  result.review
+                )
+                  ? result.review
+                  : [],
+
+              isFree,
+
+              testType:
+                isFree
+                  ? "Free Test"
+                  : "Mock Test",
+
+              type:
+                isFree
+                  ? "Free Test"
+                  : "Mock Test",
+
+              exam:
+                test?.subExam ||
+                test?.category ||
+                "General",
+
+              examName:
+                test?.subExam ||
+                test?.category ||
+                "General",
+
+              category:
+                test?.topCategory ||
+                test?.category ||
+                "General",
+
+              subject:
+                test?.subject ||
+                "",
+
+              duration:
+                test?.duration
+                  ? Math.ceil(
+                      Number(
+                        test.duration
+                      ) / 60
+                    )
+                  : null,
+            };
+          }
+        );
+
+      return res.json(
+        results
+      );
     } catch (error) {
       console.error(
         "MongoDB test history error:",
         error
       );
 
-      return res.status(500).json({
-        error:
-          "Failed to load results",
-      });
+      return res
+        .status(500)
+        .json({
+          error:
+            "Failed to load results",
+        });
     }
   }
 );
 
-// =====================================================
-// GET /api/tests/:id?lang=en|hi
-// Full test WITHOUT correct answers
-// =====================================================
+/* =====================================================
+   GET /api/tests/:id?lang=en|hi
+
+   Login required.
+
+   FREE TEST:
+   subscription not required.
+
+   PREMIUM TEST:
+   subscription required.
+
+   Correct answers are NOT sent to frontend.
+===================================================== */
 
 router.get(
   "/:id",
+
   requireAuth,
-  requireSubscription,
+
+  requireTestAccess,
+
   async (req, res) => {
     try {
+      /*
+        requireTestAccess already
+        loaded the test.
+      */
+
+      const test =
+        req.testDocument;
+
       const testId =
-        String(
-          req.params.id || ""
-        )
-          .trim()
-          .toLowerCase();
+        test.testId;
 
       const lang =
         req.query.lang === "hi"
           ? "hi"
           : "en";
 
-      if (!testId) {
-        return res.status(400).json({
-          error:
-            "Test ID is required",
-        });
-      }
-
-      // -----------------------------------------
-      // FIND TEST
-      // -----------------------------------------
-
-      const test =
-        await Test.findOne({
-          testId,
-          isActive: true,
-        }).lean();
-
-      if (!test) {
-        return res.status(404).json({
-          error:
-            "Test not found",
-        });
-      }
-
-      // -----------------------------------------
+      // ==============================
       // LOAD QUESTIONS
-      // Correct answer frontend ko nahi bhejna
-      // -----------------------------------------
+      // ==============================
 
       const questionDocuments =
         await Question.find({
@@ -293,6 +493,7 @@ router.get(
               "optionB",
               "optionC",
               "optionD",
+
               "questionTextHi",
               "optionAHi",
               "optionBHi",
@@ -302,9 +503,9 @@ router.get(
           )
           .lean();
 
-      // -----------------------------------------
-      // LANGUAGE FORMAT
-      // -----------------------------------------
+      // ==============================
+      // FORMAT LANGUAGE
+      // ==============================
 
       const questions =
         questionDocuments.map(
@@ -335,7 +536,6 @@ router.get(
               };
             }
 
-            // Hindi unavailable ho to English fallback
             return {
               id:
                 question.questionId,
@@ -353,12 +553,15 @@ router.get(
           }
         );
 
-      // -----------------------------------------
+      // ==============================
       // RESPONSE
-      // -----------------------------------------
+      // ==============================
 
       return res.json({
         id:
+          test.testId,
+
+        testId:
           test.testId,
 
         category:
@@ -385,6 +588,20 @@ router.get(
             test.negativeMarking
           ) || 0,
 
+        topCategory:
+          test.topCategory,
+
+        subExam:
+          test.subExam,
+
+        isFree:
+          test.isFree === true,
+
+        testType:
+          test.isFree === true
+            ? "Free Test"
+            : "Mock Test",
+
         language:
           lang,
 
@@ -392,81 +609,80 @@ router.get(
       });
     } catch (error) {
       console.error(
-        "MongoDB public test error:",
+        "MongoDB load test error:",
         error
       );
 
-      return res.status(500).json({
-        error:
-          "Failed to load test",
-      });
+      return res
+        .status(500)
+        .json({
+          error:
+            "Failed to load test",
+        });
     }
   }
 );
 
-// =====================================================
-// POST /api/tests/:id/submit?lang=en|hi
-// Submit test and save result in MongoDB
-// =====================================================
+/* =====================================================
+   POST /api/tests/:id/submit?lang=en|hi
+
+   Login required.
+
+   Free tests:
+   no subscription required.
+
+   Premium tests:
+   subscription required.
+
+   Score is calculated ONLY on backend.
+===================================================== */
 
 router.post(
   "/:id/submit",
+
   requireAuth,
-  requireSubscription,
+
+  requireTestAccess,
+
   async (req, res) => {
     try {
+      const test =
+        req.testDocument;
+
       const testId =
-        String(
-          req.params.id || ""
-        )
-          .trim()
-          .toLowerCase();
+        test.testId;
+
+      // ==============================
+      // ANSWERS
+      // ==============================
 
       const answers =
         req.body &&
         typeof req.body.answers ===
           "object" &&
-        req.body.answers !== null
+        req.body.answers !==
+          null
           ? req.body.answers
           : {};
 
-      // NEVER trust a userId sent by the browser.
-      // The result is always saved for the logged-in user.
-      const userId = req.user.id;
+      /*
+        IMPORTANT:
+
+        Browser-sent userId is ignored.
+        Logged-in user's ID is used.
+      */
+
+      const userId =
+        req.user.id;
 
       const lang =
         req.query.lang === "hi"
           ? "hi"
           : "en";
 
-      if (!testId) {
-        return res.status(400).json({
-          error:
-            "Test ID is required",
-        });
-      }
-
-      // -----------------------------------------
-      // FIND TEST
-      // -----------------------------------------
-
-      const test =
-        await Test.findOne({
-          testId,
-          isActive: true,
-        }).lean();
-
-      if (!test) {
-        return res.status(404).json({
-          error:
-            "Test not found",
-        });
-      }
-
-      // -----------------------------------------
-      // LOAD QUESTIONS WITH CORRECT ANSWERS
-      // Correct answers sirf backend use karega
-      // -----------------------------------------
+      // ==============================
+      // LOAD QUESTIONS + CORRECT ANSWERS
+      // ==============================
 
       const questions =
         await Question.find({
@@ -477,13 +693,25 @@ router.post(
           })
           .lean();
 
+      if (
+        questions.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              "No questions available in this test",
+          });
+      }
+
       let correctCount = 0;
       let wrongCount = 0;
-      let unansweredCount = 0;
+      let unansweredCount =
+        0;
 
-      // -----------------------------------------
+      // ==============================
       // CHECK ANSWERS
-      // -----------------------------------------
+      // ==============================
 
       const review =
         questions.map(
@@ -517,15 +745,27 @@ router.post(
                     question.optionD,
                   ];
 
+            /*
+              Frontend sends:
+
+              1 = A
+              2 = B
+              3 = C
+              4 = D
+            */
+
             const rawSelected =
               answers[
                 question.questionId
               ];
 
             const selected =
-              rawSelected === undefined ||
-              rawSelected === null ||
-              rawSelected === ""
+              rawSelected ===
+                undefined ||
+              rawSelected ===
+                null ||
+              rawSelected ===
+                ""
                 ? null
                 : Number(
                     rawSelected
@@ -545,16 +785,22 @@ router.post(
                 selected
               )
             ) {
-              unansweredCount++;
+              unansweredCount +=
+                1;
             } else if (
               selected ===
               correctAnswer
             ) {
-              correctCount++;
-              status = "correct";
+              correctCount +=
+                1;
+
+              status =
+                "correct";
             } else {
-              wrongCount++;
-              status = "wrong";
+              wrongCount += 1;
+
+              status =
+                "wrong";
             }
 
             return {
@@ -575,9 +821,9 @@ router.post(
           }
         );
 
-      // -----------------------------------------
+      // ==============================
       // CALCULATE SCORE
-      // -----------------------------------------
+      // ==============================
 
       const marksPerCorrect =
         Number(
@@ -604,16 +850,18 @@ router.post(
           score * 100
         ) / 100;
 
-      // -----------------------------------------
-      // GENERATE NEXT RESULT ID
-      // -----------------------------------------
+      // ==============================
+      // RESULT ID
+      // ==============================
 
       const lastResult =
         await Result.findOne({})
           .sort({
             resultId: -1,
           })
-          .select("resultId")
+          .select(
+            "resultId"
+          )
           .lean();
 
       const newResultId =
@@ -632,9 +880,9 @@ router.post(
       const submittedAt =
         new Date();
 
-      // -----------------------------------------
+      // ==============================
       // SAVE RESULT
-      // -----------------------------------------
+      // ==============================
 
       const savedResult =
         await Result.create({
@@ -666,10 +914,9 @@ router.post(
           submittedAt,
         });
 
-      // -----------------------------------------
+      // ==============================
       // RESPONSE
-      // Same structure as old API
-      // -----------------------------------------
+      // ==============================
 
       return res.json({
         resultId:
@@ -704,6 +951,22 @@ router.post(
 
         review:
           savedResult.review,
+
+        isFree:
+          test.isFree === true,
+
+        testType:
+          test.isFree === true
+            ? "Free Test"
+            : "Mock Test",
+
+        exam:
+          test.subExam ||
+          test.category,
+
+        category:
+          test.topCategory ||
+          test.category,
       });
     } catch (error) {
       console.error(
@@ -712,20 +975,26 @@ router.post(
       );
 
       if (
-        error?.code === 11000
+        error?.code ===
+        11000
       ) {
-        return res.status(409).json({
-          error:
-            "Result could not be saved. Please submit again.",
-        });
+        return res
+          .status(409)
+          .json({
+            error:
+              "Result could not be saved. Please submit again.",
+          });
       }
 
-      return res.status(500).json({
-        error:
-          "Failed to submit test",
-      });
+      return res
+        .status(500)
+        .json({
+          error:
+            "Failed to submit test",
+        });
     }
   }
 );
 
-module.exports = router;
+module.exports =
+  router;

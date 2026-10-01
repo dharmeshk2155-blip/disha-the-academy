@@ -1,0 +1,632 @@
+/* ==========================================
+   FREE TEST PAGES
+========================================== */
+
+.ft-page {
+  width: 100%;
+  min-height: 100vh;
+
+  background: #f5f7fb;
+  color: #071a40;
+
+  text-align: left;
+}
+
+/* ==========================================
+   HERO
+========================================== */
+
+.ft-hero {
+  padding: 48px 52px;
+
+  background:
+    linear-gradient(
+      120deg,
+      #092654,
+      #17488e
+    );
+
+  color: #ffffff;
+}
+
+.ft-hero-content {
+  max-width: 760px;
+}
+
+.ft-free-label {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px 13px;
+
+  border-radius: 30px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      193,
+      45,
+      0.45
+    );
+
+  background:
+    rgba(
+      255,
+      193,
+      45,
+      0.12
+    );
+
+  color: #ffc12d;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ft-hero h1,
+.ft-exam-hero h1 {
+  margin:
+    14px 0 8px;
+
+  color: #ffffff;
+
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.ft-hero p,
+.ft-exam-hero p {
+  max-width: 700px;
+
+  color: #dce7fa;
+
+  font-size: 16px;
+}
+
+/* ==========================================
+   CONTENT
+========================================== */
+
+.ft-content {
+  padding:
+    34px 46px 60px;
+}
+
+.ft-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  gap: 20px;
+
+  margin-bottom: 24px;
+}
+
+.ft-heading h2 {
+  margin:
+    0 0 5px;
+
+  color: #071a40;
+
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.ft-heading p {
+  color: #6d7a92;
+
+  font-size: 14px;
+}
+
+/* ==========================================
+   CATEGORY
+========================================== */
+
+.ft-categories {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.ft-category {
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border:
+    1px solid #dfe5ee;
+
+  border-radius: 15px;
+}
+
+.ft-category-header {
+  width: 100%;
+
+  padding:
+    20px 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  border: none;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  text-align: left;
+}
+
+.ft-category.open
+.ft-category-header {
+  border-bottom:
+    1px solid #edf0f5;
+}
+
+.ft-category-left {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+}
+
+.ft-category-icon {
+  width: 50px;
+  height: 50px;
+
+  min-width: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #eaf1ff;
+
+  color: #1b5bd6;
+}
+
+.ft-category-header h3 {
+  margin:
+    0 0 4px;
+
+  color: #071a40;
+
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.ft-category-header p {
+  color: #71809a;
+
+  font-size: 13px;
+}
+
+.ft-category-right {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  color: #66758f;
+}
+
+.ft-category-right span {
+  padding:
+    6px 10px;
+
+  border-radius: 8px;
+
+  background: #f4f6fa;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   EXAM GRID
+========================================== */
+
+.ft-exams-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 12px;
+
+  padding:
+    18px 20px 22px;
+
+  background: #fbfcfe;
+}
+
+.ft-exam-card {
+  min-height: 83px;
+
+  padding: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  border:
+    1px solid #e0e6f0;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #071a40;
+
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ft-exam-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #ffc12d;
+
+  box-shadow:
+    0 8px 20px
+    rgba(
+      7,
+      26,
+      64,
+      0.07
+    );
+}
+
+.ft-exam-card h4 {
+  margin:
+    0 0 5px;
+
+  color: #071a40;
+
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.ft-exam-card span {
+  color: #71809a;
+
+  font-size: 12px;
+}
+
+/* ==========================================
+   EXAM HERO
+========================================== */
+
+.ft-exam-hero {
+  padding:
+    32px 46px 40px;
+
+  background:
+    linear-gradient(
+      120deg,
+      #092654,
+      #17488e
+    );
+
+  color: #ffffff;
+}
+
+.ft-back-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-bottom: 20px;
+
+  color: #dce7fb;
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.ft-small-category {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #71809a;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+}
+
+.ft-test-count {
+  padding:
+    8px 12px;
+
+  border:
+    1px solid #dfe5ee;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #52617c;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   TEST CARDS
+========================================== */
+
+.ft-tests-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 18px;
+}
+
+.ft-test-card {
+  padding: 22px;
+
+  border:
+    1px solid #dfe5ee;
+
+  border-radius: 15px;
+
+  background: #ffffff;
+}
+
+.ft-test-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+
+  color: #74819a;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.ft-badge {
+  padding:
+    6px 9px;
+
+  border-radius: 7px;
+
+  background: #e5f8ec;
+
+  color: #13823b;
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.ft-test-card h3 {
+  margin:
+    0 0 20px;
+
+  color: #071a40;
+
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.ft-test-details {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 18px;
+
+  padding-bottom: 18px;
+
+  border-bottom:
+    1px solid #edf0f5;
+}
+
+.ft-test-details div {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #63718b;
+
+  font-size: 13px;
+}
+
+.ft-start-btn {
+  width: 100%;
+
+  min-height: 45px;
+
+  margin-top: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border-radius: 10px;
+
+  background: #ffc12d;
+
+  color: #071a40;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ft-start-btn:hover {
+  background: #ffb918;
+}
+
+.ft-no-tests,
+.ft-empty-page {
+  padding:
+    60px 20px;
+
+  text-align: center;
+}
+
+.ft-no-tests h3,
+.ft-empty-page h2 {
+  color: #071a40;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (
+  max-width: 1000px
+) {
+
+  .ft-exams-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (
+  max-width: 768px
+) {
+
+  .ft-hero {
+    padding:
+      30px 18px;
+  }
+
+  .ft-hero h1,
+  .ft-exam-hero h1 {
+    font-size: 29px;
+  }
+
+  .ft-hero p,
+  .ft-exam-hero p {
+    font-size: 14px;
+  }
+
+  .ft-content {
+    padding:
+      22px 14px 40px;
+  }
+
+  .ft-category-header {
+    padding: 16px;
+  }
+
+  .ft-category-right span {
+    display: none;
+  }
+
+  .ft-exams-grid {
+    grid-template-columns:
+      1fr;
+
+    padding: 14px;
+  }
+
+  .ft-tests-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .ft-exam-hero {
+    padding:
+      25px 18px 30px;
+  }
+
+}
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
+@media (
+  max-width: 480px
+) {
+
+  .ft-category-icon {
+    width: 43px;
+    height: 43px;
+
+    min-width: 43px;
+  }
+
+  .ft-category-header h3 {
+    font-size: 16px;
+  }
+
+  .ft-category-header p {
+    display: none;
+  }
+
+  .ft-heading {
+    align-items:
+      flex-start;
+  }
+
+  .ft-test-count {
+    display: none;
+  }
+
+  .ft-test-details {
+    flex-direction:
+      column;
+
+    gap: 10px;
+  }
+
+}

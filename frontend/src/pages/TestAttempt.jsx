@@ -142,7 +142,7 @@ function getInitials(name) {
     .toUpperCase();
 }
 
-export default function TestAttempt() {
+export default function TestAttempt({ freeMode = false }) {
   const { testId } = useParams();
   const navigate = useNavigate();
 
@@ -873,13 +873,17 @@ export default function TestAttempt() {
 
           <button
             className="ta-btn ta-btn-primary"
-            onClick={() =>
-              navigate(
-                "/take-mock-test"
-              )
-            }
+           onClick={() =>
+  navigate(
+    freeMode
+      ? "/free-tests"
+      : "/take-mock-test"
+  )
+}
           >
-            Back to Mock Tests
+           {freeMode
+  ? "Back to Free Tests"
+  : "Back to Mock Tests"}
           </button>
         </div>
 

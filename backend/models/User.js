@@ -85,6 +85,13 @@ resetOTPRequestedAt: {
       type: Boolean,
       default: true,
     },
+
+    // Last time the user opened the notification bell
+    // (see routes/notifications.js)
+    notificationsSeenAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

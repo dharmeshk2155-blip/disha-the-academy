@@ -32,6 +32,7 @@ const testSchema = new mongoose.Schema(
       maxlength: 200,
     },
 
+    // Duration in seconds
     duration: {
       type: Number,
       required: true,
@@ -65,6 +66,18 @@ const testSchema = new mongoose.Schema(
       maxlength: 200,
     },
 
+    /*
+      IMPORTANT
+
+      true  = Free Test
+      false = Premium/Normal Test
+    */
+    isFree: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -77,6 +90,14 @@ const testSchema = new mongoose.Schema(
   }
 );
 
+testSchema.index({
+  isActive: 1,
+  isFree: 1,
+});
+
 module.exports =
   mongoose.models.Test ||
-  mongoose.model("Test", testSchema);
+  mongoose.model(
+    "Test",
+    testSchema
+  );
