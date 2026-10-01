@@ -1869,3 +1869,43 @@
     margin-left: 0;
   }
 }
+
+/* ======================================================
+   MOBILE SAFETY  (keep this block LAST)
+   minmax(0,1fr) stops wide children from stretching the
+   hero/toolbar past the screen width.
+====================================================== */
+@media (max-width: 950px) {
+  .mth-page {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .mth-hero {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .mth-hero-left {
+    min-width: 0;
+  }
+
+  .mth-hero-art {
+    display: none;
+  }
+
+  .mth-features {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mth-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mth-subtitle {
+    font-size: 13px;
+  }
+}

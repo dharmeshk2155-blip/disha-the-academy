@@ -16,7 +16,7 @@
 
 .read-note-topbar {
   position: sticky;
-  top: 0;
+  top: var(--header-height, 56px); /* stick below the fixed site header */
 
   z-index: 50;
 

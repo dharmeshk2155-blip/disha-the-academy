@@ -2392,3 +2392,279 @@
     min-height: 60px;
   }
 }
+
+/* ======================================================
+   MOBILE / TABLET FIXES  (keep this block LAST)
+   - no sideways scrolling: result rows become cards
+   - compact hero / filters / tabs
+====================================================== */
+@media (max-width: 950px) {
+
+  .mr-page {
+    padding: 0 10px 32px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .mr-hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 16px 12px 14px;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .mr-hero::after {
+    display: none;
+  }
+
+  .mr-hero-art {
+    display: none;
+  }
+
+  .mr-breadcrumb {
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .mr-hero h1 {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .mr-hero-subtitle {
+    margin: 6px 0 12px;
+    font-size: 13px;
+  }
+
+  .mr-stats {
+    max-width: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mr-stat-card {
+    min-height: 0;
+    padding: 9px 10px;
+    gap: 8px;
+  }
+
+  .mr-stat-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mr-stat-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .mr-stat-card strong {
+    font-size: 18px;
+  }
+
+  .mr-stat-card p {
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  /* ---------- filters ---------- */
+  .mr-filter-panel {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .mr-filter-button {
+    min-height: 40px;
+  }
+
+  /* ---------- exam tabs: one swipeable row ---------- */
+  .mr-tabs {
+    min-height: 0;
+    margin-top: 10px;
+    padding: 6px;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mr-tabs button {
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .mr-tabs button svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .mr-tabs .mr-more-tab {
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  /* ---------- heading ---------- */
+  .mr-results-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 0 10px;
+  }
+
+  .mr-results-heading h2 {
+    font-size: 18px;
+  }
+
+  .mr-results-sort {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .mr-sort-box {
+    width: auto;
+    min-width: 150px;
+    flex: 0 0 auto;
+  }
+
+  .mr-sort-box select {
+    font-size: 12px;
+  }
+
+  /* ---------- RESULT ROWS => CARDS (no horizontal scroll) ---------- */
+  .mr-results-list {
+    overflow: visible;
+    gap: 10px;
+  }
+
+  .mr-result-row {
+    min-width: 0;
+    width: 100%;
+    min-height: 0;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 10px;
+    align-items: center;
+  }
+
+  .mr-result-row:hover {
+    transform: none;
+  }
+
+  .mr-test-info {
+    grid-column: 1 / -1;
+    gap: 10px;
+  }
+
+  .mr-test-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
+  }
+
+  .mr-test-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mr-test-info > div:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mr-test-info h3 {
+    font-size: 15px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .mr-test-info p {
+    margin-top: 5px;
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .mr-score-area {
+    gap: 9px;
+    min-width: 0;
+  }
+
+  .mr-score-ring {
+    width: 46px;
+    height: 46px;
+    padding: 5px;
+  }
+
+  .mr-score-ring > div {
+    font-size: 10.5px;
+  }
+
+  .mr-score-area strong {
+    font-size: 13px;
+  }
+
+  .mr-score-area span {
+    font-size: 11px;
+  }
+
+  .mr-rank-area,
+  .mr-date-area {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .mr-rank-area span,
+  .mr-date-area span {
+    font-size: 10.5px;
+  }
+
+  .mr-rank-area strong,
+  .mr-date-area strong {
+    font-size: 12.5px;
+    overflow-wrap: anywhere;
+  }
+
+  .mr-view-button {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 12.5px;
+  }
+
+  /* ---------- states ---------- */
+  .mr-state-card,
+  .mr-filter-empty {
+    margin-top: 10px;
+  }
+
+  .mr-empty-card {
+    min-height: 0;
+    padding: 20px 14px 24px;
+  }
+
+  .mr-empty-card > p {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mr-hero h1 {
+    font-size: 32px;
+  }
+
+  .mr-filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .mr-result-row {
+    grid-template-columns: 1fr;
+  }
+}

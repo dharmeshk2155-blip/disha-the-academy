@@ -198,14 +198,129 @@
   font-weight: 600;
 }
 
+/* ---------- Tablet / phone: keep all 3 plans in ONE row ---------- */
 @media (max-width: 800px) {
-  .pricing-grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    margin: 0 auto;
+  .pricing-page {
+    padding: 18px 10px 40px;
+  }
+
+  .pricing-hero {
+    margin-bottom: 20px;
   }
 
   .pricing-hero h1 {
-    font-size: 26px;
+    font-size: 22px;
+    line-height: 1.25;
+    margin: 10px 0 6px;
+  }
+
+  .pricing-hero p {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .pricing-eyebrow {
+    font-size: 10.5px;
+    padding: 4px 10px;
+  }
+
+  .pricing-active,
+  .pricing-message {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-width: none;
+    margin: 18px 0 0;
+    align-items: stretch;
+  }
+
+  .pricing-card {
+    padding: 20px 8px 12px;
+    border-radius: 12px;
+  }
+
+  .pricing-badge {
+    top: -10px;
+    font-size: 10px;
+    padding: 3px 9px;
+  }
+
+  .pricing-card h2 {
+    font-size: 13px;
+    margin: 0 0 6px;
+  }
+
+  .pricing-price {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+  }
+
+  .pricing-rupee {
+    font-size: 13px;
+    margin-right: 1px;
+  }
+
+  .pricing-permonth {
+    font-size: 10.5px;
+    margin: 4px 0 10px;
+  }
+
+  .pricing-features {
+    font-size: 10.5px;
+    line-height: 1.35;
+    margin: 0 0 12px;
+  }
+
+  .pricing-features li {
+    padding: 4px 0 4px 13px;
+  }
+
+  .pricing-features li::before {
+    font-size: 10px;
+    top: 4px;
+  }
+
+  .pricing-buy {
+    padding: 9px 4px;
+    font-size: 11.5px;
+    border-radius: 8px;
+    line-height: 1.2;
+  }
+
+  .pricing-note {
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pricing-page {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .pricing-grid {
+    gap: 6px;
+  }
+
+  .pricing-card {
+    padding: 18px 6px 10px;
+  }
+
+  .pricing-price {
+    font-size: 21px;
+  }
+
+  .pricing-features {
+    font-size: 10px;
+  }
+
+  .pricing-buy {
+    font-size: 10.5px;
   }
 }

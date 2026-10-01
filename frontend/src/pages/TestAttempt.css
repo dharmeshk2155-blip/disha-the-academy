@@ -1775,3 +1775,416 @@
   min-height: 40px;
   height: 40px;
 }
+
+/* =====================================================
+   MOBILE / TABLET EXAM LAYOUT  (keep this block LAST)
+   The "fit in one screen" rules above are for desktop only.
+   On phones/tablets the page scrolls normally, nothing has a
+   fixed height, and the action bar sticks to the bottom.
+   ===================================================== */
+@media (max-width: 1050px) {
+  .ta-page {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* ---------- header: title + timer on one row, buttons below ---------- */
+  .ta-exam-header {
+    height: auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .ta-header-title {
+    grid-column: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    font-size: 15px;
+    line-height: 1.25;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ta-header-timer {
+    grid-column: 2;
+    justify-self: end;
+    width: auto;
+    min-height: 40px;
+    padding: 4px 8px;
+    gap: 4px;
+    border-radius: 9px;
+  }
+
+  .ta-clock-icon {
+    font-size: 18px;
+  }
+
+  .ta-time-label {
+    display: none;
+  }
+
+  .ta-time-box {
+    min-width: 32px;
+    height: 30px;
+    padding: 0 4px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+
+  .ta-header-actions {
+    grid-column: 1 / -1;
+    width: 100%;
+    gap: 8px;
+    justify-content: stretch;
+  }
+
+  .ta-fullscreen-btn,
+  .ta-pause-btn {
+    flex: 1;
+    height: 36px;
+    padding: 0 8px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  /* ---------- section bar ---------- */
+  .ta-section-bar {
+    height: auto;
+    min-height: 0;
+    padding: 8px 12px;
+    gap: 10px;
+    overflow-x: auto;
+  }
+
+  .ta-section-heading {
+    padding-right: 10px;
+    font-size: 11px;
+  }
+
+  .ta-section-tab {
+    min-width: 0;
+    height: 36px;
+    padding: 0 22px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* ---------- body: stacked, natural height ---------- */
+  .ta-exam-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    padding: 8px;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .ta-question-panel {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    border-radius: 12px;
+  }
+
+  .ta-question-header {
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .ta-question-number {
+    font-size: 16px;
+  }
+
+  .ta-question-tools {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 10px;
+  }
+
+  .ta-marks-block {
+    gap: 5px;
+  }
+
+  .ta-meta-label {
+    font-size: 12px;
+  }
+
+  .ta-positive-mark,
+  .ta-negative-mark {
+    min-width: 42px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .ta-question-time {
+    min-width: 0;
+    padding: 0 10px;
+  }
+
+  .ta-language-tool {
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .ta-language-tool select {
+    height: 32px;
+    padding: 0 26px 0 8px;
+    font-size: 13px;
+  }
+
+  .ta-question-content {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    padding: 14px 12px 16px;
+  }
+
+  .ta-q-text {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .ta-options {
+    gap: 8px;
+  }
+
+  .ta-option {
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 10px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  /* action buttons stay reachable at the bottom while the question scrolls */
+  .ta-bottom-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    height: auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-top: 1px solid #e1eaf3;
+    box-shadow: 0 -4px 14px rgba(16, 58, 101, 0.08);
+  }
+
+  .ta-bottom-left {
+    display: contents;
+  }
+
+  .ta-action-outline {
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 6px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .ta-save-next {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .ta-pause-overlay {
+    inset: 0;
+    z-index: 30;
+    align-items: flex-start;
+    padding-top: 48px;
+  }
+
+  /* ---------- sidebar below the question ---------- */
+  .ta-right-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .ta-student-card {
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .ta-student-avatar,
+  .ta-student-image {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+
+  .ta-student-card strong {
+    font-size: 15px;
+  }
+
+  .ta-summary-card {
+    grid-template-columns: 1fr 1fr;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .ta-summary-item {
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.2;
+  }
+
+  .ta-summary-number {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .ta-palette-card {
+    flex: none;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ta-palette-title {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .ta-q-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 12px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ta-q-btn {
+    height: 40px;
+  }
+
+  .ta-sidebar-bottom {
+    padding: 10px;
+    margin-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ta-submit-test-btn {
+    min-height: 46px;
+    font-size: 15px;
+  }
+
+  .ta-modal {
+    padding: 22px 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .ta-q-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .ta-time-box {
+    min-width: 28px;
+    font-size: 14px;
+  }
+
+  .ta-fullscreen-btn,
+  .ta-pause-btn {
+    font-size: 12px;
+  }
+}
+
+/* ---------- instruction + result screens on phones ---------- */
+@media (max-width: 700px) {
+  .ta-instructions-page {
+    min-height: 0;
+    padding: 14px 10px 28px;
+  }
+
+  .ta-instructions-card {
+    padding: 18px 14px;
+    text-align: left;
+  }
+
+  .ta-instructions-card h2 {
+    font-size: 19px;
+  }
+
+  .ta-instructions-sub {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .ta-instructions-card h3 {
+    font-size: 15px;
+  }
+
+  .ta-instructions-list {
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding-left: 18px;
+  }
+
+  .ta-language-select {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ta-result-page {
+    padding: 14px 10px 40px;
+  }
+
+  .ta-result-card {
+    padding: 18px 12px;
+    margin-bottom: 18px;
+  }
+
+  .ta-result-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 10px;
+    margin: 18px 0;
+  }
+
+  .ta-stat {
+    min-width: 0;
+  }
+
+  .ta-stat span {
+    font-size: 24px;
+  }
+
+  .ta-review-item {
+    padding: 12px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .ta-review-option {
+    padding: 9px 10px;
+    font-size: 14px;
+  }
+}

@@ -1480,3 +1480,114 @@
     min-height: 48px;
   }
 }
+
+/* ======================================================
+   MOBILE / TABLET FIXES  (keep this block LAST)
+   The compact-hero override above re-declared a 2-column grid
+   with min widths (360px + 430px) AFTER the mobile rules, so
+   the hero was wider than the screen and got cut on the right.
+====================================================== */
+@media (max-width: 950px) {
+
+  .blog-v2-page {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .blog-v2-hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    column-gap: 0;
+    row-gap: 10px;
+    min-height: 0;
+    padding: 18px 14px 12px;
+    border-radius: 12px;
+  }
+
+  .blog-v2-hero-copy,
+  .blog-v2-visual,
+  .blog-v2-feature-strip {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .blog-v2-hero-copy h1 {
+    font-size: 32px;
+    line-height: 1.02;
+  }
+
+  .blog-v2-hero-copy > p {
+    max-width: none;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .blog-v2-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .blog-v2-search input {
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .blog-v2-search button {
+    min-width: 76px;
+  }
+
+  /* illustration is decorative - hidden on phones to keep the hero short */
+  .blog-v2-visual {
+    display: none;
+  }
+
+  /* 4 features as a neat 2x2 grid */
+  .blog-v2-feature-strip {
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 6px;
+    padding: 6px;
+  }
+
+  .blog-v2-feature {
+    min-width: 0;
+    padding: 6px;
+    border: 0;
+    gap: 8px;
+  }
+
+  .blog-v2-feature:last-child {
+    border-bottom: 0;
+  }
+
+  .blog-v2-feature span {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .blog-v2-categories {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .blog-v2-categories button {
+    min-width: 0;
+    flex-shrink: 0;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+
+  .blog-v2-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 601px) and (max-width: 950px) {
+  .blog-v2-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

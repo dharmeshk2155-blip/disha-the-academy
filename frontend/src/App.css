@@ -610,13 +610,6 @@ body {
     transform: translateX(0);
   }
 
-  /* Logo lives in the top bar on desktop; on mobile the top bar
-     shrinks to a small floating icon pill, so hide it there — the
-     hamburger button + drawer carries the branding instead. */
-  .topbar-logo {
-    display: none;
-  }
-
   .navbar .nav-links {
     flex-direction: column;
     align-items: flex-start;
@@ -635,23 +628,85 @@ body {
     margin: 4px 0 4px;
   }
 
-  /* On mobile there's no persistent sidebar taking up space, so the
-     header goes back to a small floating pill instead of a full bar */
+  /* Mobile top bar: a real full-width fixed header (hamburger | logo | actions)
+     so it never floats over page content. Body gets matching padding-top. */
   .topbar-right {
     position: fixed;
-    top: 14px;
-    left: auto;
-    right: 16px;
-    height: auto;
-    background: none;
-    box-shadow: none;
-    border-bottom: none;
-    padding: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(20, 21, 34, 0.08);
+    border-bottom: 1px solid var(--border);
+    padding: 0 10px 0 58px; /* left space = hamburger button */
+    gap: 8px;
   }
 
   body {
     margin-left: 0;
-    padding-top: 0;
+    padding-top: var(--header-height);
+    overflow-x: hidden;
+  }
+
+  /* hamburger sits inside the 56px bar, vertically centred */
+  .navbar-toggle {
+    top: 8px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* logo is visible again on mobile (compact) */
+  .topbar-logo {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 4px;
+  }
+
+  .topbar-logo-icon {
+    height: 30px;
+  }
+
+  .topbar-logo-wordmark {
+    height: 20px;
+    max-width: 100%;
+  }
+
+  .topbar-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .topbar-icon-btn {
+    padding: 6px;
+  }
+
+  .topbar-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .login-btn,
+  .logout-btn {
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 7px;
+  }
+
+  /* language dropdown must stay inside the screen */
+  .topbar-lang-dropdown {
+    right: -40px;
+  }
+
+  /* drawer starts below nothing now - keep it full height above the bar */
+  .navbar {
+    padding-top: 70px;
   }
 
   .hero {
@@ -707,6 +762,23 @@ body {
 
   .navbar .nav-links a {
     font-size: 13px;
+  }
+}
+
+/* Very small phones: keep the top bar on one line */
+@media (max-width: 380px) {
+  .topbar-lang-wrapper {
+    display: none;
+  }
+
+  .topbar-logo-wordmark {
+    height: 17px;
+  }
+
+  .login-btn,
+  .logout-btn {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 }
 /* =========================
