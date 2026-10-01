@@ -51,6 +51,9 @@ function Register() {
       JSON.stringify(data.user)
     );
 
+    // lets the bell show its "new updates" popup once after login
+    sessionStorage.setItem("dishaJustLoggedIn", "1");
+
     setMessage(
       "Account created successfully!"
     );

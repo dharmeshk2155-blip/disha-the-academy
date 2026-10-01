@@ -12,7 +12,6 @@ import {
   CircleHelp, 
   Mail, 
   Info, 
-  Bell, 
   X, 
   Menu, 
   Search, 
@@ -21,33 +20,15 @@ import {
 } from "lucide-react"; 
  
 import "../pages/ExtraPages.css"; 
+import NotificationBell from "./NotificationBell";
  
 import logoIcon from "../assets/logo-icon.png"; 
 import logoWordmark from "../assets/logo-wordmark.png"; 
- 
-const SAMPLE_NOTIFICATIONS = [ 
-  { 
-    id: 1, 
-    title: "New mock test added", 
-    body: "SSC CGL Reasoning Test 02 is now live.", 
-  }, 
-  { 
-    id: 2, 
-    title: "Result ready", 
-    body: "Your last mock test result has been calculated.", 
-  }, 
-  { 
-    id: 3, 
-    title: "Maintenance notice", 
-    body: "Site under maintenance — payments temporarily paused.", 
-  }, 
-]; 
  
 function Navbar() { 
   const navigate = useNavigate(); 
  
   const [searchQuery, setSearchQuery] = useState(""); 
-  const [showNotif, setShowNotif] = useState(false); 
   const [showLangMenu, setShowLangMenu] = useState(false); 
   const [menuOpen, setMenuOpen] = useState(false); 
  
@@ -229,31 +210,9 @@ function Navbar() {
             )} 
           </div> 
  
-          {/* NOTIFICATIONS */} 
-          {user && ( 
-            <div className="xp-notif-wrapper"> 
-              <button 
-                className="xp-notif-btn" 
-                onClick={() => setShowNotif((prev) => !prev)} 
-                aria-label="Notifications" 
-              > 
-                <Bell size={20} strokeWidth={1.8} /> 
-                <span className="xp-notif-dot" /> 
-              </button> 
- 
-              {showNotif && ( 
-                <div className="xp-notif-dropdown"> 
-                  {SAMPLE_NOTIFICATIONS.map((n) => ( 
-                    <div key={n.id} className="xp-notif-item"> 
-                      <strong>{n.title}</strong> 
-                      <span>{n.body}</span> 
-                    </div> 
-                  ))} 
-                </div> 
-              )} 
-            </div> 
-          )} 
- 
+          {/* NOTIFICATIONS */}
+          {user && <NotificationBell />}
+
           {/* USER */} 
           {user ? ( 
             <> 

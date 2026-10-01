@@ -1,0 +1,916 @@
+/* ======================================================
+   HOME PAGE
+   Everything is scoped under .hm so it cannot leak into
+   other pages. Breakpoints use container queries (not the
+   viewport), because the left sidebar takes 220px of the
+   screen and the page width is what really matters.
+====================================================== */
+
+.hm {
+  --hm-navy: #0b1f4d;
+  --hm-ink: #0f2350;
+  --hm-muted: #55657f;
+  --hm-line: #e3e9f3;
+  --hm-gold: #f7c04a;
+  --hm-gold-deep: #b9791a;
+  --hm-blue: #1a56db;
+  --hm-red: #d92d20;
+  --hm-focus: #1a56db;
+
+  container-type: inline-size;
+  container-name: hm;
+
+  font-family: "Plus Jakarta Sans", Inter, system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: left;
+  color: var(--hm-ink);
+  padding: 0 20px 44px;
+}
+
+.hm h1,
+.hm h2,
+.hm h3 {
+  font-family: inherit;
+  color: var(--hm-ink);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.hm p {
+  margin: 0;
+}
+
+.hm a {
+  text-decoration: none;
+}
+
+.hm :focus-visible {
+  outline: 3px solid var(--hm-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- shared pieces ---------- */
+
+.hm-sec {
+  margin-top: 28px;
+}
+
+.hm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hm-head h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.hm-head p {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--hm-muted);
+}
+
+.hm-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hm-blue);
+  white-space: nowrap;
+}
+
+.hm-viewall:hover {
+  text-decoration: underline;
+}
+
+.hm-card {
+  background: #fff;
+  border: 1px solid var(--hm-line);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 35, 80, 0.04);
+  transition: border-color 0.15s ease;
+}
+
+.hm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.hm-btn:hover {
+  filter: brightness(0.95);
+}
+
+.hm-btn-gold {
+  background: var(--hm-gold);
+  color: var(--hm-navy);
+}
+
+.hm-btn-navy {
+  background: var(--hm-navy);
+  color: #fff;
+}
+
+.hm-btn-ghost {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+}
+
+.hm-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #fff;
+  color: var(--hm-navy);
+  border: 1.5px solid var(--hm-gold);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.hm-btn-outline:hover {
+  background: #fff8e6;
+}
+
+.hm-btn-wide {
+  width: 100%;
+}
+
+.hm-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.hm-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hm-blue);
+}
+
+.hm-readmore:hover {
+  text-decoration: underline;
+}
+
+.hm-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hm-logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hm-card:has(a:hover) {
+  border-color: #c9d6ec;
+}
+
+/* loading placeholders */
+
+.hm-skel {
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eef2f8 25%, #f7f9fc 50%, #eef2f8 75%);
+  background-size: 200% 100%;
+  animation: hm-shimmer 1.4s linear infinite;
+}
+
+@keyframes hm-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-skel {
+    animation: none;
+  }
+
+  .hm * {
+    scroll-behavior: auto;
+  }
+}
+
+/* ======================================================
+   1. HERO
+====================================================== */
+
+.hm-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0 -20px;
+  padding: 26px 40px 22px;
+  min-height: 250px;
+  background: linear-gradient(100deg, #eaf3fc 0%, #dce9f7 58%, #e7f0fa 100%);
+}
+
+.hm-hero-kicker {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hm-ink);
+}
+
+.hm .hm-hero h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(28px, 4.4cqi, 44px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hm-hero h1 span {
+  display: block;
+}
+
+.hm-gold {
+  color: #c08420;
+}
+
+.hm-hero-lead {
+  max-width: 42ch;
+  font-size: 14px;
+  color: #2c3e63;
+}
+
+.hm-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.hm-hero-art {
+  display: flex;
+  justify-content: center;
+}
+
+.hm-hero-art img,
+.hm-illus {
+  width: 100%;
+  max-width: 440px;
+  max-height: 260px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ======================================================
+   2. EXAM CATEGORIES
+====================================================== */
+
+.hm-cats {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hm-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 14px 6px 12px;
+  text-align: center;
+  color: var(--hm-ink);
+}
+
+.hm-cat-icon {
+  display: flex;
+  height: 34px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.hm-cat-name {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hm-cat-sub {
+  font-size: 12px;
+  color: var(--hm-muted);
+}
+
+/* ======================================================
+   3. POPULAR EXAMS
+====================================================== */
+
+.hm-popular {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-exam {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px 14px;
+  text-align: center;
+}
+
+.hm-exam .hm-logo {
+  margin-bottom: 4px;
+}
+
+.hm-exam h3 {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hm-exam p {
+  flex: 1;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--hm-muted);
+}
+
+/* ======================================================
+   4. STUDY NOTES
+====================================================== */
+
+.hm-notes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hm-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.hm-note-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 62px;
+}
+
+.hm-note-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.hm-note-tile b {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hm-note h3 {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hm-note p {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--hm-muted);
+}
+
+.hm-price {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--hm-red);
+}
+
+.hm-note .hm-btn-outline {
+  margin-top: auto;
+  padding: 7px 8px;
+  font-size: 12.5px;
+}
+
+/* ======================================================
+   5. MOCK TESTS
+====================================================== */
+
+.hm-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hm-tab {
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #e6edf8;
+  color: #2f4472;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hm-tab:hover {
+  background: #d9e4f5;
+}
+
+.hm-tab[aria-selected="true"] {
+  background: var(--hm-navy);
+  color: #fff;
+}
+
+.hm-tests {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-test {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.hm-test-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hm-test-top .hm-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.hm-test h3 {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hm-test-meta {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--hm-muted);
+}
+
+.hm-test-meta li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hm-test .hm-btn-outline {
+  margin-top: auto;
+}
+
+/* ======================================================
+   6. CURRENT AFFAIRS
+====================================================== */
+
+.hm-affairs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-affair {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hm-affair-img,
+.hm-blog-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #dfe9f7, #eef3fb);
+  color: #7b8fb3;
+}
+
+.hm-affair-img {
+  aspect-ratio: 16 / 9;
+}
+
+.hm-affair-img img,
+.hm-blog-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hm-affair-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+
+.hm-affair-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--hm-muted);
+}
+
+.hm-affair h3 {
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm-affair p {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--hm-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm-affair .hm-readmore {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+/* ======================================================
+   7. RESOURCES  /  10. WHY DISHA
+====================================================== */
+
+.hm-resources {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-why {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-resource,
+.hm-why-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  color: var(--hm-ink);
+}
+
+.hm-resource-icon,
+.hm-why-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 10px;
+}
+
+.hm-resource strong,
+.hm-why-item strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hm-resource small,
+.hm-why-item small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--hm-muted);
+}
+
+/* ======================================================
+   8. ACCOUNT BAND
+====================================================== */
+
+.hm-account {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 18px;
+  align-items: center;
+  margin-top: 28px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #e3eefb, #eef4fc);
+  border: 1px solid #d3e1f4;
+}
+
+.hm .hm-account h2 {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.hm-account-main > p {
+  max-width: 54ch;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #33466b;
+}
+
+.hm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.hm-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--hm-line);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.hm-account-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  text-align: center;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--hm-line);
+}
+
+.hm-account-side strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.hm-account-side p {
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--hm-muted);
+}
+
+/* ======================================================
+   9. BLOG
+====================================================== */
+
+.hm-blogs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hm-blog {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+}
+
+.hm-blog-img {
+  width: 92px;
+  min-height: 92px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.hm-blog-body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.hm-blog h3 {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm-blog-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--hm-muted);
+}
+
+.hm-blog .hm-readmore {
+  margin-top: auto;
+}
+
+/* ======================================================
+   11. FINAL CTA
+====================================================== */
+
+.hm-final {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #0b1f4d, #12306f);
+  color: #fff;
+}
+
+.hm-final svg {
+  flex-shrink: 0;
+}
+
+.hm-final-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hm .hm-final h2 {
+  font-size: 21px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.hm-final p {
+  margin-top: 3px;
+  font-size: 13px;
+  color: #c9d7f2;
+}
+
+.hm-final-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ======================================================
+   RESPONSIVE (container = page width)
+====================================================== */
+
+@container hm (max-width: 980px) {
+  .hm-cats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hm-hero {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    padding: 24px 28px 20px;
+  }
+
+  .hm-notes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hm-tests,
+  .hm-affairs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-blogs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-why {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-final {
+    flex-wrap: wrap;
+  }
+}
+
+@container hm (max-width: 700px) {
+  .hm-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 24px 12px;
+  }
+
+  .hm-hero-art img,
+  .hm-illus {
+    max-width: 340px;
+  }
+
+  .hm-popular {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-popular .hm-exam:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .hm-notes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-resources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-account {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-blogs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+}
+
+@container hm (max-width: 480px) {
+  .hm-tests,
+  .hm-affairs,
+  .hm-popular,
+  .hm-notes,
+  .hm-why {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-cats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hm-hero-cta .hm-btn,
+  .hm-final-cta .hm-btn {
+    flex: 1 1 100%;
+  }
+
+  .hm-head h2 {
+    font-size: 20px;
+  }
+}

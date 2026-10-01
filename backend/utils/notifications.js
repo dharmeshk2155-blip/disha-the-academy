@@ -32,12 +32,17 @@ function buildNotifications({
   const items = [];
 
   for (const test of tests) {
+    // Free tests have their own attempt page (see FreeExamTests.jsx)
+    const isFree = test.isFree === true;
+
     items.push({
       id: `test:${test.testId}`,
       type: "test",
-      title: "New mock test added",
+      title: isFree ? "New free mock test added" : "New mock test added",
       body: test.title,
-      link: `/mock-test/${test.testId}`,
+      link: isFree
+        ? `/free-tests/attempt/${test.testId}`
+        : `/mock-test/${test.testId}`,
       createdAt: test.createdAt,
     });
   }

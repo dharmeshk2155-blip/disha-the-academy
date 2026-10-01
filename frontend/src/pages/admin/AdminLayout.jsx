@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   BookOpen,
   ClipboardList,
+  Gift,
   Newspaper,
   PenLine,
   CircleHelp,
@@ -25,6 +26,7 @@ import {
   ShieldCheck,
   ExternalLink,
 } from "lucide-react";
+
 
 import "./AdminLayout.css";
 
@@ -53,6 +55,11 @@ const SECTIONS = [
         path: "/admin/notes",
         label: "Notes",
         icon: BookOpen,
+      },
+      {
+        path: "/admin/free-tests",
+        label: "Free Tests",
+        icon: Gift,
       },
       {
         path: "/admin/tests",
@@ -118,6 +125,7 @@ const SECTIONS = [
 const PAGE_TITLES = {
   "/admin": "Dashboard",
   "/admin/notes": "Notes",
+  "/admin/free-tests": "Free Tests",
   "/admin/tests": "Tests / Mock Tests",
   "/admin/current-affairs": "Current Affairs",
   "/admin/blog": "Blog",

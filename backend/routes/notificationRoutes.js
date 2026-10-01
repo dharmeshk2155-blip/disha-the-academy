@@ -57,7 +57,7 @@ router.get("/", requireAuth, async (req, res) => {
         .lean(),
 
       Test.find({ isActive: true, ...recent })
-        .select("testId title createdAt")
+        .select("testId title isFree createdAt")
         .sort({ createdAt: -1 })
         .limit(20)
         .lean(),
