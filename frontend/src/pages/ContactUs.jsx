@@ -452,8 +452,8 @@ export default function ContactUs() {
 
               <div>
                 <strong>Email Us</strong>
-                <a href="mailto:support@dishatheacademy.com">
-                  support@dishatheacademy.com
+                <a href="mailto:dharmeshd74@outlook.com">
+                  dharmeshd74@outlook.com
                 </a>
                 <span>For support, queries and feedback</span>
               </div>
@@ -466,8 +466,8 @@ export default function ContactUs() {
 
               <div>
                 <strong>Call Us</strong>
-                <a href="tel:+919876543210">
-                  +91 98765 43210
+                <a href="tel:+918627053974">
+                  +91 8627053974
                 </a>
                 <span>Mon - Sat, 10:00 AM - 6:00 PM</span>
               </div>
@@ -481,7 +481,7 @@ export default function ContactUs() {
               <div>
                 <strong>Our Location</strong>
                 <span className="contact-fit-primary-text">
-                  Himachal Pradesh, India
+                  Chamba, Himachal Pradesh, India
                 </span>
                 <span>Online platform – accessible everywhere</span>
               </div>
@@ -612,7 +612,7 @@ export default function ContactUs() {
             </h2>
 
             <div className="contact-fit-social-grid">
-              <a href="#" className="contact-fit-social-item">
+              <a href="https://wa.me/918627043974" className="contact-fit-social-item">
                 <div className="contact-fit-social-logo whatsapp">
                   W
                 </div>
@@ -623,7 +623,7 @@ export default function ContactUs() {
                 <SocialArrow />
               </a>
 
-              <a href="#" className="contact-fit-social-item">
+              <a href="https://t.me/dishatheacademy" className="contact-fit-social-item">
                 <div className="contact-fit-social-logo telegram">
                   ➤
                 </div>
@@ -634,7 +634,7 @@ export default function ContactUs() {
                 <SocialArrow />
               </a>
 
-              <a href="#" className="contact-fit-social-item">
+              <a href="https://www.instagram.com/dishatheacadamy?stkn=OWt0bmdpZWRxeTlo" className="contact-fit-social-item">
                 <div className="contact-fit-social-logo instagram">
                   ◎
                 </div>
