@@ -25,7 +25,7 @@ const Footer = () => {
     <FaFacebookF />
   </a>
 
-  <a href="#" aria-label="Instagram">
+  <a href="https://www.instagram.com/dishatheacadamy?stkn=OWt0bmdpZWRxeTlo" aria-label="Instagram">
     <FaInstagram />
   </a>
 
@@ -33,7 +33,7 @@ const Footer = () => {
     <FaYoutube />
   </a>
 
-  <a href="#" aria-label="Telegram">
+  <a href="https://t.me/dishatheacademy" aria-label="Telegram">
     <FaTelegramPlane />
   </a>
 </div>
