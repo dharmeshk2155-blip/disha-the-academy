@@ -2161,3 +2161,170 @@ body:has(.admin-lock-page) #root {
   text-align: left;
   display: block;
 }
+
+/* =========================================================
+   ADMIN MOBILE FIXES  (keep this block LAST in the file)
+
+   BUG THAT WAS FIXED
+   The rules above that set
+     .admin-content-area { width: calc(100vw - 255px);
+                           margin-left: 255px; }
+   come AFTER the 850px mobile rule that sets
+     margin-left: 0; width: 100%;
+   so on phones the content was still pushed 255px to the right
+   and squeezed into a thin column. Re-declaring the mobile
+   values here, at the end, makes them win.
+========================================================= */
+@media (max-width: 850px) {
+
+  .admin-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .admin-content-area {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    min-width: 0;
+  }
+
+  /* sidebar = drawer: full height of the *visible* screen, never wider than screen */
+  .admin-sidebar {
+    width: min(280px, 86vw);
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .admin-navigation {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .admin-sidebar-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* page behind the open drawer must not scroll */
+  body:has(.admin-sidebar-open) {
+    overflow: hidden !important;
+  }
+
+  /* ---------- top header ---------- */
+  .admin-top-header {
+    height: var(--admin-header-height);
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  .admin-header-left {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 10px;
+  }
+
+  .admin-header-left > div {
+    min-width: 0;
+  }
+
+  .admin-header-left h1 {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-header-right {
+    flex-shrink: 0;
+  }
+
+  /* ---------- content ---------- */
+  .admin-main {
+    padding: 12px 10px 28px;
+    min-width: 0;
+  }
+
+  /*
+    Every admin page root (admin-users-page, admin-notes-page, ...)
+    also has its OWN 14-20px padding on top of .admin-main's padding,
+    which wasted ~30px per side on a 360px screen. Trim that here.
+  */
+  .admin-main > [class$="-page"] {
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 10px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Wide tables scroll INSIDE their own box, never the whole page */
+  .admin-orders-table-wrap,
+  .admin-users-table-wrap,
+  .admin-notes-table-wrap,
+  .admin-tests-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-orders-table th,
+  .admin-orders-table td {
+    white-space: nowrap;
+  }
+
+  /* modals: never taller/wider than the visible screen */
+  .admin-order-modal,
+  .admin-test-modal,
+  .admin-question-modal {
+    max-width: 100%;
+    max-height: 92vh;
+    max-height: 92dvh;
+  }
+}
+
+@media (max-width: 600px) {
+
+  /* 16px inputs stop iPhone Safari from zooming the page on focus */
+  .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+  .admin-shell select,
+  .admin-shell textarea {
+    font-size: 16px;
+  }
+
+  .admin-main {
+    padding: 10px 8px 24px;
+  }
+
+  .admin-dashboard-welcome h2 {
+    font-size: 19px;
+  }
+
+  .admin-stats-grid {
+    gap: 10px;
+  }
+
+  .admin-lock-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-header-left h1 {
+    font-size: 15px;
+  }
+
+  .admin-avatar {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+
+/* overflow-x:hidden turns .admin-content-area into a scroll container, which
+   stops the sticky top header (and sticky editor toolbars) from sticking to
+   the screen. "clip" hides sideways overflow WITHOUT doing that. */
+.admin-content-area {
+  overflow-x: clip;
+}
