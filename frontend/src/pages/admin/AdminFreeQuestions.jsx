@@ -23,7 +23,10 @@ import {
   Save,
   CheckCircle2,
   AlertCircle,
+  FileSpreadsheet,
 } from "lucide-react";
+
+import BulkImportQuestions from "./BulkImportQuestions";
 
 import "./AdminQuestions.css";
 
@@ -59,9 +62,11 @@ export default function AdminFreeQuestions() {
     useNavigate();
 
   const {
-    adminKey,
+    adminToken,
   } =
     useOutletContext();
+
+  const [showImport, setShowImport] = useState(false);
 
   const [
     test,
@@ -124,8 +129,7 @@ export default function AdminFreeQuestions() {
               )}/questions`,
               {
                 headers: {
-                  "x-admin-key":
-                    adminKey,
+                  Authorization: `Bearer ${adminToken}`,
                 },
               }
             );
@@ -169,20 +173,20 @@ export default function AdminFreeQuestions() {
         }
       },
       [
-        adminKey,
+        adminToken,
         testId,
       ]
     );
 
   useEffect(() => {
     if (
-      adminKey &&
+      adminToken &&
       testId
     ) {
       fetchQuestions();
     }
   }, [
-    adminKey,
+    adminToken,
     testId,
     fetchQuestions,
   ]);
@@ -346,8 +350,7 @@ export default function AdminFreeQuestions() {
             "Content-Type":
               "application/json",
 
-            "x-admin-key":
-              adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
 
           body:
@@ -443,8 +446,7 @@ export default function AdminFreeQuestions() {
               "DELETE",
 
             headers: {
-              "x-admin-key":
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
             },
           }
         );
@@ -544,6 +546,16 @@ export default function AdminFreeQuestions() {
 
         </div>
 
+        <div className="bq-header-actions">
+
+          <button type="button" className="bq-import-btn" onClick={() => setShowImport(true)}>
+
+            <FileSpreadsheet size={18} />
+
+            Import Excel
+
+          </button>
+
         <button
           type="button"
           className="admin-question-primary-btn"
@@ -557,6 +569,8 @@ export default function AdminFreeQuestions() {
 
           Add Question
         </button>
+
+        </div>
 
       </div>
 
@@ -1076,6 +1090,20 @@ export default function AdminFreeQuestions() {
           </div>
 
         </div>
+      )}
+
+
+      {showImport && (
+        <BulkImportQuestions
+          mode="free"
+          testId={testId}
+          testTitle={test?.title || ""}
+          apiBase={API_BASE}
+          authHeaders={{ Authorization: `Bearer ${adminToken}` }}
+          existingQuestions={questions}
+          onClose={() => setShowImport(false)}
+          onImported={fetchQuestions}
+        />
       )}
 
     </div>

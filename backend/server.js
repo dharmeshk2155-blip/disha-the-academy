@@ -32,6 +32,7 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const adminFreeTestsRoutes = require("./routes/adminFreeTests");
+const { createBulkImportHandler } = require("./utils/bulkQuestions");
 
 const app = express();
 const statsRoutes = require("./routes/stats");
@@ -55,7 +56,8 @@ const requireAdmin = require("./middleware/requireAdmin");
 app.set("trust proxy", 1);
 
 app.use(cors());
-app.use(express.json());
+// 2mb: bulk Excel import sends hundreds of bilingual questions in one request
+app.use(express.json({ limit: "2mb" }));
 
 // Safety net for every /api/admin/* endpoint. Guessing a token is not
 // realistic (it is signed), so this mainly stops abuse/floods.
@@ -2919,6 +2921,15 @@ app.get(
 );
 
 // =====================================================
+// ADMIN - BULK IMPORT QUESTIONS (EXCEL) - MONGODB
+// =====================================================
+app.post(
+  "/api/admin/tests/:testId/questions/bulk",
+  requireAdmin,
+  createBulkImportHandler({ mode: "test" })
+);
+
+// =====================================================
 // ADMIN - ADD QUESTION TO TEST - MONGODB
 // =====================================================
 
@@ -3835,4 +3846,4 @@ process.on(
     );
 
   }
-);  
+);

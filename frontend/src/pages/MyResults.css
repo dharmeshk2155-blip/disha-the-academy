@@ -2668,3 +2668,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ======================================================
+   TITLE OVERLAP FIX (all screen sizes)
+   The text wrapper next to the icon is a flex item. Without
+   min-width:0 it grows to the full width of a long title, so the
+   title ran underneath the score ring. Now it can shrink, and long
+   titles wrap to 2 lines (then "...") instead of overlapping.
+====================================================== */
+.mr-test-info > div:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mr-test-info h3 {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+/* score/rank/date cells must not be pushed by their neighbours */
+.mr-score-area,
+.mr-rank-area,
+.mr-date-area {
+  min-width: 0;
+}

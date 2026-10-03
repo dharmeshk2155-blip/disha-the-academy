@@ -84,6 +84,19 @@ const questionSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+
+    // optional explanations (English / Hindi)
+    explanationEn: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    explanationHi: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   {
     timestamps: true,

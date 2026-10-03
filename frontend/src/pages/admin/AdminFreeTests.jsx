@@ -54,7 +54,7 @@ const INITIAL_FORM = {
 
 export default function AdminFreeTests() {
   const {
-    adminKey,
+    adminToken,
   } =
     useOutletContext();
 
@@ -128,8 +128,7 @@ export default function AdminFreeTests() {
           `${API_BASE}/api/admin/free-tests`,
           {
             headers: {
-              "x-admin-key":
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
             },
           }
         );
@@ -174,10 +173,10 @@ export default function AdminFreeTests() {
   }
 
   useEffect(() => {
-    if (adminKey) {
+    if (adminToken) {
       fetchTests();
     }
-  }, [adminKey]);
+  }, [adminToken]);
 
   const categories =
     useMemo(() => {
@@ -578,8 +577,7 @@ export default function AdminFreeTests() {
             "Content-Type":
               "application/json",
 
-            "x-admin-key":
-              adminKey,
+            Authorization: `Bearer ${adminToken}`,
           },
 
           body:
@@ -685,8 +683,7 @@ export default function AdminFreeTests() {
               "DELETE",
 
             headers: {
-              "x-admin-key":
-                adminKey,
+              Authorization: `Bearer ${adminToken}`,
             },
           }
         );

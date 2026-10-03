@@ -2,6 +2,8 @@ const express = require("express");
 
 const Test = require("../models/Test");
 const Question = require("../models/Question");
+const { createBulkImportHandler } = require("../utils/bulkQuestions");
+const requireAdmin = require("../middleware/requireAdmin");
 
 const router = express.Router();
 
@@ -9,24 +11,10 @@ const router = express.Router();
    ADMIN SECURITY
 ===================================================== */
 
-function requireAdminKey(req, res, next) {
-  const adminKey =
-    req.header("x-admin-key");
-
-  if (
-    !adminKey ||
-    adminKey !== process.env.ADMIN_KEY
-  ) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
-  }
-
-  next();
-}
-
-router.use(requireAdminKey);
+// Same login as every other admin page:
+//   Authorization: Bearer <admin token>   (JWT)
+// The old ADMIN_KEY header is no longer used.
+router.use(requireAdmin);
 
 /* =====================================================
    HELPERS
@@ -759,6 +747,14 @@ router.get(
         });
     }
   }
+);
+
+/* =====================================================
+   BULK IMPORT QUESTIONS (EXCEL) - FREE TEST
+===================================================== */
+router.post(
+  "/:testId/questions/bulk",
+  createBulkImportHandler({ mode: "free" })
 );
 
 /* =====================================================

@@ -13,7 +13,10 @@ import {
   Save,
   CheckCircle2,
   AlertCircle,
+  FileSpreadsheet,
 } from "lucide-react";
+
+import BulkImportQuestions from "./BulkImportQuestions";
 
 import "./AdminQuestions.css";
 
@@ -40,6 +43,8 @@ function AdminQuestions() {
   const { testId } = useParams();
   const navigate = useNavigate();
   const { adminToken } = useOutletContext();
+
+  const [showImport, setShowImport] = useState(false);
 
   const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -443,6 +448,16 @@ const handleDeleteQuestion = async (question) => {
           </p>
         </div>
 
+        <div className="bq-header-actions">
+
+          <button type="button" className="bq-import-btn" onClick={() => setShowImport(true)}>
+
+            <FileSpreadsheet size={18} />
+
+            Import Excel
+
+          </button>
+
         <button
           type="button"
           className="admin-question-primary-btn"
@@ -451,6 +466,8 @@ const handleDeleteQuestion = async (question) => {
           <Plus size={18} />
           Add Question
         </button>
+
+        </div>
       </div>
 
       {/* TEST INFO */}
@@ -927,6 +944,20 @@ const handleDeleteQuestion = async (question) => {
 
           </div>
         </div>
+      )}
+
+
+      {showImport && (
+        <BulkImportQuestions
+          mode="test"
+          testId={testId}
+          testTitle={test?.title || ""}
+          apiBase={API_BASE}
+          authHeaders={{ Authorization: `Bearer ${adminToken}` }}
+          existingQuestions={questions}
+          onClose={() => setShowImport(false)}
+          onImported={fetchQuestions}
+        />
       )}
 
     </div>
