@@ -52,6 +52,17 @@ const testSchema = new mongoose.Schema(
       default: 0,
     },
 
+    /*
+      Kind of test: previous_year | sectional | full
+      (no default on purpose - older tests get it from the
+      migration script, new tests must choose one)
+    */
+    testCategory: {
+      type: String,
+      enum: ["previous_year", "sectional", "full"],
+      index: true,
+    },
+
     topCategory: {
       type: String,
       required: true,

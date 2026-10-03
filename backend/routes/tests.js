@@ -162,6 +162,7 @@ router.get(
 
             topCategory:
               test.topCategory,
+            testCategory: test.testCategory || "",
 
             subExam:
               test.subExam,
@@ -289,6 +290,7 @@ router.get(
                   "subject",
                   "duration",
                   "topCategory",
+                  "testCategory",
                   "subExam",
                   "isFree",
                 ].join(" ")
@@ -399,6 +401,9 @@ router.get(
                 test?.topCategory ||
                 test?.category ||
                 "General",
+
+              testCategory:
+                test?.testCategory || "",
 
               subject:
                 test?.subject ||
@@ -590,6 +595,7 @@ router.get(
 
         topCategory:
           test.topCategory,
+        testCategory: test.testCategory || "",
 
         subExam:
           test.subExam,

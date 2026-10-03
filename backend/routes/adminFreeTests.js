@@ -4,6 +4,7 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const { createBulkImportHandler } = require("../utils/bulkQuestions");
 const requireAdmin = require("../middleware/requireAdmin");
+const { normalizeTestCategory } = require("../utils/testCategory");
 
 const router = express.Router();
 
@@ -65,6 +66,7 @@ function formatTest(
 
     topCategory:
       test.topCategory,
+    testCategory: test.testCategory || "",
 
     subExam:
       test.subExam,
@@ -133,6 +135,18 @@ function validateTestBody(body) {
     Number(
       body.negativeMarking
     );
+
+  const testCategory =
+    normalizeTestCategory(
+      body.testCategory
+    );
+
+  if (!testCategory) {
+    return {
+      error:
+        "Please choose a test category (Previous Year, Sectional or Full).",
+    };
+  }
 
   if (
     !testId ||
@@ -208,6 +222,7 @@ function validateTestBody(body) {
       marksPerCorrect,
       negativeMarking,
       topCategory,
+      testCategory,
       subExam,
 
       isActive:
@@ -509,6 +524,8 @@ router.put(
 
       existing.topCategory =
         values.topCategory;
+      existing.testCategory =
+        values.testCategory;
 
       existing.subExam =
         values.subExam;

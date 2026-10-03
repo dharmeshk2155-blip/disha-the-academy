@@ -33,6 +33,7 @@ const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const adminFreeTestsRoutes = require("./routes/adminFreeTests");
 const { createBulkImportHandler } = require("./utils/bulkQuestions");
+const { normalizeTestCategory } = require("./utils/testCategory");
 
 const app = express();
 const statsRoutes = require("./routes/stats");
@@ -2219,6 +2220,7 @@ app.get(
 
             topCategory:
               test.topCategory,
+            testCategory: test.testCategory || "",
 
             subExam:
               test.subExam,
@@ -2315,6 +2317,22 @@ app.post(
           success: false,
           message:
             "Please fill all required fields.",
+        });
+      }
+
+      // ===============================================
+      // TEST CATEGORY (Previous Year / Sectional / Full)
+      // ===============================================
+      const cleanTestCategory =
+        normalizeTestCategory(
+          req.body.testCategory
+        );
+
+      if (!cleanTestCategory) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please choose a test category (Previous Year, Sectional or Full).",
         });
       }
 
@@ -2438,6 +2456,9 @@ app.post(
           topCategory:
             cleanTopCategory,
 
+          testCategory:
+            cleanTestCategory,
+
           subExam:
             cleanSubExam,
 
@@ -2484,6 +2505,7 @@ app.post(
 
           topCategory:
             newTest.topCategory,
+          testCategory: newTest.testCategory || "",
 
           subExam:
             newTest.subExam,
@@ -2687,6 +2709,29 @@ app.put(
       test.subExam =
         cleanSubExam;
 
+      // category of test: only changed when the form sends it
+      if (
+        req.body.testCategory !==
+          undefined &&
+        req.body.testCategory !== ""
+      ) {
+        const newTestCategory =
+          normalizeTestCategory(
+            req.body.testCategory
+          );
+
+        if (!newTestCategory) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Invalid test category.",
+          });
+        }
+
+        test.testCategory =
+          newTestCategory;
+      }
+
       await test.save();
 
       // ===============================================
@@ -2729,6 +2774,7 @@ app.put(
 
           topCategory:
             test.topCategory,
+          testCategory: test.testCategory || "",
 
           subExam:
             test.subExam,
@@ -2895,6 +2941,7 @@ app.get(
 
           topCategory:
             test.topCategory,
+          testCategory: test.testCategory || "",
 
           subExam:
             test.subExam,

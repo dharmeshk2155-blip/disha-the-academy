@@ -8,6 +8,16 @@
    The browser parses the Excel file and sends JSON, but the server
    NEVER trusts it: every row is validated again here.
 
+   LANGUAGE RULES
+     - A question may be English-only (English subject), Hindi-only
+       (Hindi subject) or bilingual (GS, Maths, Reasoning ...).
+     - A language that is used must be COMPLETE (question + 4 options).
+     - Failed (never saved): an option missing in a used language,
+       options without a question, missing / invalid correctAnswer,
+       or nothing written in either language.
+     - A Hindi-only question is stored with the Hindi text in the main
+       fields as well, so the student side needs no change.
+
    Request body
      { questions: [ { rowNumber, questionText, optionA..D, correctAnswer,
                       questionTextHi, optionAHi..DHi,
@@ -37,6 +47,20 @@ const HI_FIELDS = [
   "optionCHi",
   "optionDHi",
 ];
+
+// names used in the Excel header (shown in error messages)
+const LABEL = {
+  questionText: "questionEn",
+  optionA: "optionAEn",
+  optionB: "optionBEn",
+  optionC: "optionCEn",
+  optionD: "optionDEn",
+  questionTextHi: "questionHi",
+  optionAHi: "optionAHi",
+  optionBHi: "optionBHi",
+  optionCHi: "optionCHi",
+  optionDHi: "optionDHi",
+};
 
 function clean(value) {
   return String(value ?? "").trim();
@@ -134,14 +158,27 @@ function createBulkImportHandler({ mode }) {
           q[f] = clean(raw?.[f]);
         });
 
-        const missing = [...EN_FIELDS, ...HI_FIELDS].filter(
-          (f) => !q[f]
-        );
+        const hasEn = EN_FIELDS.some((f) => q[f]);
+        const hasHi = HI_FIELDS.some((f) => q[f]);
+
+        if (!hasEn && !hasHi) {
+          failed.push({
+            row,
+            reason: "Question missing (nothing written in English or Hindi).",
+          });
+          return;
+        }
+
+        // a language that is used must be complete
+        const missing = [
+          ...(hasEn ? EN_FIELDS : []),
+          ...(hasHi ? HI_FIELDS : []),
+        ].filter((f) => !q[f]);
 
         if (missing.length) {
           failed.push({
             row,
-            reason: `Missing: ${missing.join(", ")}`,
+            reason: `Missing: ${missing.map((f) => LABEL[f]).join(", ")}`,
           });
           return;
         }
@@ -154,6 +191,13 @@ function createBulkImportHandler({ mode }) {
             reason: "correctAnswer must be A, B, C or D.",
           });
           return;
+        }
+
+        // Hindi-only: keep the Hindi text in the main fields too
+        if (!hasEn) {
+          EN_FIELDS.forEach((f, i) => {
+            q[f] = q[HI_FIELDS[i]];
+          });
         }
 
         const key = dupKey(q.questionText);
