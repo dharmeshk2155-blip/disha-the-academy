@@ -67,11 +67,24 @@ function BulkImportQuestions({
   }, [importing, report]);
 
   const counts = useMemo(() => {
-    const c = { valid: 0, error: 0, duplicate: 0, warning: 0 };
+    const c = {
+      valid: 0,
+      error: 0,
+      duplicate: 0,
+      warning: 0,
+      enOnly: 0,
+      hiOnly: 0,
+    };
 
     results.forEach((r) => {
       c[r.status] += 1;
       if (r.warnings.length) c.warning += 1;
+
+      // single-language questions are only a NOTE, they still import
+      if (r.status === "valid") {
+        if (r.language === "en") c.enOnly += 1;
+        if (r.language === "hi") c.hiOnly += 1;
+      }
     });
 
     return c;
@@ -226,6 +239,24 @@ function BulkImportQuestions({
       : v[`option${letter}`];
   }
 
+  // the whole language is left out on purpose (e.g. English-only question)
+  function notProvided(r) {
+    return (
+      (lang === "hi" && r.language === "en") ||
+      (lang === "en" && r.language === "hi")
+    );
+  }
+
+  function emptyText(r) {
+    return notProvided(r) ? (
+      <em className="bq-muted">
+        not provided in {lang === "hi" ? "Hindi" : "English"}
+      </em>
+    ) : (
+      <em>(empty)</em>
+    );
+  }
+
   function renderRow(r) {
     const v = r.values;
     const answer = r.payload.correctAnswer;
@@ -236,7 +267,15 @@ function BulkImportQuestions({
         className={`bq-row bq-row-${r.status}`}
       >
         <header className="bq-row-head">
-          <span className="bq-row-no">Row {r.rowNumber}</span>
+          <span className="bq-row-no">
+            Row {r.rowNumber}
+            {r.status !== "error" && r.language === "en" && (
+              <span className="bq-tag">English only</span>
+            )}
+            {r.status !== "error" && r.language === "hi" && (
+              <span className="bq-tag">हिन्दी only</span>
+            )}
+          </span>
 
           <span className={`bq-badge bq-badge-${r.status}`}>
             {r.status === "valid"
@@ -248,9 +287,8 @@ function BulkImportQuestions({
         </header>
 
         <p className="bq-q" lang={lang === "hi" ? "hi" : "en"}>
-          {(lang === "hi" ? v.questionTextHi : v.questionText) || (
-            <em>(empty)</em>
-          )}
+          {(lang === "hi" ? v.questionTextHi : v.questionText) ||
+            emptyText(r)}
         </p>
 
         <ul className="bq-options">
@@ -261,7 +299,7 @@ function BulkImportQuestions({
               lang={lang === "hi" ? "hi" : "en"}
             >
               <b>{L}</b>
-              <span>{optionText(v, L) || <em>(empty)</em>}</span>
+              <span>{optionText(v, L) || emptyText(r)}</span>
             </li>
           ))}
         </ul>
@@ -347,8 +385,9 @@ function BulkImportQuestions({
                 Download the bilingual template.
               </li>
               <li>
-                Fill English and Hindi in the <b>same row</b> (one row =
-                one question). Answer key: A / B / C / D.
+                One row = one question. English subject: fill English only.
+                Hindi subject: fill Hindi only. GS / Maths / Reasoning:
+                fill both in the <b>same row</b>. Answer key: A / B / C / D.
               </li>
               <li>
                 Upload the file. You can check everything before saving.
@@ -434,6 +473,27 @@ function BulkImportQuestions({
                 <p className="bq-hint">
                   {blankRows} blank row(s) ignored.
                 </p>
+              )}
+
+              {counts.enOnly + counts.hiOnly > 0 && (
+                <div className="bq-alert bq-alert-info">
+                  <AlertCircle size={18} />
+                  <span>
+                    {counts.enOnly > 0 &&
+                      `${counts.enOnly} question${
+                        counts.enOnly === 1 ? " is" : "s are"
+                      } English-only. `}
+                    {counts.hiOnly > 0 &&
+                      `${counts.hiOnly} question${
+                        counts.hiOnly === 1 ? " is" : "s are"
+                      } Hindi-only. `}
+                    This is fine for English / Hindi subject tests, they
+                    will import. If a student picks the other language,
+                    they will see the language that is available. If you
+                    did not mean this, fix the Excel file and upload
+                    again.
+                  </span>
+                </div>
               )}
 
               {counts.error + counts.duplicate > 0 && (

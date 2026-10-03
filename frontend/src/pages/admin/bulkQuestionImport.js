@@ -15,23 +15,26 @@ export const MAX_IMPORT_ROWS = 500;
 
 // header in Excel  ->  field name used by the backend
 const COLUMNS = [
-  { header: "questionEn", field: "questionText", required: true },
-  { header: "questionHi", field: "questionTextHi", required: true },
+  { header: "questionEn", field: "questionText", lang: "en" },
+  { header: "questionHi", field: "questionTextHi", lang: "hi" },
 
-  { header: "optionAEn", field: "optionA", required: true },
-  { header: "optionAHi", field: "optionAHi", required: true },
-  { header: "optionBEn", field: "optionB", required: true },
-  { header: "optionBHi", field: "optionBHi", required: true },
-  { header: "optionCEn", field: "optionC", required: true },
-  { header: "optionCHi", field: "optionCHi", required: true },
-  { header: "optionDEn", field: "optionD", required: true },
-  { header: "optionDHi", field: "optionDHi", required: true },
+  { header: "optionAEn", field: "optionA", lang: "en" },
+  { header: "optionAHi", field: "optionAHi", lang: "hi" },
+  { header: "optionBEn", field: "optionB", lang: "en" },
+  { header: "optionBHi", field: "optionBHi", lang: "hi" },
+  { header: "optionCEn", field: "optionC", lang: "en" },
+  { header: "optionCHi", field: "optionCHi", lang: "hi" },
+  { header: "optionDEn", field: "optionD", lang: "en" },
+  { header: "optionDHi", field: "optionDHi", lang: "hi" },
 
-  { header: "correctAnswer", field: "correctAnswer", required: true },
+  { header: "correctAnswer", field: "correctAnswer", lang: null },
 
-  { header: "explanationEn", field: "explanationEn", required: false },
-  { header: "explanationHi", field: "explanationHi", required: false },
+  { header: "explanationEn", field: "explanationEn", lang: null },
+  { header: "explanationHi", field: "explanationHi", lang: null },
 ];
+
+const EN_COLS = COLUMNS.filter((c) => c.lang === "en");
+const HI_COLS = COLUMNS.filter((c) => c.lang === "hi");
 
 export const TEMPLATE_HEADERS = COLUMNS.map((c) => c.header);
 
@@ -92,7 +95,9 @@ export async function downloadTemplate() {
     ["HOW TO FILL THIS FILE"],
     [""],
     ["1. One row = one question. Keep the header row (row 1) unchanged."],
-    ["2. Fill BOTH English (…En) and Hindi (…Hi) columns in the same row."],
+    ["2. English subject: fill only the English (…En) columns. Hindi subject: fill only the Hindi (…Hi) columns."],
+    ["   GS / Maths / Reasoning etc.: fill BOTH in the same row. (Only one language is allowed, you just get a note.)"],
+    ["   If you use a language, its question AND all 4 options must be filled."],
     ["3. correctAnswer must be A, B, C or D (same answer for both languages)."],
     ["4. explanationEn / explanationHi are optional."],
     ["5. Blank rows are ignored. Rows with problems are shown before import."],
@@ -175,9 +180,40 @@ export async function parseQuestionFile(file) {
 
   const presentFields = new Set(colField.filter(Boolean));
 
-  const missingHeaders = COLUMNS.filter(
-    (c) => c.required && !presentFields.has(c.field)
-  ).map((c) => c.header);
+  /*
+    A test may be English-only (English subject), Hindi-only (Hindi subject)
+    or bilingual (GS, Maths, Reasoning...). So a whole language may be
+    absent from the file, but a language must not be HALF there.
+  */
+  const countHave = (cols) =>
+    cols.filter((c) => presentFields.has(c.field)).length;
+
+  const enHave = countHave(EN_COLS);
+  const hiHave = countHave(HI_COLS);
+
+  const missingHeaders = [];
+
+  if (!presentFields.has("correctAnswer")) {
+    missingHeaders.push("correctAnswer");
+  }
+
+  if (enHave === 0 && hiHave === 0) {
+    missingHeaders.push(
+      "questionEn / questionHi and the option columns"
+    );
+  }
+
+  if (enHave > 0 && enHave < EN_COLS.length) {
+    EN_COLS.filter((c) => !presentFields.has(c.field)).forEach((c) =>
+      missingHeaders.push(c.header)
+    );
+  }
+
+  if (hiHave > 0 && hiHave < HI_COLS.length) {
+    HI_COLS.filter((c) => !presentFields.has(c.field)).forEach((c) =>
+      missingHeaders.push(c.header)
+    );
+  }
 
   if (missingHeaders.length) {
     return {
@@ -231,7 +267,19 @@ export async function parseQuestionFile(file) {
 
 /* -----------------------------------------------------
    VALIDATE  ->  one result per row
-   status: "valid" | "error" | "duplicate"
+
+   status   "valid" | "error" | "duplicate"
+   language "both" | "en" | "hi"
+
+   BLOCKS the import (error)
+     - an option is missing in a language that is being used
+     - options are written but the question is missing
+     - correctAnswer is missing / not A-D
+     - nothing written in either language
+
+   Only a NOTE (never blocks)
+     - the whole question is in ONE language (English-only for an
+       English test, Hindi-only for a Hindi test, ...)
 ----------------------------------------------------- */
 export function validateRows(rows, existingQuestionTexts = []) {
   const seenInDb = new Set(existingQuestionTexts.map(dupKey));
@@ -241,12 +289,29 @@ export function validateRows(rows, existingQuestionTexts = []) {
     const errors = [];
     const warnings = [];
 
-    // 1) every required text column (EN + HI) must be filled
-    COLUMNS.filter(
-      (c) => c.required && c.field !== "correctAnswer"
-    ).forEach((c) => {
-      if (!values[c.field]) errors.push(`${c.header} missing`);
-    });
+    const filled = (cols) => cols.filter((c) => clean(values[c.field]));
+
+    const enFilled = filled(EN_COLS);
+    const hiFilled = filled(HI_COLS);
+
+    const hasEn = enFilled.length > 0;
+    const hasHi = hiFilled.length > 0;
+
+    // 1) every language that is used must be complete
+    if (!hasEn && !hasHi) {
+      errors.push("Question missing (nothing written in English or Hindi)");
+    } else {
+      [
+        [hasEn, EN_COLS],
+        [hasHi, HI_COLS],
+      ].forEach(([used, cols]) => {
+        if (!used) return;
+
+        cols.forEach((c) => {
+          if (!clean(values[c.field])) errors.push(`${c.header} missing`);
+        });
+      });
+    }
 
     // 2) answer key
     const answer = clean(values.correctAnswer).toUpperCase();
@@ -261,28 +326,33 @@ export function validateRows(rows, existingQuestionTexts = []) {
 
     // 3) soft checks (never block the import)
     if (
-      values.questionTextHi &&
+      hasHi &&
+      clean(values.questionTextHi) &&
       !HAS_DEVANAGARI.test(values.questionTextHi)
     ) {
       warnings.push("questionHi has no Hindi (Devanagari) text");
     }
 
-    const hasEn = !!values.explanationEn;
-    const hasHi = !!values.explanationHi;
+    const hasExpEn = !!clean(values.explanationEn);
+    const hasExpHi = !!clean(values.explanationHi);
 
-    if (hasEn !== hasHi) {
+    // only compare explanations when the question itself is bilingual
+    if (hasEn && hasHi && hasExpEn !== hasExpHi) {
       warnings.push(
-        hasEn
-          ? "explanationHi is empty"
-          : "explanationEn is empty"
+        hasExpEn ? "explanationHi is empty" : "explanationEn is empty"
       );
     }
 
     // 4) duplicates (inside this file, and already saved in this test)
+    // a Hindi-only question is compared by its Hindi text
+    const textForKey = hasEn
+      ? values.questionText
+      : values.questionTextHi;
+
     let duplicateOf = "";
 
-    if (values.questionText) {
-      const key = dupKey(values.questionText);
+    if (clean(textForKey)) {
+      const key = dupKey(textForKey);
 
       if (seenInDb.has(key)) {
         duplicateOf = "Already exists in this test";
@@ -301,6 +371,7 @@ export function validateRows(rows, existingQuestionTexts = []) {
     return {
       rowNumber,
       status,
+      language: hasEn && hasHi ? "both" : hasEn ? "en" : hasHi ? "hi" : "none",
       errors: duplicateOf && !errors.length ? [duplicateOf] : errors,
       warnings,
       values,

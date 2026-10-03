@@ -39,11 +39,17 @@ const API_BASE =
         .VITE_API_BASE ||
       "https://disha-the-academy.onrender.com";
 
+import {
+  TestCategoryBadge,
+  TestCategorySelect,
+} from "./testCategories";
+
 const INITIAL_FORM = {
   testId: "",
   topCategory: "",
   subExam: "",
   category: "",
+  testCategory: "",
   title: "",
   subject: "",
   durationMinutes: "",
@@ -410,6 +416,10 @@ export default function AdminFreeTests() {
         test.subExam ||
         "",
 
+      testCategory:
+        test.testCategory ||
+        "",
+
       category:
         test.category ||
         "",
@@ -489,6 +499,7 @@ export default function AdminFreeTests() {
       !testId ||
       !form.topCategory ||
       !form.subExam ||
+      !form.testCategory ||
       !form.category.trim() ||
       !form.title.trim() ||
       !form.subject.trim()
@@ -589,6 +600,9 @@ export default function AdminFreeTests() {
 
               subExam:
                 form.subExam,
+
+              testCategory:
+                form.testCategory,
 
               category:
                 form.category.trim(),
@@ -1024,6 +1038,7 @@ export default function AdminFreeTests() {
                           <span>
                             {test.testId}
                           </span>
+                          <TestCategoryBadge value={test.testCategory} />
                         </div>
                       </td>
 
@@ -1337,6 +1352,11 @@ export default function AdminFreeTests() {
                   />
 
                 </div>
+
+                <TestCategorySelect
+                  value={form.testCategory}
+                  onChange={handleChange}
+                />
 
                 <div className="admin-test-form-field">
 

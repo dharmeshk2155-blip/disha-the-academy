@@ -17,6 +17,13 @@ function formatDuration(seconds) {
   return `${mins} min`;
 }
 
+// kinds of test shown as tabs (order = tab order)
+const CATEGORY_TABS = [
+  { value: "full", label: "Full Tests" },
+  { value: "sectional", label: "Sectional Tests" },
+  { value: "previous_year", label: "Previous Year Tests" },
+];
+
 export default function MockTests() {
   const { topSlug, subSlug } = useParams();
   const navigate = useNavigate();
@@ -24,6 +31,7 @@ export default function MockTests() {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("");
 
   const examGroup = getExamGroup(topSlug);
   const subExam = getSubExam(topSlug, subSlug);
@@ -132,6 +140,32 @@ export default function MockTests() {
     );
   }
 
+  // old tests that have no category yet stay visible in an "Other" tab
+  const categoryOf = (test) =>
+    CATEGORY_TABS.some((c) => c.value === test.testCategory)
+      ? test.testCategory
+      : "other";
+
+  const tabs = [
+    ...CATEGORY_TABS,
+    ...(tests.some((t) => categoryOf(t) === "other")
+      ? [{ value: "other", label: "Other Tests" }]
+      : []),
+  ].map((tab) => ({
+    ...tab,
+    count: tests.filter((t) => categoryOf(t) === tab.value).length,
+  }));
+
+  // open the first tab that has tests, unless the student picked one
+  const currentCategory =
+    activeCategory ||
+    tabs.find((tab) => tab.count > 0)?.value ||
+    "full";
+
+  const visibleTests = tests.filter(
+    (t) => categoryOf(t) === currentCategory
+  );
+
   return (
     <div className="mt-page">
       <button
@@ -153,13 +187,41 @@ export default function MockTests() {
         </p>
       </div>
 
+      {tests.length > 0 && (
+        <div
+          className="mt-tabs"
+          role="tablist"
+          aria-label="Test category"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={currentCategory === tab.value}
+              className={`mt-tab ${
+                currentCategory === tab.value ? "active" : ""
+              }`}
+              onClick={() => setActiveCategory(tab.value)}
+            >
+              {tab.label}
+              <span className="mt-tab-count">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {tests.length === 0 ? (
         <div className="mt-status">
           No mock tests available for {subExam.name} yet.
         </div>
+      ) : visibleTests.length === 0 ? (
+        <div className="mt-status">
+          No tests in this category yet.
+        </div>
       ) : (
         <div className="mt-grid">
-          {tests.map((test) => {
+          {visibleTests.map((test) => {
             const testId = test.id || test.testId;
 
             return (

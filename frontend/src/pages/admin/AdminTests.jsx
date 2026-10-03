@@ -24,6 +24,11 @@ import { EXAM_TAXONOMY } from "../../data/examTaxonomy";
 import "./AdminTests.css";
 
 
+import {
+  TestCategoryBadge,
+  TestCategorySelect,
+} from "./testCategories";
+
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://disha-the-academy.onrender.com";
@@ -33,6 +38,7 @@ const INITIAL_FORM = {
   topCategory: "",
   subExam: "",
   category: "",
+  testCategory: "",
   title: "",
   subject: "",
   durationMinutes: "",
@@ -240,6 +246,7 @@ function AdminTests() {
     !testId ||
     !form.topCategory ||
     !form.subExam ||
+    !form.testCategory ||
     !category ||
     !title ||
     !subject ||
@@ -325,6 +332,7 @@ function AdminTests() {
         negativeMarking,
         topCategory: form.topCategory,
         subExam: form.subExam,
+        testCategory: form.testCategory,
       }),
     });
 
@@ -381,6 +389,7 @@ function AdminTests() {
     topCategory: test.topCategory || "",
     subExam: test.subExam || "",
     category: test.category || "",
+    testCategory: test.testCategory || "",
     title: test.title || "",
     subject: test.subject || "",
     durationMinutes: test.duration
@@ -635,6 +644,7 @@ const handleDeleteTest = async (test) => {
                         <div className="admin-test-name">
                           <strong>{test.title}</strong>
                           <span>{test.testId}</span>
+                          <TestCategoryBadge value={test.testCategory} />
                         </div>
                       </td>
 
@@ -879,6 +889,12 @@ const handleDeleteTest = async (test) => {
                     disabled={saving}
                   />
                 </div>
+
+                <TestCategorySelect
+                  value={form.testCategory}
+                  onChange={handleFormChange}
+                  disabled={saving}
+                />
 
                 <div className="admin-test-form-field admin-test-form-full">
                   <label htmlFor="title">

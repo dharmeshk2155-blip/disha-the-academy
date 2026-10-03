@@ -69,6 +69,13 @@ function getTitle(result) {
 }
 
 
+// what the "Test Types" filter matches on (value saved on the test)
+const TEST_CATEGORY_LABELS = {
+  full: "Full Test",
+  sectional: "Sectional Test",
+  previous_year: "Previous Year Test",
+};
+
 function getExam(result) {
   return (
     result.exam ||
@@ -487,9 +494,9 @@ export default function MyResults() {
           list.filter(
             (result) =>
               normalize(
-                result.testType ||
-                  result.type ||
-                  ""
+                `${result.testType || ""} ${result.type || ""} ${
+                  TEST_CATEGORY_LABELS[result.testCategory] || ""
+                }`
               ).includes(
                 normalize(
                   typeFilter
@@ -856,15 +863,11 @@ export default function MyResults() {
                   </option>
 
                   <option>
-                    Chapter Test
+                    Sectional Test
                   </option>
 
                   <option>
-                    Weekly Test
-                  </option>
-
-                  <option>
-                    Mock Test
+                    Previous Year Test
                   </option>
 
                   <option>
