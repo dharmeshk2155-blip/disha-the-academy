@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+} from "react-router-dom";
 import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import Notes from "./pages/Notes";
@@ -13,11 +19,11 @@ import OrderSuccess from "./pages/OrderSuccess";
 import ExamGroups from "./pages/ExamGroups";
 import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
+import ExamPage from "./pages/ExamPage";
+import AllTests from "./pages/AllTests";
 import FreeTests from "./pages/FreeTests";
 import FreeExamTests from "./pages/FreeExamTests";
 import FreeTestAttempt from "./pages/FreeTestAttempt";
-import PopularExamsSub from "./pages/PopularExamsSub";
-import PopularExamsTests from "./pages/PopularExamsTests";
 import Dashboard from "./pages/Dashboard";
 import MyResults from "./pages/MyResults";
 import Leaderboard from "./pages/Leaderboard";
@@ -58,6 +64,26 @@ import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminAbout from "./pages/admin/AdminAbout";
 import AdminSettings from "./pages/admin/AdminSettings";
 import "./App.css";
+
+/*
+  Popular Exams used to have its own copy of the pages. Both Home rows now
+  use the main flow, so old /popular-exams/... addresses (bookmarks, old
+  links) are sent to the same place in the main flow.
+*/
+function PopularExamsRedirect() {
+  const { topSlug, subSlug } = useParams();
+
+  return (
+    <Navigate
+      to={
+        subSlug
+          ? `/take-mock-test/${topSlug}/${subSlug}`
+          : `/take-mock-test/${topSlug}`
+      }
+      replace
+    />
+  );
+}
 
 function App() {
   return (
@@ -273,7 +299,27 @@ function App() {
             path="/take-mock-test/:topSlug/:subSlug"
             element={
               <ProtectedRoute>
+                <ExamPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Test list: one exam + one test type */}
+          <Route
+            path="/take-mock-test/:topSlug/:subSlug/:typeSlug"
+            element={
+              <ProtectedRoute>
                 <MockTests />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Quick access: all / recently added tests + search + filters */}
+          <Route
+            path="/mock-tests"
+            element={
+              <ProtectedRoute>
+                <AllTests />
               </ProtectedRoute>
             }
           />
@@ -296,19 +342,11 @@ function App() {
           ================================================== */}
           <Route
             path="/popular-exams/:topSlug"
-            element={
-              <ProtectedRoute>
-                <PopularExamsSub />
-              </ProtectedRoute>
-            }
+            element={<PopularExamsRedirect />}
           />
           <Route
             path="/popular-exams/:topSlug/:subSlug"
-            element={
-              <ProtectedRoute>
-                <PopularExamsTests />
-              </ProtectedRoute>
-            }
+            element={<PopularExamsRedirect />}
           />
         </Route>
         </Route>

@@ -562,3 +562,84 @@
   color: #8a98b3;
   font-weight: 400;
 }
+
+
+/* scrolling inside the modal must not scroll the page behind it */
+.bq-body-scroll {
+  overscroll-behavior: contain;
+}
+
+.bq-import-btn {
+  justify-content: center;
+}
+
+/* ---------- phones: bigger touch targets, tidy toolbar and summary ---------- */
+@media (max-width: 600px) {
+  .bq-close {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* language switch + filter each take a full row, buttons share the width */
+  .bq-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bq-seg {
+    display: flex;
+    width: 100%;
+  }
+
+  .bq-seg button {
+    flex: 1;
+    min-height: 40px;
+    padding: 0 8px;
+  }
+
+  /* 2 per row; an odd last card (e.g. 3 results) spans the full row */
+  .bq-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bq-summary > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .bq-summary strong {
+    font-size: 22px;
+  }
+
+  .bq-row {
+    padding: 11px 12px;
+  }
+
+  .bq-q {
+    font-size: 14px;
+  }
+
+  .bq-tag {
+    display: inline-block;
+    margin: 4px 0 0 0;
+  }
+
+  .bq-row-no {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bq-row-no .bq-tag {
+    margin: 0;
+  }
+
+  .bq-import-btn {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+
+  .bq-header-actions .admin-question-primary-btn {
+    flex: 1 1 100%;
+  }
+}

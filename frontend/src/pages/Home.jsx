@@ -255,7 +255,7 @@ function Hero() {
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
 
-          <Link to="/take-mock-test" className="hm-btn hm-btn-navy">
+          <Link to="/mock-tests" className="hm-btn hm-btn-navy">
             Take a Mock Test
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
@@ -818,8 +818,8 @@ export default function Home() {
   return (
     <div className="hm">
       <Hero />
-      <ExamCategories />
       <PopularExams />
+      <ExamCategories />
       <StudyNotes state={notes} />
       <MockTests state={tests} />
       <CurrentAffairs state={affairs} />

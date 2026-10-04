@@ -450,6 +450,24 @@ export default function ExamGroups() {
           SEARCH + FILTER TOOLBAR
       ========================================= */}
 
+      <button
+        type="button"
+        className="mth-quick"
+        onClick={() => navigate("/mock-tests")}
+      >
+        <span className="mth-quick-icon">
+          <Clock3 size={20} />
+        </span>
+
+        <span className="mth-quick-text">
+          <small>QUICK ACCESS</small>
+          <strong>All / Recently added tests</strong>
+          <em>Search and filter by exam, category, type and language</em>
+        </span>
+
+        <ArrowRight size={20} />
+      </button>
+
       <section className="mth-toolbar">
 
         <form

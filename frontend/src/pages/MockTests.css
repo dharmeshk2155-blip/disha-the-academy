@@ -203,3 +203,30 @@
     font-size: 13px;
   }
 }
+
+
+@media (max-width: 600px) {
+  .mt-page {
+    padding: 18px 14px 40px;
+  }
+
+  .mt-header h1 {
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  .mt-header p {
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+
+  /* tabs swipe edge to edge, first tab still lines up with the page */
+  .mt-tabs {
+    margin: 12px -14px 16px;
+    padding: 0 14px 4px;
+  }
+
+  .mt-grid {
+    gap: 12px;
+  }
+}

@@ -55,6 +55,16 @@ function BulkImportQuestions({
   const [importError, setImportError] = useState("");
   const [report, setReport] = useState(null);
 
+  // stop the page behind the modal from scrolling (phones scroll it otherwise)
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   // close with Esc (not while importing)
   useEffect(() => {
     function onKey(e) {

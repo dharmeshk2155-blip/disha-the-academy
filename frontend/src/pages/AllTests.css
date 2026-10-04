@@ -1,0 +1,249 @@
+/* All / Recently added tests (Quick Access) */
+
+.at-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+.at-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.at-header h1 {
+  margin: 0 0 4px;
+  color: #0b1f3a;
+  font-size: 28px;
+}
+
+.at-header p {
+  margin: 0;
+  color: #5b6472;
+  font-size: 14.5px;
+}
+
+.at-browse {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  color: #0b1f3a;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.at-browse:hover {
+  color: #c78500;
+}
+
+.at-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 50px 0;
+  color: #5b6472;
+  font-size: 15px;
+  text-align: center;
+}
+
+.at-error {
+  color: #c0392b;
+}
+
+.at-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  color: #6b7d9e;
+  background: #fff;
+  border: 1px solid #d6dfec;
+  border-radius: 12px;
+}
+
+.at-search:focus-within {
+  border-color: #f0a500;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.18);
+}
+
+.at-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  color: #0b1f3a;
+  font-size: 15px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.at-search-clear {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #5b6472;
+  background: #eef2f9;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.at-filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.at-filters label {
+  min-width: 0;
+}
+
+.at-filters span {
+  display: block;
+  margin-bottom: 4px;
+  color: #5b6472;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.at-filters select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 10px;
+  color: #0b1f3a;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #d6dfec;
+  border-radius: 10px;
+}
+
+.at-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.at-tabs {
+  display: inline-flex;
+  padding: 3px;
+  background: #eef2f9;
+  border-radius: 999px;
+}
+
+.at-tabs button {
+  min-height: 38px;
+  padding: 0 18px;
+  color: #4a5d82;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.at-tabs button.on {
+  color: #fff;
+  background: #0b2a66;
+}
+
+.at-count {
+  margin: 0;
+  color: #5b6472;
+  font-size: 13.5px;
+}
+
+.at-clear {
+  min-height: 36px;
+  padding: 0 14px;
+  color: #0b1f3a;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #cfd9e8;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.at-bar .at-clear {
+  margin-left: auto;
+}
+
+.at-more {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.at-more button {
+  min-height: 44px;
+  padding: 0 22px;
+  color: #0b1f3a;
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #cfd9e8;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.at-more button:hover {
+  background: #f3f7fc;
+}
+
+@media (max-width: 900px) {
+  .at-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .at-page {
+    padding: 16px 14px 40px;
+  }
+
+  .at-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .at-header h1 {
+    font-size: 24px;
+  }
+
+  .at-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 16px stops iPhone Safari zooming the page when a field is tapped */
+  .at-search input,
+  .at-filters select {
+    font-size: 16px;
+  }
+
+  .at-tabs {
+    display: flex;
+    width: 100%;
+  }
+
+  .at-tabs button {
+    flex: 1;
+    padding: 0 8px;
+  }
+
+  .at-bar .at-clear {
+    margin-left: 0;
+  }
+}

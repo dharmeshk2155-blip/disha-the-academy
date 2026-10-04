@@ -1909,3 +1909,69 @@
     font-size: 13px;
   }
 }
+
+
+/* quick access strip: jump straight to the latest tests */
+.mth-quick {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  color: #0b1f4d;
+  text-align: left;
+  background: #fff7e0;
+  border: 1px solid #f4dc9c;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.mth-quick:hover {
+  background: #fff1cc;
+}
+
+.mth-quick-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.mth-quick-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mth-quick-text small {
+  display: block;
+  color: #b87700;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.mth-quick-text strong {
+  display: block;
+  font-size: 16px;
+}
+
+.mth-quick-text em {
+  display: block;
+  color: #5b6472;
+  font-size: 12.5px;
+  font-style: normal;
+}
+
+@media (max-width: 600px) {
+  .mth-quick {
+    padding: 12px 14px;
+  }
+
+  .mth-quick-text em {
+    display: none;
+  }
+}

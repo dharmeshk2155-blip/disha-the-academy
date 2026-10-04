@@ -16,17 +16,19 @@ import { getSubExam } from "../../data/examTaxonomy";
 // ======================================================
 // Static content of the home page.
 // Every "to" below is a route that already exists in App.jsx.
+// BOTH rows (categories + popular exams) open the SAME flow:
+//   /take-mock-test/:category -> exam -> exam page -> test type -> test list
 // ======================================================
 
 /* Section 2 - "What are you preparing for?" */
 export const CATEGORY_TILES = [
-  { key: "ssc", label: "SSC", Icon: FaFileAlt, color: "#d62839", to: "/popular-exams/ssc" },
-  { key: "banking", label: "Banking", Icon: FaUniversity, color: "#1d6fdc", to: "/popular-exams/banking" },
-  { key: "railway", label: "Railway", Icon: FaTrain, color: "#e8590c", to: "/popular-exams/railway" },
-  { key: "teaching", label: "Teaching", Icon: FaChalkboardTeacher, color: "#2b9348", to: "/popular-exams/teaching" },
-  { key: "hp", label: "HP", Icon: FaMountain, color: "#6b46c1", to: "/popular-exams/police/state-police" },
-  { key: "police", label: "Police", Icon: FaUserShield, color: "#a8761a", to: "/popular-exams/police" },
-  { key: "civil-services", label: "Civil Services", Icon: FaLandmark, color: "#0b1f4d", to: "/popular-exams/civil-services" },
+  { key: "ssc", label: "SSC", Icon: FaFileAlt, color: "#d62839", to: "/take-mock-test/ssc" },
+  { key: "banking", label: "Banking", Icon: FaUniversity, color: "#1d6fdc", to: "/take-mock-test/banking" },
+  { key: "railway", label: "Railway", Icon: FaTrain, color: "#e8590c", to: "/take-mock-test/railway" },
+  { key: "teaching", label: "Teaching", Icon: FaChalkboardTeacher, color: "#2b9348", to: "/take-mock-test/teaching" },
+  { key: "hp", label: "HP", Icon: FaMountain, color: "#6b46c1", to: "/take-mock-test/police/state-police" },
+  { key: "police", label: "Police", Icon: FaUserShield, color: "#a8761a", to: "/take-mock-test/police" },
+  { key: "civil-services", label: "Civil Services", Icon: FaLandmark, color: "#0b1f4d", to: "/take-mock-test/civil-services" },
   { key: "other", label: "Other", Icon: FaThLarge, color: "#0b1f4d", to: "/take-mock-test" },
 ];
 
@@ -48,7 +50,7 @@ export const POPULAR_EXAMS = [
     key: "ssc",
     title: "SSC Exams",
     tags: ["Notes", "Tests", "Current Affairs"],
-    to: "/popular-exams/ssc",
+    to: "/take-mock-test/ssc",
     logo: getSubExam("ssc", "cgl")?.iconUrl,
     fallback: CATEGORY_ICONS.ssc,
   },
@@ -56,7 +58,7 @@ export const POPULAR_EXAMS = [
     key: "hp",
     title: "HP Government Exams",
     tags: ["Notes", "Tests", "Study Material"],
-    to: "/popular-exams/police/state-police",
+    to: "/take-mock-test/police/state-police",
     logo: getSubExam("police", "state-police")?.iconUrl,
     fallback: { Icon: FaMountain, color: "#6b46c1" },
   },
@@ -64,7 +66,7 @@ export const POPULAR_EXAMS = [
     key: "banking",
     title: "Banking Exams",
     tags: ["Mock Tests", "Notes", "Study Material"],
-    to: "/popular-exams/banking",
+    to: "/take-mock-test/banking",
     logo: getSubExam("banking", "sbi-po")?.iconUrl,
     fallback: CATEGORY_ICONS.banking,
   },
@@ -72,7 +74,7 @@ export const POPULAR_EXAMS = [
     key: "railway",
     title: "Railway Exams",
     tags: ["Tests", "Notes", "Study Material"],
-    to: "/popular-exams/railway",
+    to: "/take-mock-test/railway",
     logo: getSubExam("railway", "rrb-ntpc")?.iconUrl,
     fallback: CATEGORY_ICONS.railway,
   },
@@ -80,7 +82,7 @@ export const POPULAR_EXAMS = [
     key: "teaching",
     title: "Teaching Exams",
     tags: ["Notes", "Tests", "Study Material"],
-    to: "/popular-exams/teaching",
+    to: "/take-mock-test/teaching",
     logo: getSubExam("teaching", "ctet")?.iconUrl,
     fallback: CATEGORY_ICONS.teaching,
   },

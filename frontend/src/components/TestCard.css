@@ -1,0 +1,119 @@
+/* Test card + grid (shared by Test list and All tests pages) */
+
+.tc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.tc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e8ee;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(11, 31, 58, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(11, 31, 58, 0.12);
+}
+
+.tc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tc-subject {
+  min-width: 0;
+  max-width: 70%;
+  padding: 3px 11px;
+  overflow: hidden;
+  color: #0b1f3a;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #eef2fb;
+  border-radius: 999px;
+}
+
+.tc-access {
+  flex-shrink: 0;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.tc-free {
+  color: #11683f;
+  background: #e1f6ec;
+}
+
+.tc-paid {
+  color: #8a5a00;
+  background: #fff1cf;
+}
+
+.tc-title {
+  margin: 0;
+  color: #0b1f3a;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.tc-exam {
+  margin: -4px 0 0;
+  color: #5b6472;
+  font-size: 12.5px;
+}
+
+.tc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  color: #5b6472;
+  font-size: 13px;
+  list-style: none;
+}
+
+.tc-start {
+  width: 100%;
+  min-height: 44px;
+  margin-top: auto;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  background: #0b1f3a;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tc-start:hover {
+  color: #0b1f3a;
+  background: #f0a500;
+}
+
+@media (max-width: 600px) {
+  .tc-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .tc-card {
+    padding: 14px;
+  }
+}

@@ -87,6 +87,10 @@ router.get(
       let questionCountMap =
         new Map();
 
+      // testId -> ["en", "hi"]  (languages students can use)
+      const languageMap =
+        new Map();
+
       if (testIds.length > 0) {
         const questionCounts =
           await Question.aggregate([
@@ -105,6 +109,56 @@ router.get(
                 totalQuestions: {
                   $sum: 1,
                 },
+
+                /*
+                  Language of each question:
+                    Hindi text empty         -> English only
+                    Hindi text same as main  -> Hindi only
+                                                (bulk import copies it)
+                    Hindi text different     -> both languages
+                */
+                englishOnlyCount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: [
+                          {
+                            $strLenCP: {
+                              $ifNull: ["$questionTextHi", ""],
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
+                },
+
+                hindiOnlyCount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $and: [
+                          {
+                            $gt: [
+                              {
+                                $strLenCP: {
+                                  $ifNull: ["$questionTextHi", ""],
+                                },
+                              },
+                              0,
+                            ],
+                          },
+                          { $eq: ["$questionTextHi", "$questionText"] },
+                        ],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
+                },
               },
             },
           ]);
@@ -121,6 +175,20 @@ router.get(
               ]
             )
           );
+
+        questionCounts.forEach((item) => {
+          const total = Number(item.totalQuestions) || 0;
+          const englishOnly = Number(item.englishOnlyCount) || 0;
+          const hindiOnly = Number(item.hindiOnlyCount) || 0;
+          const both = total - englishOnly - hindiOnly;
+
+          const languages = [];
+
+          if (englishOnly + both > 0) languages.push("en");
+          if (hindiOnly + both > 0) languages.push("hi");
+
+          languageMap.set(String(item._id), languages);
+        });
       }
 
       // ==============================
@@ -181,6 +249,11 @@ router.get(
                   test.testId
                 )
               ) || 0,
+
+            languages:
+              languageMap.get(String(test.testId)) || [],
+
+            createdAt: test.createdAt,
           })
         );
 
