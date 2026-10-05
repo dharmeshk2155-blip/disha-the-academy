@@ -9,6 +9,15 @@ const Question =
 const Result =
   require("../models/Result");
 
+const User =
+  require("../models/User");
+const {
+  accuracyOf,
+  loadFirstAttempts,
+  percentile,
+  round2,
+  summarise,
+} = require("../utils/testAnalytics");
 const requireAuth =
   require("../middleware/requireAuth");
 
@@ -283,6 +292,255 @@ router.get(
 
    Free + premium results both returned.
 ===================================================== */
+
+/* =====================================================
+   GET /api/tests/result/:resultId
+   Full result page data for the logged-in student:
+   overview, comparison with topper / average, and the solutions.
+
+   Rank, percentile, topper and average always use the student's
+   FIRST attempt of this test (later attempts only change the
+   solutions that are shown).
+===================================================== */
+router.get(
+  "/result/:resultId",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const resultId = Number(req.params.resultId);
+
+      if (!Number.isInteger(resultId) || resultId < 1) {
+        return res.status(400).json({ error: "Invalid result." });
+      }
+
+      const result = await Result.findOne({ resultId }).lean();
+
+      if (!result) {
+        return res.status(404).json({ error: "Result not found." });
+      }
+
+      if (String(result.userId) !== String(req.user.id)) {
+        return res
+          .status(403)
+          .json({ error: "This result belongs to another account." });
+      }
+
+      const testId = result.testId;
+
+      const [test, questions, firstAttempts, myAttempts] =
+        await Promise.all([
+          Test.findOne({ testId })
+            .select(
+              "title subject duration marksPerCorrect negativeMarking isFree"
+            )
+            .lean(),
+          Question.find({ testId }).sort({ questionId: 1 }).lean(),
+          loadFirstAttempts(testId),
+          Result.find({ testId, userId: String(req.user.id) })
+            .sort({ submittedAt: 1, resultId: 1 })
+            .select("resultId score submittedAt")
+            .lean(),
+        ]);
+
+      const attemptNumber =
+        myAttempts.findIndex((a) => a.resultId === resultId) + 1 || 1;
+
+      const official =
+        firstAttempts.find((r) => r.userId === String(req.user.id)) || null;
+
+      const total = firstAttempts.length;
+      const { topper, average } = summarise(firstAttempts);
+
+      // how many students answered each question correctly (first attempts)
+      const correctBy = {};
+
+      if (firstAttempts.length) {
+        const reviews = await Result.find({
+          resultId: { $in: firstAttempts.map((r) => r.resultId) },
+        })
+          .select("review.questionId review.status")
+          .lean();
+
+        reviews.forEach((doc) => {
+          (doc.review || []).forEach((item) => {
+            if (item.status === "correct") {
+              correctBy[item.questionId] =
+                (correctBy[item.questionId] || 0) + 1;
+            }
+          });
+        });
+      }
+
+      const byId = new Map(questions.map((q) => [q.questionId, q]));
+      const hasTimes =
+        result.questionTimes && typeof result.questionTimes === "object";
+
+      const solutions = (result.review || []).map((item, index) => {
+        const q = byId.get(item.questionId);
+
+        return {
+          number: index + 1,
+          questionId: item.questionId,
+          question: {
+            en: q ? q.questionText : item.question || "",
+            hi: q ? q.questionTextHi || "" : "",
+          },
+          options: {
+            en: q
+              ? [q.optionA, q.optionB, q.optionC, q.optionD]
+              : item.options || [],
+            hi: q
+              ? [q.optionAHi, q.optionBHi, q.optionCHi, q.optionDHi]
+              : [],
+          },
+          selected: item.selected ?? null,
+          correctAnswer: Number(q?.correctAnswer ?? item.correctAnswer),
+          status: item.status,
+          explanation: {
+            en: q?.explanationEn || "",
+            hi: q?.explanationHi || "",
+          },
+          timeSpent: hasTimes
+            ? Number(result.questionTimes[String(item.questionId)]) || 0
+            : null,
+          percentCorrect: total
+            ? round2(((correctBy[item.questionId] || 0) / total) * 100)
+            : null,
+        };
+      });
+
+      // the language switch only makes sense when Hindi really differs
+      const bilingual = solutions.some(
+        (s) => s.question.hi && s.question.hi !== s.question.en
+      );
+
+      return res.json({
+        success: true,
+
+        test: {
+          testId,
+          title: result.testTitle || test?.title || "",
+          subject: test?.subject || "",
+          isFree: test?.isFree === true,
+          durationSeconds: Number(test?.duration) || 0,
+          marksPerCorrect: Number(test?.marksPerCorrect) || 0,
+          negativeMarking: Number(test?.negativeMarking) || 0,
+          totalQuestions: solutions.length,
+        },
+
+        // the attempt that is being viewed
+        attempt: {
+          resultId: result.resultId,
+          attemptNumber,
+          totalAttempts: myAttempts.length,
+          isFirstAttempt: attemptNumber === 1,
+          firstResultId: myAttempts[0]?.resultId || result.resultId,
+          score: result.score,
+          totalMarks: result.totalMarks,
+          correct: result.correctCount,
+          wrong: result.wrongCount,
+          unanswered: result.unansweredCount,
+          attempted: result.correctCount + result.wrongCount,
+          accuracy: accuracyOf(result.correctCount, result.wrongCount),
+          timeTakenSeconds: result.timeTakenSeconds ?? null,
+          submittedAt: result.submittedAt,
+        },
+
+        // the OFFICIAL result = first attempt (rank counts only this)
+        official: official && {
+          resultId: official.resultId,
+          score: official.score,
+          totalMarks: official.totalMarks,
+          correct: official.correct,
+          wrong: official.wrong,
+          unanswered: official.unanswered,
+          attempted: official.correct + official.wrong,
+          accuracy: official.accuracy,
+          timeTakenSeconds: official.timeTakenSeconds,
+          rank: official.rank,
+          totalParticipants: total,
+          percentile: percentile(official.rank, total),
+        },
+
+        comparison: {
+          topper: topper && {
+            score: topper.score,
+            accuracy: topper.accuracy,
+            correct: topper.correct,
+            wrong: topper.wrong,
+            timeTakenSeconds: topper.timeTakenSeconds,
+          },
+          average,
+        },
+
+        bilingual,
+        solutions,
+      });
+    } catch (error) {
+      console.error("Result detail error:", error);
+      return res.status(500).json({ error: "Failed to load the result." });
+    }
+  }
+);
+
+/* =====================================================
+   GET /api/tests/:testId/leaderboard
+   Leaderboard of ONE test. Only each student's first attempt counts.
+===================================================== */
+router.get(
+  "/:testId/leaderboard",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const testId = String(req.params.testId || "")
+        .trim()
+        .toLowerCase();
+
+      const rows = await loadFirstAttempts(testId);
+
+      const TOP = 10;
+      const me = String(req.user.id);
+      const myIndex = rows.findIndex((r) => r.userId === me);
+
+      const show = rows.slice(0, TOP);
+
+      if (myIndex >= TOP) show.push(rows[myIndex]);
+
+      const users = await User.find({
+        _id: { $in: show.map((r) => r.userId) },
+      })
+        .select("fullName")
+        .lean();
+
+      const nameOf = new Map(
+        users.map((u) => [String(u._id), u.fullName || "Student"])
+      );
+
+      const toEntry = (r) => ({
+        rank: r.rank,
+        name: nameOf.get(r.userId) || "Student",
+        score: r.score,
+        totalMarks: r.totalMarks,
+        accuracy: r.accuracy,
+        timeTakenSeconds: r.timeTakenSeconds,
+        isMe: r.userId === me,
+      });
+
+      return res.json({
+        success: true,
+        testId,
+        totalParticipants: rows.length,
+        myRank: myIndex >= 0 ? rows[myIndex].rank : null,
+        entries: rows.slice(0, TOP).map(toEntry),
+        // your row when you are outside the top 10
+        me: myIndex >= TOP ? toEntry(rows[myIndex]) : null,
+      });
+    } catch (error) {
+      console.error("Test leaderboard error:", error);
+      return res.status(500).json({ error: "Failed to load the leaderboard." });
+    }
+  }
+);
 
 router.get(
   "/results/:userId",
@@ -948,6 +1206,38 @@ router.post(
           lastResult?.resultId
         ) || 0) + 1;
 
+      // time spent (sent by the test page; clamped so it cannot be abused)
+      const durationLimit =
+        Math.max(Number(test.duration) || 0, 0);
+
+      const toSeconds = (value) => {
+        const n = Math.round(Number(value));
+        if (!Number.isFinite(n) || n < 0) return null;
+        return durationLimit > 0 ? Math.min(n, durationLimit) : n;
+      };
+
+      const timeTakenSeconds =
+        toSeconds(req.body?.timeTakenSeconds);
+
+      let questionTimes;
+
+      if (
+        req.body?.questionTimes &&
+        typeof req.body.questionTimes === "object"
+      ) {
+        questionTimes = {};
+
+        questions.forEach((q) => {
+          const secs = toSeconds(
+            req.body.questionTimes[q.questionId]
+          );
+
+          if (secs !== null) {
+            questionTimes[String(q.questionId)] = secs;
+          }
+        });
+      }
+
       const cleanUserId =
         userId === null ||
         userId === undefined
@@ -990,6 +1280,10 @@ router.post(
 
           review,
 
+
+          timeTakenSeconds,
+
+          questionTimes,
           submittedAt,
         });
 

@@ -44,6 +44,7 @@ import {
   TestCategorySelect,
 } from "./testCategories";
 
+import useTaxonomy from "../../data/useTaxonomy";
 const INITIAL_FORM = {
   testId: "",
   topCategory: "",
@@ -59,6 +60,8 @@ const INITIAL_FORM = {
 };
 
 export default function AdminFreeTests() {
+  useTaxonomy();
+
   const {
     adminToken,
   } =

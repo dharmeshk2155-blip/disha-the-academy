@@ -1,0 +1,433 @@
+/* Admin > Exams & Categories (mobile first) */
+
+.ax-page {
+  padding: 18px 20px 40px;
+}
+
+.ax-header h2 {
+  margin: 0 0 6px;
+  color: #172033;
+  font-size: 22px;
+}
+
+.ax-header p {
+  max-width: 720px;
+  margin: 0 0 16px;
+  color: #5a667d;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.ax-msg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.ax-msg button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ax-msg-ok {
+  color: #11683f;
+  background: #e9f8f0;
+  border: 1px solid #bfe8d1;
+}
+
+.ax-msg-error {
+  color: #a42121;
+  background: #fdeeee;
+  border: 1px solid #f6c9c9;
+}
+
+.ax-forms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.ax-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+}
+
+.ax-card h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 16px;
+}
+
+.ax-card label {
+  display: block;
+  min-width: 0;
+}
+
+.ax-card label > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #5a667d;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.ax-card input:not([type="checkbox"]),
+.ax-card select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  color: #172033;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 9px;
+}
+
+.ax-card input:focus,
+.ax-card select:focus {
+  border-color: #f0a500;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.18);
+}
+
+.ax-card input:disabled {
+  color: #7b869a;
+  background: #f3f5f9;
+}
+
+.ax-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ax-check {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.ax-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0b2a66;
+}
+
+.ax-check span {
+  margin: 0 !important;
+  color: #172033 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.ax-hint {
+  margin: 0;
+  color: #66748f;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.ax-hint code {
+  padding: 1px 6px;
+  background: #eef2f9;
+  border-radius: 5px;
+}
+
+.ax-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.ax-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #cfd8e6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ax-btn:disabled,
+.ax-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ax-btn-primary {
+  color: #fff;
+  background: #0b2a66;
+  border-color: #0b2a66;
+}
+
+.ax-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ax-list-head h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 17px;
+}
+
+.ax-list-head h3 span {
+  margin-left: 6px;
+  padding: 2px 9px;
+  color: #4a5d82;
+  font-size: 12px;
+  background: #eaf0fa;
+  border-radius: 999px;
+}
+
+.ax-list-head input {
+  width: 260px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 9px;
+}
+
+.ax-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ax-group {
+  min-width: 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+}
+
+.ax-group-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ax-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  background: #fff1cf;
+  border-radius: 12px;
+}
+
+.ax-group-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.ax-group-title strong {
+  display: block;
+  color: #172033;
+  font-size: 16px;
+}
+
+.ax-group-title small {
+  display: block;
+  margin-top: 1px;
+  color: #66748f;
+  font-size: 12.5px;
+}
+
+.ax-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ax-tag {
+  padding: 2px 9px;
+  color: #4a5d82;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #eef2f9;
+  border-radius: 999px;
+}
+
+.ax-tag-new {
+  color: #11683f;
+  background: #e1f6ec;
+}
+
+.ax-tag-hp {
+  color: #6b46c1;
+  background: #efe9fb;
+}
+
+.ax-group-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.ax-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #172033;
+  background: #f3f6fb;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.ax-danger {
+  color: #b42323 !important;
+}
+
+.ax-exams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ax-exams li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 12px;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 600;
+  background: #f1f4fa;
+  border-radius: 999px;
+}
+
+.ax-exams li span {
+  overflow-wrap: anywhere;
+}
+
+.ax-exams li.ax-new {
+  background: #e9f8f0;
+}
+
+.ax-exams li button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  color: #4a5d82;
+  background: rgba(255, 255, 255, 0.8);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.ax-exams .ax-empty {
+  color: #8a96ac;
+  font-weight: 500;
+  background: transparent;
+}
+
+.ax-none {
+  padding: 30px 0;
+  color: #66748f;
+  text-align: center;
+}
+
+@media (max-width: 850px) {
+  .ax-forms {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ax-page {
+    padding: 12px 6px 30px;
+  }
+
+  .ax-header h2 {
+    font-size: 20px;
+  }
+
+  .ax-card {
+    padding: 15px;
+  }
+
+  .ax-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ax-card input:not([type="checkbox"]),
+  .ax-card select,
+  .ax-list-head input {
+    font-size: 16px;
+  }
+
+  .ax-btn {
+    flex: 1 1 100%;
+    min-height: 46px;
+  }
+
+  .ax-list-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ax-list-head input {
+    width: 100%;
+  }
+
+  .ax-group {
+    padding: 13px;
+  }
+
+  .ax-icon-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .ax-exams li button {
+    width: 30px;
+    height: 30px;
+  }
+}

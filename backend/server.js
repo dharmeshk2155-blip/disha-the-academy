@@ -32,6 +32,10 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const adminFreeTestsRoutes = require("./routes/adminFreeTests");
+const {
+  publicRouter: examTaxonomyPublicRoutes,
+  adminRouter: examTaxonomyAdminRoutes,
+} = require("./routes/examTaxonomy");
 const { createBulkImportHandler } = require("./utils/bulkQuestions");
 const { normalizeTestCategory } = require("./utils/testCategory");
 
@@ -94,6 +98,14 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/admin/notes",adminNotesRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use( "/api/admin/free-tests", adminFreeTestsRoutes);
+
+// Exams & categories (admin can add new exams from the admin panel)
+app.use("/api/exam-taxonomy", examTaxonomyPublicRoutes);
+app.use(
+  "/api/admin/exam-taxonomy",
+  requireAdmin,
+  examTaxonomyAdminRoutes
+);
 // ======================================================
 // FILE PATHS
 // ======================================================

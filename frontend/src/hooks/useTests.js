@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://disha-the-academy.onrender.com";
+import { API_BASE } from "../config/api";
 
 /*
   Loads every active test once (GET /api/tests).

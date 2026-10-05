@@ -37,7 +37,7 @@ function ForgotPassword() {
         setError(data.message || "Could not send OTP. Please try again.");
       }
     } catch (err) {
-      setError("Backend se connection nahi ho raha. Check karo backend running hai ya nahi.");
+      setError("Unable to connect to the server. Please check your internet connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ function ForgotPassword() {
         setError(data.message || "Invalid or expired OTP.");
       }
     } catch (err) {
-      setError("Backend se connection nahi ho raha. Check karo backend running hai ya nahi.");
+      setError("Unable to connect to the server. Please check your internet connection and try again.");
     } finally {
       setLoading(false);
     }

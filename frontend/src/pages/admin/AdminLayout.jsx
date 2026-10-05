@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   BookOpen,
   ClipboardList,
+  Layers,
   Gift,
   Newspaper,
   PenLine,
@@ -65,6 +66,11 @@ const SECTIONS = [
         path: "/admin/tests",
         label: "Tests / Mock Tests",
         icon: ClipboardList,
+      },
+      {
+        path: "/admin/exams",
+        label: "Exams & Categories",
+        icon: Layers,
       },
       {
         path: "/admin/current-affairs",
@@ -127,6 +133,7 @@ const PAGE_TITLES = {
   "/admin/notes": "Notes",
   "/admin/free-tests": "Free Tests",
   "/admin/tests": "Tests / Mock Tests",
+  "/admin/exams": "Exams & Categories",
   "/admin/current-affairs": "Current Affairs",
   "/admin/blog": "Blog",
   "/admin/faq": "FAQ",

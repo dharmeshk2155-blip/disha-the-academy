@@ -2,16 +2,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getExamGroup } from "../data/examTaxonomy";
 import "./ExamCategories.css";
 
+import useTaxonomy from "../data/useTaxonomy";
+import useGoBack from "../hooks/useGoBack";
 export default function SubExams() {
+  useTaxonomy();
   const { topSlug } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/take-mock-test");
   const group = getExamGroup(topSlug);
 
   if (!group) {
     return (
       <div className="ec-page">
-        <button className="ec-back-btn" onClick={() => navigate("/take-mock-test")}>
-          ← Back to Exams
+        <button className="ec-back-btn" onClick={goBack}>
+          ← Back
         </button>
         <div className="ec-status">Exam category not found.</div>
       </div>
@@ -20,8 +24,8 @@ export default function SubExams() {
 
   return (
     <div className="ec-page">
-      <button className="ec-back-btn" onClick={() => navigate("/take-mock-test")}>
-        ← Back to Exams
+      <button className="ec-back-btn" onClick={goBack}>
+        ← Back
       </button>
 
       <div className="ec-header">

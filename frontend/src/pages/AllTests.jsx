@@ -9,6 +9,7 @@ import TestCard from "../components/TestCard";
 
 import "./AllTests.css";
 
+import useTaxonomy from "../data/useTaxonomy";
 const RECENT_LIMIT = 12;
 
 const EMPTY_FILTERS = {
@@ -35,6 +36,7 @@ const createdTime = (test) => {
     /mock-tests?q=cgl            -> search text
 */
 export default function AllTests() {
+  useTaxonomy();
   const [params] = useSearchParams();
 
   const { tests, loading, error } = useTests();

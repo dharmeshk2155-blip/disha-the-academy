@@ -130,7 +130,7 @@ function Register() {
             );
 
             setMessage(
-              "Backend se connection nahi ho raha. Please try again."
+              "Unable to connect to the server. Please check your internet connection and try again."
             );
           }
         },
@@ -274,7 +274,7 @@ function Register() {
       );
 
       setMessage(
-        "Backend se connection nahi ho raha. Please try again."
+        "Unable to connect to the server. Please check your internet connection and try again."
       );
     } finally {
       setLoading(false);

@@ -14,6 +14,8 @@ import TestCard from "../components/TestCard";
 
 import "./MockTests.css";
 
+import useTaxonomy from "../data/useTaxonomy";
+import useGoBack from "../hooks/useGoBack";
 /*
   TEST LIST   (/take-mock-test/:topSlug/:subSlug/:typeSlug)
   Shows the tests of ONE exam and ONE type
@@ -21,8 +23,10 @@ import "./MockTests.css";
   Each card: title, questions, duration, free/paid, Start Test.
 */
 export default function MockTests() {
+  useTaxonomy();
   const { topSlug, subSlug, typeSlug } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack(`/take-mock-test/${topSlug}/${subSlug}`);
 
   const group = getExamGroup(topSlug);
   const exam = getSubExam(topSlug, subSlug);
@@ -63,11 +67,8 @@ export default function MockTests() {
   if (!group || !exam) {
     return (
       <div className="mt-page">
-        <button
-          className="mt-back-btn"
-          onClick={() => navigate("/take-mock-test")}
-        >
-          ← Back to Test Series
+        <button className="mt-back-btn" onClick={goBack}>
+          ← Back
         </button>
 
         <div className="mt-status mt-error">Exam not found.</div>
@@ -91,10 +92,7 @@ export default function MockTests() {
   if (error) {
     return (
       <div className="mt-page">
-        <button
-          className="mt-back-btn"
-          onClick={() => navigate(examPath)}
-        >
+        <button className="mt-back-btn" onClick={goBack}>
           ← Back
         </button>
 
@@ -111,11 +109,8 @@ export default function MockTests() {
 
   return (
     <div className="mt-page">
-      <button
-        className="mt-back-btn"
-        onClick={() => navigate(examPath)}
-      >
-        ← Back to {exam.name}
+      <button className="mt-back-btn" onClick={goBack}>
+        ← Back
       </button>
 
       <div className="mt-header">

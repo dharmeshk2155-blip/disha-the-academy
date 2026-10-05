@@ -149,6 +149,11 @@ export default function TestAttempt({ freeMode = false }) {
   const timerRef = useRef(null);
   const questionTimerRef = useRef(null);
 
+  // seconds spent on every question  { questionId: seconds }  (sent on submit)
+  const questionTimesRef = useRef({});
+  const currentIndexRef = useRef(0);
+  const timeLeftRef = useRef(0);
+
   const [test, setTest] = useState(null);
   const [loading, setLoading] =
     useState(true);
@@ -393,6 +398,14 @@ export default function TestAttempt({ freeMode = false }) {
             body: JSON.stringify({
               answers:
                 submissionAnswers,
+              timeTakenSeconds:
+                Math.max(
+                  0,
+                  (Number(test.duration) || 0) -
+                    timeLeftRef.current
+                ),
+              questionTimes:
+                questionTimesRef.current,
             }),
           }
         );
@@ -410,7 +423,12 @@ export default function TestAttempt({ freeMode = false }) {
 
         setShowConfirm(false);
         setPaused(false);
-        setResult(data);
+
+        // result page: overview, leaderboard and solutions
+        navigate(
+          `/test-result/${data.resultId}`,
+          { replace: true }
+        );
       } catch (err) {
         console.error(
           "Submit test error:",
@@ -430,6 +448,7 @@ export default function TestAttempt({ freeMode = false }) {
       answers,
       submitting,
       language,
+      navigate,
     ]);
 
   // =====================================================
@@ -464,6 +483,7 @@ export default function TestAttempt({ freeMode = false }) {
       setCurrentIndex(0);
       setQuestionTime(0);
       setAnswers({});
+      questionTimesRef.current = {};
       setPaused(false);
 
       const initialStatus = {};
@@ -573,6 +593,35 @@ export default function TestAttempt({ freeMode = false }) {
     result,
     paused,
   ]);
+
+  // =====================================================
+  // TIME SPENT ON EACH QUESTION
+  // =====================================================
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  useEffect(() => {
+    if (!testStarted || result || paused) {
+      return undefined;
+    }
+
+    const counter = setInterval(() => {
+      const question =
+        test?.questions?.[currentIndexRef.current];
+
+      if (question) {
+        questionTimesRef.current[question.id] =
+          (questionTimesRef.current[question.id] || 0) + 1;
+      }
+    }, 1000);
+
+    return () => clearInterval(counter);
+  }, [testStarted, result, paused, test]);
 
   // =====================================================
   // LANGUAGE SWITCH

@@ -102,7 +102,7 @@ function Login() {
             );
 
             setMessage(
-              "Backend se connection nahi ho raha. Please try again."
+              "Unable to connect to the server. Please check your internet connection and try again."
             );
           }
         },
@@ -152,7 +152,7 @@ function Login() {
       );
 
       setMessage(
-        "Backend se connection nahi ho raha. Please try again."
+        "Unable to connect to the server. Please check your internet connection and try again."
       );
     } finally {
       setLoading(false);

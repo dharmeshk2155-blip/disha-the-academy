@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +19,8 @@ import useTests from "../hooks/useTests";
 
 import "./ExamPage.css";
 
+import useTaxonomy from "../data/useTaxonomy";
+import useGoBack from "../hooks/useGoBack";
 // icon for each type card
 const TYPE_ICON = {
   previous_year: FileText,
@@ -34,8 +36,9 @@ const TYPE_ICON = {
     - choose a test type -> Test list
 */
 export default function ExamPage() {
+  useTaxonomy();
   const { topSlug, subSlug } = useParams();
-  const navigate = useNavigate();
+  const goBack = useGoBack(`/take-mock-test/${topSlug}`);
 
   const group = getExamGroup(topSlug);
   const exam = getSubExam(topSlug, subSlug);
@@ -80,13 +83,9 @@ export default function ExamPage() {
   }, [tests]);
 
   const back = (
-    <button
-      type="button"
-      className="ep-back"
-      onClick={() => navigate(group ? `/take-mock-test/${topSlug}` : "/take-mock-test")}
-    >
+    <button type="button" className="ep-back" onClick={goBack}>
       <ArrowLeft size={18} />
-      {group ? `Back to ${group.title}` : "Back to exams"}
+      Back
     </button>
   );
 

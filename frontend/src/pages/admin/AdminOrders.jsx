@@ -179,7 +179,7 @@ export default function AdminOrders() {
       console.error("Orders load error:", err);
 
       setError(
-        err.message || "Orders load nahi ho paye."
+        err.message || "Unable to load orders."
       );
     } finally {
       setLoading(false);
@@ -327,7 +327,7 @@ export default function AdminOrders() {
       {error && (
         <div className="admin-dashboard-error">
           <div>
-            <strong>Orders load nahi hue</strong>
+            <strong>Orders could not be loaded</strong>
             <span>{error}</span>
           </div>
 

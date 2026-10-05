@@ -60,6 +60,19 @@ const resultSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // seconds the student spent in the test (null for old results)
+    timeTakenSeconds: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+
+    // { "<questionId>": seconds } time spent on each question
+    questionTimes: {
+      type: Object,
+      default: undefined,
+    },
+
     review: {
       type: Array,
       default: [],

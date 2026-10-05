@@ -103,7 +103,7 @@ export default function AdminHome() {
 
       setError(
         err.message ||
-          "Dashboard data load nahi ho paya."
+          "Unable to load dashboard data."
       );
     } finally {
       setLoading(false);
@@ -234,7 +234,7 @@ export default function AdminHome() {
 
           <div>
             <strong>
-              Dashboard data load nahi hua
+              Dashboard data could not be loaded
             </strong>
 
             <span>

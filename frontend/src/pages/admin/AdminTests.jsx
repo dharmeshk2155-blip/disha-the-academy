@@ -29,6 +29,7 @@ import {
   TestCategorySelect,
 } from "./testCategories";
 
+import useTaxonomy from "../../data/useTaxonomy";
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://disha-the-academy.onrender.com";
@@ -47,6 +48,8 @@ const INITIAL_FORM = {
 };
 
 function AdminTests() {
+  useTaxonomy();
+
   const { adminToken } = useOutletContext();
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);

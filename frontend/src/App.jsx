@@ -21,6 +21,8 @@ import SubExams from "./pages/SubExams";
 import MockTests from "./pages/MockTests";
 import ExamPage from "./pages/ExamPage";
 import AllTests from "./pages/AllTests";
+import TestResult from "./pages/TestResult";
+import HimachalExams from "./pages/HimachalExams";
 import FreeTests from "./pages/FreeTests";
 import FreeExamTests from "./pages/FreeExamTests";
 import FreeTestAttempt from "./pages/FreeTestAttempt";
@@ -52,6 +54,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminNotes from "./pages/admin/AdminNotes";
 import AdminFreeTests from "./pages/admin/AdminFreeTests";
+import AdminExams from "./pages/admin/AdminExams";
 import AdminFreeQuestions from "./pages/admin/AdminFreeQuestions";
 import AdminTests from "./pages/admin/AdminTests";
 import AdminQuestions from "./pages/admin/AdminQuestions";
@@ -314,6 +317,35 @@ function App() {
             }
           />
 
+          {/* Result after a test: overview, solutions, test leaderboard.
+              /results/:id is the address "View Details" in My Results uses. */}
+          <Route
+            path="/test-result/:resultId"
+            element={
+              <ProtectedRoute>
+                <TestResult />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/results/:resultId"
+            element={
+              <ProtectedRoute>
+                <TestResult />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Himachal Pradesh exams: HPPSC, HPRCA, HPBOSE, High Court, HP Police */}
+          <Route
+            path="/himachal-pradesh"
+            element={
+              <ProtectedRoute>
+                <HimachalExams />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Quick access: all / recently added tests + search + filters */}
           <Route
             path="/mock-tests"
@@ -388,6 +420,14 @@ function App() {
           {/* ==================================================
               FREE TESTS
           ================================================== */}
+          {/* ==================================================
+              EXAMS & CATEGORIES
+          ================================================== */}
+          <Route
+            path="exams"
+            element={<AdminExams />}
+          />
+
           <Route
             path="free-tests"
             element={<AdminFreeTests />}

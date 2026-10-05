@@ -30,6 +30,7 @@ import {
 import "./ExamGroups.css";
 
 
+import useTaxonomy from "../data/useTaxonomy";
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://disha-the-academy.onrender.com";
@@ -48,6 +49,7 @@ function makeStatsKey(
 
 
 export default function ExamGroups() {
+  useTaxonomy();
   const navigate =
     useNavigate();
 

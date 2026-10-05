@@ -57,7 +57,7 @@ function OtpStep({ apiBase, flow, email, onVerified, onBack }) {
       }
     } catch (error) {
       console.error("OTP verify error:", error);
-      show("Backend se connection nahi ho raha. Please try again.", true);
+      show("Unable to connect to the server. Please check your internet connection and try again.", true);
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ function OtpStep({ apiBase, flow, email, onVerified, onBack }) {
       }
     } catch (error) {
       console.error("OTP resend error:", error);
-      show("Backend se connection nahi ho raha. Please try again.", true);
+      show("Unable to connect to the server. Please check your internet connection and try again.", true);
     }
   }
 
