@@ -58,6 +58,11 @@ const SECTIONS = [
         icon: BookOpen,
       },
       {
+        path: "/admin/notes-import",
+        label: "Import Word Notes",
+        icon: FileText,
+      },
+      {
         path: "/admin/free-tests",
         label: "Free Tests",
         icon: Gift,
@@ -131,6 +136,7 @@ const SECTIONS = [
 const PAGE_TITLES = {
   "/admin": "Dashboard",
   "/admin/notes": "Notes",
+  "/admin/notes-import": "Import Word Notes",
   "/admin/free-tests": "Free Tests",
   "/admin/tests": "Tests / Mock Tests",
   "/admin/exams": "Exams & Categories",

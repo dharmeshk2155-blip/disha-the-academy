@@ -1,0 +1,599 @@
+/* Admin > Import Word Notes (mobile first) */
+
+.ni-page {
+  max-width: 920px;
+  padding: 18px 20px 50px;
+  text-align: left;
+}
+
+.ni-head h2 {
+  margin: 0 0 6px;
+  color: #172033;
+  font-size: 22px;
+}
+
+.ni-head p {
+  max-width: 700px;
+  margin: 0 0 16px;
+  color: #5a667d;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ---------- step bar ---------- */
+.ni-steps {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.ni-steps li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  color: #7b869a;
+  font-size: 13px;
+  font-weight: 700;
+  background: #eef2f9;
+  border-radius: 10px;
+}
+
+.ni-steps li span {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: #5a667d;
+  font-size: 12px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.ni-steps li.now {
+  color: #fff;
+  background: #0b2a66;
+}
+
+.ni-steps li.now span {
+  color: #0b2a66;
+}
+
+.ni-steps li.done {
+  color: #11683f;
+  background: #e1f6ec;
+}
+
+.ni-steps li.done span {
+  color: #fff;
+  background: #1fa86a;
+}
+
+/* ---------- cards and fields ---------- */
+.ni-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+}
+
+.ni-card h3 {
+  margin: 0 0 14px;
+  color: #172033;
+  font-size: 17px;
+}
+
+.ni-field {
+  display: block;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.ni-field > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #5a667d;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.ni-field input,
+.ni-field select,
+.ni-field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 9px;
+}
+
+.ni-field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.ni-field input:focus,
+.ni-field select:focus,
+.ni-field textarea:focus {
+  border-color: #f0a500;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.18);
+}
+
+.ni-field input:disabled,
+.ni-field select:disabled {
+  color: #7b869a;
+  background: #f3f5f9;
+}
+
+.ni-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ni-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ni-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0b2a66;
+}
+
+.ni-hint {
+  margin: 10px 0 0;
+  color: #66748f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- buttons ---------- */
+.ni-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ni-actions-center {
+  justify-content: center;
+}
+
+.ni-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #cfd8e6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ni-btn:hover:not(:disabled) {
+  background: #f3f7fc;
+}
+
+.ni-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ni-btn-primary {
+  color: #fff;
+  background: #0b2a66;
+  border-color: #0b2a66;
+}
+
+.ni-btn-primary:hover:not(:disabled) {
+  background: #0a2252;
+}
+
+.ni-spin {
+  animation: ni-spin 0.9s linear infinite;
+}
+
+@keyframes ni-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- upload ---------- */
+.ni-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 16px;
+  color: #4a5d82;
+  text-align: center;
+  background: #f7f9fc;
+  border: 2px dashed #c9d4e6;
+  border-radius: 14px;
+}
+
+.ni-drop p {
+  margin: 0;
+}
+
+.ni-drop b {
+  display: block;
+  color: #172033;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.ni-drop small {
+  color: #66748f;
+  font-size: 12.5px;
+}
+
+.ni-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  border-radius: 10px;
+}
+
+.ni-alert svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ni-alert ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.ni-alert-error {
+  color: #a42121;
+  background: #fdeeee;
+  border: 1px solid #f6c9c9;
+}
+
+.ni-alert-warn {
+  color: #7a5200;
+  background: #fff6e0;
+  border: 1px solid #f3dca3;
+}
+
+.ni-tips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ni-tips > div {
+  padding: 12px 14px;
+  background: #f7f9fc;
+  border-radius: 10px;
+}
+
+.ni-tips h4 {
+  margin: 0 0 6px;
+  color: #11683f;
+  font-size: 13.5px;
+}
+
+.ni-tips > div:last-child h4 {
+  color: #a42121;
+}
+
+.ni-tips ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #4a5d82;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------- preview / edit ---------- */
+.ni-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ni-stats span {
+  padding: 5px 12px;
+  color: #4a5d82;
+  font-size: 12.5px;
+  background: #eef2f9;
+  border-radius: 999px;
+}
+
+.ni-stats b {
+  color: #0b2a66;
+}
+
+.ni-empty {
+  margin-top: 14px;
+  padding: 30px 16px;
+  color: #66748f;
+  text-align: center;
+  background: #f7f9fc;
+  border-radius: 10px;
+}
+
+.ni-blocks {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ni-block {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+}
+
+.ni-block-edit {
+  border-color: #f0a500;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.15);
+}
+
+.ni-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  background: #f6f8fc;
+  border-radius: 11px 11px 0 0;
+}
+
+.ni-type {
+  color: #66748f;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ni-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.ni-tools button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #35476a;
+  background: #fff;
+  border: 1px solid #dde4ef;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ni-tools button:hover:not(:disabled) {
+  background: #eef2f9;
+}
+
+.ni-tools button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ni-tools .ni-del {
+  color: #b42323;
+}
+
+.ni-render {
+  padding: 12px 16px 4px;
+}
+
+.ni-render > * {
+  margin-top: 0;
+}
+
+.ni-editor {
+  padding: 14px;
+}
+
+/* ---------- publish ---------- */
+.ni-summary {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.ni-summary div {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f7f9fc;
+  border-radius: 9px;
+}
+
+.ni-summary dt {
+  flex-shrink: 0;
+  width: 84px;
+  color: #66748f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ni-summary dd {
+  margin: 0;
+  min-width: 0;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ni-radio {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ni-radio label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ni-radio label.on {
+  background: #f1f6ff;
+  border-color: #0b2a66;
+}
+
+.ni-radio input {
+  margin-top: 3px;
+  accent-color: #0b2a66;
+}
+
+.ni-radio b {
+  display: block;
+  color: #172033;
+  font-size: 14px;
+}
+
+.ni-radio small {
+  color: #66748f;
+  font-size: 12.5px;
+}
+
+/* ---------- done ---------- */
+.ni-done {
+  max-width: 560px;
+  margin: 30px auto;
+  padding: 30px 22px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+}
+
+.ni-done-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 12px;
+  color: #fff;
+  background: #1fa86a;
+  border-radius: 50%;
+}
+
+.ni-done h2 {
+  margin: 0 0 8px;
+  color: #172033;
+  font-size: 21px;
+}
+
+.ni-done p {
+  margin: 0;
+  color: #4a5d82;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 700px) {
+  .ni-page {
+    padding: 12px 6px 40px;
+  }
+
+  .ni-head h2 {
+    font-size: 20px;
+  }
+
+  /* only the current step shows its name; the others stay as numbers */
+  .ni-steps li {
+    justify-content: center;
+    padding: 8px 4px;
+  }
+
+  .ni-steps li:not(.now) {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .ni-steps li.now {
+    flex: 3;
+  }
+
+  .ni-card {
+    padding: 15px;
+  }
+
+  .ni-row,
+  .ni-tips,
+  .ni-radio {
+    grid-template-columns: 1fr;
+  }
+
+  /* 16px stops iPhone Safari from zooming when a field is tapped */
+  .ni-field input,
+  .ni-field select,
+  .ni-field textarea {
+    font-size: 16px;
+  }
+
+  .ni-actions {
+    flex-direction: column-reverse;
+  }
+
+  .ni-btn {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .ni-summary div {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ni-summary dt {
+    width: auto;
+  }
+
+  .ni-tools button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ni-render {
+    padding: 10px 12px 2px;
+  }
+}

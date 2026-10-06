@@ -32,6 +32,7 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const adminFreeTestsRoutes = require("./routes/adminFreeTests");
+const adminNotesImportRoutes = require("./routes/adminNotesImport");
 const {
   publicRouter: examTaxonomyPublicRoutes,
   adminRouter: examTaxonomyAdminRoutes,
@@ -105,6 +106,18 @@ app.use(
   "/api/admin/exam-taxonomy",
   requireAdmin,
   examTaxonomyAdminRoutes
+);
+
+// Word (.docx) -> notes import (admin only)
+app.use("/api/admin/notes-import", adminNotesImportRoutes);
+
+// images that were taken out of Word notes (local storage fallback)
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: "7d",
+    fallthrough: true,
+  })
 );
 // ======================================================
 // FILE PATHS

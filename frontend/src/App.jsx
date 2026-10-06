@@ -55,6 +55,7 @@ import AdminHome from "./pages/admin/AdminHome";
 import AdminNotes from "./pages/admin/AdminNotes";
 import AdminFreeTests from "./pages/admin/AdminFreeTests";
 import AdminExams from "./pages/admin/AdminExams";
+import AdminNotesImport from "./pages/admin/AdminNotesImport";
 import AdminFreeQuestions from "./pages/admin/AdminFreeQuestions";
 import AdminTests from "./pages/admin/AdminTests";
 import AdminQuestions from "./pages/admin/AdminQuestions";
@@ -404,6 +405,12 @@ function App() {
   path="notes"
   element={<AdminNotes />}
 />
+
+        {/* Word (.docx) -> notes import */}
+        <Route
+          path="notes-import"
+          element={<AdminNotesImport />}
+        />
 
           {/* ==================================================
               TESTS

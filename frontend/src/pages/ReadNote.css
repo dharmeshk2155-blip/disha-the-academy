@@ -695,3 +695,32 @@
   }
 
 }
+
+/* ---------- notes imported from Word: wide tables scroll, extra headings ---------- */
+.read-note-content .note-table-wrap {
+  max-width: 100%;
+  margin: 1em 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.read-note-content .note-table-wrap table {
+  min-width: 420px;
+  margin: 0;
+}
+
+.read-note-content h4,
+.read-note-content h5,
+.read-note-content h6 {
+  margin: 1.4em 0 0.5em;
+  color: #0b1f3a;
+  font-size: 1.05em;
+  line-height: 1.3;
+}
+
+.read-note-content .note-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}

@@ -63,6 +63,34 @@ const noteSchema = new mongoose.Schema(
       default: "",
     },
 
+    // language of the note text
+    language: {
+      type: String,
+      enum: ["en", "hi", "bilingual"],
+      default: "en",
+    },
+
+    // ordered content blocks made from a Word file (heading, paragraph,
+    // image, list, table). "content" above is the same text as HTML, so the
+    // Read Note page works for both manual and Word notes.
+    blocks: {
+      type: Array,
+      default: [],
+    },
+
+    source: {
+      type: String,
+      enum: ["manual", "docx"],
+      default: "manual",
+    },
+
+    sourceFileName: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 255,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
