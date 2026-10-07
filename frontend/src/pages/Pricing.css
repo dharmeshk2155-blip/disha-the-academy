@@ -324,3 +324,145 @@
     font-size: 10.5px;
   }
 }
+
+
+/* ---------- offers, coupon box ---------- */
+.pricing-offer {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0 0 6px;
+  padding: 2px 9px;
+  overflow: hidden;
+  color: #b3261e;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #fdeceb;
+  border-radius: 999px;
+}
+
+.pricing-was {
+  color: #8a92a3;
+  font-size: 13px;
+  text-decoration: line-through;
+}
+
+.pricing-coupon-line {
+  margin: -2px 0 8px;
+  color: #11683f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pricing-coupon-na {
+  margin: -2px 0 8px;
+  color: #8a92a3;
+  font-size: 10.5px;
+}
+
+.pricing-coupon {
+  max-width: 460px;
+  margin: 0 auto 22px;
+}
+
+.pricing-coupon form,
+.pricing-coupon-on {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pricing-coupon input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  color: #071a49;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: #fff;
+  border: 1px dashed #b9c4da;
+  border-radius: 10px;
+}
+
+.pricing-coupon input:focus {
+  border-color: #071a49;
+  outline: 0;
+}
+
+.pricing-coupon button {
+  min-height: 44px;
+  padding: 0 18px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  background: #071a49;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pricing-coupon button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pricing-coupon-on {
+  justify-content: space-between;
+  padding: 10px 14px;
+  color: #11683f;
+  font-size: 14px;
+  background: #e9f8f0;
+  border: 1px solid #bfe8d1;
+  border-radius: 10px;
+}
+
+.pricing-coupon-on button {
+  min-height: 34px;
+  padding: 0 12px;
+  color: #11683f;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #bfe8d1;
+}
+
+.pricing-coupon-msg {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.pricing-coupon-msg.ok {
+  color: #11683f;
+}
+
+.pricing-coupon-msg.error {
+  color: #b3261e;
+}
+
+@media (max-width: 800px) {
+  .pricing-coupon {
+    margin-bottom: 16px;
+  }
+
+  /* 16px stops iPhone Safari from zooming when the field is tapped */
+  .pricing-coupon input {
+    font-size: 16px;
+  }
+
+  .pricing-was {
+    font-size: 11px;
+  }
+
+  .pricing-offer {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .pricing-coupon-line,
+  .pricing-coupon-na {
+    font-size: 9.5px;
+  }
+}

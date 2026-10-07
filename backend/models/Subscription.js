@@ -40,6 +40,36 @@ const subscriptionSchema = new mongoose.Schema(
       min: 1,
     },
 
+    // price = what the student actually paid.
+    // The numbers below show how that price was reached.
+    basePrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // automatic plan offer taken off basePrice
+    offerDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // coupon used on this purchase ("" = none)
+    couponCode: {
+      type: String,
+      default: "",
+      trim: true,
+      uppercase: true,
+      index: true,
+    },
+
+    couponDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     paid: {
       type: Boolean,
       default: false,

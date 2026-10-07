@@ -56,6 +56,7 @@ import AdminNotes from "./pages/admin/AdminNotes";
 import AdminFreeTests from "./pages/admin/AdminFreeTests";
 import AdminExams from "./pages/admin/AdminExams";
 import AdminNotesImport from "./pages/admin/AdminNotesImport";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminFreeQuestions from "./pages/admin/AdminFreeQuestions";
 import AdminTests from "./pages/admin/AdminTests";
 import AdminQuestions from "./pages/admin/AdminQuestions";
@@ -433,6 +434,14 @@ function App() {
           <Route
             path="exams"
             element={<AdminExams />}
+          />
+
+          {/* ==================================================
+              SUBSCRIPTIONS: plans, offers, coupons
+          ================================================== */}
+          <Route
+            path="subscriptions"
+            element={<AdminSubscriptions />}
           />
 
           <Route

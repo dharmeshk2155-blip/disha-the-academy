@@ -12,6 +12,7 @@ import {
   BookOpen,
   ClipboardList,
   Layers,
+  CreditCard,
   Gift,
   Newspaper,
   PenLine,
@@ -78,6 +79,11 @@ const SECTIONS = [
         icon: Layers,
       },
       {
+        path: "/admin/subscriptions",
+        label: "Subscriptions",
+        icon: CreditCard,
+      },
+      {
         path: "/admin/current-affairs",
         label: "Current Affairs",
         icon: Newspaper,
@@ -140,6 +146,7 @@ const PAGE_TITLES = {
   "/admin/free-tests": "Free Tests",
   "/admin/tests": "Tests / Mock Tests",
   "/admin/exams": "Exams & Categories",
+  "/admin/subscriptions": "Subscriptions",
   "/admin/current-affairs": "Current Affairs",
   "/admin/blog": "Blog",
   "/admin/faq": "FAQ",

@@ -1,0 +1,659 @@
+/* Admin > Subscriptions (mobile first) */
+
+.as-page {
+  max-width: 980px;
+  padding: 18px 20px 50px;
+  text-align: left;
+}
+
+.as-head h2 {
+  margin: 0 0 6px;
+  color: #172033;
+  font-size: 22px;
+}
+
+.as-head p {
+  max-width: 680px;
+  margin: 0 0 16px;
+  color: #5a667d;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ---------- tabs ---------- */
+.as-tabs {
+  display: flex;
+  gap: 4px;
+  max-width: 440px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: #eef2f9;
+  border-radius: 12px;
+}
+
+.as-tabs button {
+  flex: 1;
+  min-height: 42px;
+  color: #4a5d82;
+  font-size: 14px;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.as-tabs button.on {
+  color: #172033;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(11, 31, 77, 0.16);
+}
+
+/* ---------- messages ---------- */
+.as-msg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.as-msg button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.as-msg-ok {
+  color: #11683f;
+  background: #e9f8f0;
+  border: 1px solid #bfe8d1;
+}
+
+.as-msg-error {
+  color: #a42121;
+  background: #fdeeee;
+  border: 1px solid #f6c9c9;
+}
+
+.as-status {
+  padding: 36px 0;
+  color: #66748f;
+  text-align: center;
+}
+
+.as-error {
+  color: #a42121;
+}
+
+/* ---------- buttons ---------- */
+.as-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 16px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #cfd8e6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.as-btn:hover:not(:disabled) {
+  background: #f3f7fc;
+}
+
+.as-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.as-btn-primary {
+  color: #fff;
+  background: #0b2a66;
+  border-color: #0b2a66;
+}
+
+.as-btn-primary:hover:not(:disabled) {
+  background: #0a2252;
+}
+
+.as-btn-sm {
+  min-height: 38px;
+  padding: 0 13px;
+  font-size: 13px;
+}
+
+.as-btn-danger {
+  color: #b42323;
+}
+
+/* ---------- bar above lists ---------- */
+.as-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.as-bar h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 17px;
+}
+
+.as-bar h3 span {
+  margin-left: 6px;
+  padding: 2px 9px;
+  color: #4a5d82;
+  font-size: 12px;
+  background: #eaf0fa;
+  border-radius: 999px;
+}
+
+/* ---------- forms ---------- */
+.as-card {
+  margin-bottom: 18px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+}
+
+.as-card h3 {
+  margin: 0 0 14px;
+  color: #172033;
+  font-size: 17px;
+}
+
+.as-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.as-field {
+  display: block;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.as-field > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #5a667d;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.as-field input,
+.as-field select,
+.as-field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 9px;
+}
+
+.as-field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.as-field input:focus,
+.as-field select:focus,
+.as-field textarea:focus {
+  border-color: #f0a500;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.18);
+}
+
+.as-field input:disabled {
+  color: #7b869a;
+  background: #f3f5f9;
+}
+
+.as-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.as-inline input {
+  flex: 1;
+  min-width: 0;
+}
+
+.as-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.as-presets button {
+  min-height: 30px;
+  padding: 0 12px;
+  color: #4a5d82;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: #eef2f9;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.as-presets button:hover {
+  background: #dfe8f6;
+}
+
+.as-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.as-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0b2a66;
+}
+
+.as-offer {
+  margin: 14px 0 6px;
+  padding: 14px 16px 6px;
+  background: #fff8e8;
+  border: 1px solid #f3dca3;
+  border-radius: 12px;
+}
+
+.as-offer legend {
+  padding: 0 8px;
+  color: #7a5200;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.as-preview {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  color: #35476a;
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: #fff;
+  border-radius: 9px;
+}
+
+.as-preview b {
+  color: #11683f;
+  font-size: 16px;
+}
+
+.as-plan-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.as-plan-pick label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  color: #35476a;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #d3dae6;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.as-plan-pick label.on {
+  color: #0b2a66;
+  background: #eaf1ff;
+  border-color: #0b2a66;
+}
+
+.as-plan-pick input {
+  accent-color: #0b2a66;
+}
+
+.as-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ---------- plan / coupon cards ---------- */
+.as-list {
+  display: grid;
+  gap: 12px;
+}
+
+.as-item {
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+}
+
+.as-item-off {
+  background: #fafbfd;
+}
+
+.as-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.as-item-title {
+  min-width: 0;
+}
+
+.as-item-title > strong {
+  display: block;
+  color: #172033;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.as-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.as-chip {
+  padding: 3px 10px;
+  color: #4a5d82;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: #eef2f9;
+  border-radius: 999px;
+}
+
+.as-chip-ok,
+.as-status-active {
+  color: #11683f;
+  background: #e1f6ec;
+}
+
+.as-chip-grey,
+.as-status-off,
+.as-status-expired {
+  color: #5f6b80;
+  background: #e8ebf1;
+}
+
+.as-chip-blue {
+  color: #1d4f91;
+  background: #e3efff;
+}
+
+.as-chip-red {
+  color: #b3261e;
+  background: #fdeceb;
+}
+
+.as-chip-amber,
+.as-status-scheduled,
+.as-status-used-up {
+  color: #8a5a00;
+  background: #fff1cf;
+}
+
+.as-price {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.as-price b {
+  display: block;
+  color: #0b2a66;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.as-price s {
+  color: #8a92a3;
+  font-size: 13px;
+}
+
+.as-price small {
+  display: block;
+  color: #66748f;
+  font-size: 12px;
+}
+
+.as-line {
+  margin: 10px 0 0;
+  color: #5a667d;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.as-rules {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #5a667d;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.as-code {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.as-code strong {
+  color: #172033;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.as-code button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #4a5d82;
+  background: #eef2f9;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.as-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  color: #66748f;
+  font-size: 13px;
+  border-top: 1px solid #eef0f4;
+}
+
+.as-stats b {
+  color: #172033;
+}
+
+.as-id {
+  margin-left: auto;
+  color: #8a92a3;
+  font-size: 12px;
+}
+
+.as-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ---------- subscribers ---------- */
+.as-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.as-summary > div {
+  padding: 13px 14px;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+}
+
+.as-summary strong {
+  display: block;
+  color: #0b2a66;
+  font-size: 21px;
+  line-height: 1.15;
+}
+
+.as-summary span {
+  color: #66748f;
+  font-size: 12.5px;
+}
+
+.as-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.as-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.as-table th {
+  padding: 11px 12px;
+  color: #66748f;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  background: #f6f8fc;
+}
+
+.as-table td {
+  padding: 11px 12px;
+  color: #172033;
+  vertical-align: top;
+  border-top: 1px solid #eef0f4;
+}
+
+.as-table td small {
+  display: block;
+  color: #7b869a;
+  font-size: 12px;
+}
+
+.as-empty-cell {
+  padding: 28px 12px !important;
+  color: #66748f !important;
+  text-align: center;
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 700px) {
+  .as-page {
+    padding: 12px 6px 40px;
+  }
+
+  .as-head h2 {
+    font-size: 20px;
+  }
+
+  .as-tabs {
+    max-width: none;
+  }
+
+  .as-card {
+    padding: 15px;
+  }
+
+  .as-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 16px stops iPhone Safari from zooming when a field is tapped */
+  .as-field input,
+  .as-field select,
+  .as-field textarea {
+    font-size: 16px;
+  }
+
+  .as-actions {
+    flex-direction: column-reverse;
+  }
+
+  .as-actions .as-btn {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .as-item {
+    padding: 14px;
+  }
+
+  .as-row-actions .as-btn {
+    flex: 1;
+  }
+
+  .as-id {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .as-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .as-summary > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .as-plan-pick label {
+    min-height: 44px;
+  }
+}

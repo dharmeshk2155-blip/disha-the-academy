@@ -33,6 +33,7 @@ const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const adminFreeTestsRoutes = require("./routes/adminFreeTests");
 const adminNotesImportRoutes = require("./routes/adminNotesImport");
+const adminBillingRoutes = require("./routes/adminBilling");
 const {
   publicRouter: examTaxonomyPublicRoutes,
   adminRouter: examTaxonomyAdminRoutes,
@@ -110,6 +111,9 @@ app.use(
 
 // Word (.docx) -> notes import (admin only)
 app.use("/api/admin/notes-import", adminNotesImportRoutes);
+
+// Subscription plans, offers and coupons (admin only)
+app.use("/api/admin/billing", adminBillingRoutes);
 
 // images that were taken out of Word notes (local storage fallback)
 app.use(

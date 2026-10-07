@@ -3,10 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import "./Pricing.css";
 
-// Baaki pages jaisa hi (frontend/.env me VITE_API_BASE se badal sakte ho)
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://disha-the-academy.onrender.com";
+import { API_BASE } from "../config/api";
 
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -56,6 +53,12 @@ export default function Pricing() {
   const [subscription, setSubscription] = useState(null);
   const [buyingPlanId, setBuyingPlanId] = useState("");
   const [message, setMessage] = useState("");
+
+  // coupon: what the student typed, and the result for every plan
+  const [couponInput, setCouponInput] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [couponMessage, setCouponMessage] = useState({ type: "", text: "" });
+  const [coupon, setCoupon] = useState(null); // { code, label, quotes: { planId: quote } }
 
   // ---------------------------------------------------
   // LOAD PLANS (price + per month backend se aata hai)
@@ -128,6 +131,111 @@ export default function Pricing() {
   }, []);
 
   // ---------------------------------------------------
+  // COUPON
+  // The server checks the code for every plan and returns the new price.
+  // ---------------------------------------------------
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+
+    setCouponMessage({ type: "", text: "" });
+
+    if (!code) {
+      setCouponMessage({ type: "error", text: "Enter a coupon code." });
+      return;
+    }
+
+    const token = localStorage.getItem("dishaToken");
+
+    if (!token) {
+      setCouponMessage({
+        type: "error",
+        text: "Please log in to use a coupon code.",
+      });
+      return;
+    }
+
+    setCouponApplying(true);
+
+    try {
+      const results = await Promise.all(
+        plans.map(async (plan) => {
+          const response = await fetch(
+            `${API_BASE}/api/subscription/coupon/validate`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ planId: plan.id, code }),
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) return { plan, unauthorized: true };
+          if (response.status === 429) return { plan, error: data.error };
+
+          return response.ok && data.success
+            ? { plan, quote: data.quote, label: data.coupon?.label }
+            : { plan, error: data.error || "This coupon code is not valid." };
+        })
+      );
+
+      if (results.some((r) => r.unauthorized)) {
+        localStorage.removeItem("dishaToken");
+        navigate("/login");
+        return;
+      }
+
+      const quotes = {};
+      let label = "";
+
+      results.forEach((r) => {
+        if (r.quote) {
+          quotes[r.plan.id] = r.quote;
+          label = label || r.label || "";
+        }
+      });
+
+      if (Object.keys(quotes).length === 0) {
+        // nothing works: show the reason from the server
+        setCoupon(null);
+        setCouponMessage({
+          type: "error",
+          text: results[0]?.error || "This coupon code is not valid.",
+        });
+        return;
+      }
+
+      const skipped = results.filter((r) => !r.quote).length;
+
+      setCoupon({ code, label, quotes });
+      setCouponInput(code);
+      setCouponMessage({
+        type: "ok",
+        text:
+          `Coupon ${code} applied${label ? ` (${label})` : ""}.` +
+          (skipped > 0 ? " It does not work on every plan." : ""),
+      });
+    } catch (err) {
+      console.error("Coupon error:", err);
+      setCouponMessage({
+        type: "error",
+        text: "Unable to check the coupon. Please try again.",
+      });
+    } finally {
+      setCouponApplying(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCoupon(null);
+    setCouponInput("");
+    setCouponMessage({ type: "", text: "" });
+  }
+
+  // ---------------------------------------------------
   // BUY PLAN
   // ---------------------------------------------------
   async function handleBuy(plan) {
@@ -143,14 +251,6 @@ export default function Pricing() {
     setBuyingPlanId(plan.id);
 
     try {
-      const loaded = await loadRazorpay();
-
-      if (!loaded) {
-        throw new Error(
-          "Razorpay failed to load. Please check your internet connection."
-        );
-      }
-
       const orderResponse = await fetch(
         `${API_BASE}/api/subscription/create-order`,
         {
@@ -159,7 +259,11 @@ export default function Pricing() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ planId: plan.id }),
+          body: JSON.stringify({
+            planId: plan.id,
+            // only when the coupon works on this plan
+            couponCode: coupon?.quotes[plan.id] ? coupon.code : undefined,
+          }),
         }
       );
 
@@ -172,7 +276,28 @@ export default function Pricing() {
       }
 
       if (!orderResponse.ok || !order.success) {
+        if (order.couponError) removeCoupon();
+
         throw new Error(order.error || "Unable to start payment.");
+      }
+
+      // price came to Rs 0 (free plan or 100% coupon): already activated
+      if (order.free) {
+        setSubscription(order.subscription || null);
+        removeCoupon();
+        setMessage(
+          `🎉 ${plan.name} subscription activated. Enjoy unlimited mock tests!`
+        );
+        setBuyingPlanId("");
+        return;
+      }
+
+      const loaded = await loadRazorpay();
+
+      if (!loaded) {
+        throw new Error(
+          "Razorpay failed to load. Please check your internet connection."
+        );
       }
 
       let user = null;
@@ -228,6 +353,7 @@ export default function Pricing() {
             }
 
             setSubscription(result.subscription || null);
+            removeCoupon();
             setMessage(
               `🎉 ${plan.name} subscription activated. Enjoy unlimited mock tests!`
             );
@@ -297,48 +423,145 @@ export default function Pricing() {
         <p className="pricing-status pricing-error">{plansError}</p>
       )}
 
-      {!plansLoading && !plansError && (
-        <div className="pricing-grid">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`pricing-card ${plan.badge ? "featured" : ""}`}
-            >
-              {plan.badge && (
-                <span className="pricing-badge">{plan.badge}</span>
-              )}
+      {!plansLoading && !plansError && plans.length > 0 && (
+        <div className="pricing-coupon">
+          {coupon ? (
+            <div className="pricing-coupon-on">
+              <span>
+                <strong>{coupon.code}</strong> applied
+                {coupon.label ? ` · ${coupon.label}` : ""}
+              </span>
 
-              <h2>{plan.name}</h2>
-
-              <div className="pricing-price">
-                <span className="pricing-rupee">₹</span>
-                {plan.price}
-              </div>
-
-              <div className="pricing-permonth">
-                ₹{plan.perMonth} / month
-              </div>
-
-              <ul className="pricing-features">
-                <li>Access to all mock tests</li>
-                <li>Instant results and review</li>
-                <li>Valid for {plan.days} days</li>
-              </ul>
-
-              <button
-                type="button"
-                className="pricing-buy"
-                disabled={Boolean(buyingPlanId)}
-                onClick={() => handleBuy(plan)}
-              >
-                {buyingPlanId === plan.id
-                  ? "Opening payment..."
-                  : subscription
-                  ? "Extend Plan"
-                  : "Subscribe Now"}
+              <button type="button" onClick={removeCoupon}>
+                Remove
               </button>
             </div>
-          ))}
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyCoupon();
+              }}
+            >
+              <input
+                value={couponInput}
+                onChange={(e) =>
+                  setCouponInput(e.target.value.toUpperCase().replace(/\s/g, ""))
+                }
+                placeholder="Have a coupon code?"
+                maxLength={20}
+                aria-label="Coupon code"
+                autoCapitalize="characters"
+              />
+
+              <button type="submit" disabled={couponApplying}>
+                {couponApplying ? "Checking..." : "Apply"}
+              </button>
+            </form>
+          )}
+
+          {couponMessage.text && (
+            <p className={`pricing-coupon-msg ${couponMessage.type}`}>
+              {couponMessage.text}
+            </p>
+          )}
+        </div>
+      )}
+
+      {!plansLoading && !plansError && (
+        <div className="pricing-grid">
+          {plans.map((plan) => {
+            const quote = coupon?.quotes[plan.id];
+
+            // price the student will pay, and the price to cross out
+            const shown = quote ? quote.finalPrice : plan.finalPrice;
+            const crossed = shown < plan.price ? plan.price : null;
+            const perMonth = Math.round(
+              shown / Math.max(plan.days / 30, 1)
+            );
+
+            const offerText = plan.offer
+              ? plan.offer.label || "Special offer"
+              : "";
+
+            return (
+              <div
+                key={plan.id}
+                className={`pricing-card ${plan.badge ? "featured" : ""}`}
+              >
+                {plan.badge && (
+                  <span className="pricing-badge">{plan.badge}</span>
+                )}
+
+                <h2>{plan.name}</h2>
+
+                {offerText && (
+                  <span className="pricing-offer">{offerText}</span>
+                )}
+
+                {crossed !== null && (
+                  <div className="pricing-was">₹{crossed}</div>
+                )}
+
+                <div className="pricing-price">
+                  {shown === 0 ? (
+                    "Free"
+                  ) : (
+                    <>
+                      <span className="pricing-rupee">₹</span>
+                      {shown}
+                    </>
+                  )}
+                </div>
+
+                <div className="pricing-permonth">
+                  {shown === 0 ? "No payment needed" : `₹${perMonth} / month`}
+                </div>
+
+                {quote && quote.couponDiscount > 0 && (
+                  <div className="pricing-coupon-line">
+                    Coupon: −₹{quote.couponDiscount}
+                  </div>
+                )}
+
+                {coupon && !quote && (
+                  <div className="pricing-coupon-na">
+                    Coupon not valid here
+                  </div>
+                )}
+
+                <ul className="pricing-features">
+                  {(plan.features && plan.features.length
+                    ? plan.features
+                    : [
+                        "Access to all mock tests",
+                        "Instant results and review",
+                        `Valid for ${plan.days} days`,
+                      ]
+                  ).map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  className="pricing-buy"
+                  disabled={Boolean(buyingPlanId)}
+                  onClick={() => handleBuy(plan)}
+                >
+                  {buyingPlanId === plan.id
+                    ? shown === 0
+                      ? "Activating..."
+                      : "Opening payment..."
+                    : shown === 0
+                    ? "Activate Free"
+                    : subscription
+                    ? "Extend Plan"
+                    : "Subscribe Now"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
