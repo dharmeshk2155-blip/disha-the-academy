@@ -452,8 +452,9 @@ export default function ContactUs() {
 
               <div>
                 <strong>Email Us</strong>
-                <a href="mailto:dharmeshd74@outlook.com">
-                  dharmeshd74@outlook.com
+                <a href="mailto:dharmesh@dishatheacademy.com
+              ">
+                  dharmesh@dishatheacademy.com
                 </a>
                 <span>For support, queries and feedback</span>
               </div>
