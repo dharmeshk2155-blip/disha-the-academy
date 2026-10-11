@@ -4,6 +4,9 @@
    other pages. Breakpoints use container queries (not the
    viewport), because the left sidebar takes 220px of the
    screen and the page width is what really matters.
+
+   MOBILE: card rows become swipeable (left/right) rows
+   instead of tall stacked grids. Desktop is unchanged.
 ====================================================== */
 
 .hm {
@@ -17,6 +20,9 @@
   --hm-red: #d92d20;
   --hm-focus: #1a56db;
 
+  /* side padding of the page (smaller on phones, see below) */
+  --hm-pad: 20px;
+
   container-type: inline-size;
   container-name: hm;
 
@@ -26,7 +32,7 @@
   letter-spacing: 0;
   text-align: left;
   color: var(--hm-ink);
-  padding: 0 20px 44px;
+  padding: 0 var(--hm-pad) 44px;
 }
 
 .hm h1,
@@ -232,7 +238,7 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: center;
   gap: 12px;
-  margin: 0 -20px;
+  margin: 0 calc(var(--hm-pad) * -1);
   padding: 26px 40px 22px;
   min-height: 250px;
   background: linear-gradient(100deg, #eaf3fc 0%, #dce9f7 58%, #e7f0fa 100%);
@@ -816,8 +822,19 @@
 }
 
 /* ======================================================
-   RESPONSIVE (container = page width)
+   RESPONSIVE
 ====================================================== */
+
+/* Phones: slimmer side padding. (The container itself cannot be
+   styled by a container query, so this one uses the viewport.) */
+@media (max-width: 760px) {
+  .hm {
+    --hm-pad: 14px;
+    padding-bottom: 32px;
+  }
+}
+
+/* ---------- tablet / small desktop (container = page width) ---------- */
 
 @container hm (max-width: 980px) {
   .hm-cats {
@@ -851,66 +868,257 @@
   }
 }
 
+/* ---------- mobile: swipeable rows ---------- */
+
 @container hm (max-width: 700px) {
-  .hm-hero {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 24px 24px 12px;
-  }
-
-  .hm-hero-art img,
-  .hm-illus {
-    max-width: 340px;
-  }
-
-  .hm-popular {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hm-popular .hm-exam:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .hm-notes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hm-resources {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hm-account {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hm-blogs {
-    grid-template-columns: minmax(0, 1fr);
+  .hm-sec {
+    margin-top: 22px;
   }
 
   .hm-head {
     flex-wrap: wrap;
     align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .hm-head h2 {
+    font-size: 19px;
+  }
+
+  .hm-head p {
+    font-size: 12.5px;
+  }
+
+  /* hero stays stacked, just more compact */
+  /* Hero layout on mobile:
+       kicker + tagline on the left, books picture on the right,
+       then the description and the two buttons full width below.
+     (.hm-hero-copy is "display: contents" so its children can be
+     placed straight into the hero grid.) */
+  .hm-hero {
+    grid-template-columns: minmax(0, 1fr) 124px;
+    grid-template-areas:
+      "kicker art"
+      "title  art"
+      "lead   lead"
+      "cta    cta";
+    column-gap: 8px;
+    row-gap: 4px;
+    min-height: 0;
+    padding: 14px var(--hm-pad) 14px;
+  }
+
+  .hm-hero-copy {
+    display: contents;
+  }
+
+  .hm-hero-kicker {
+    grid-area: kicker;
+    align-self: end;
+    font-size: 12px;
+  }
+
+  .hm .hm-hero h1 {
+    grid-area: title;
+    align-self: start;
+    margin: 2px 0 4px;
+    font-size: 24px;
+    line-height: 1.12;
+  }
+
+  .hm-hero-lead {
+    grid-area: lead;
+    max-width: none;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  .hm-hero-cta {
+    grid-area: cta;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .hm-hero-cta .hm-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 9px 10px;
+    font-size: 12.5px;
+    gap: 5px;
+  }
+
+  .hm-hero-art {
+    grid-area: art;
+    align-self: center;
+    justify-content: flex-end;
+  }
+
+  .hm-hero-art img,
+  .hm-illus {
+    max-width: 124px;
+    max-height: 90px;
+  }
+
+  .hm-account {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 16px;
+  }
+
+  .hm-final {
+    flex-wrap: wrap;
+    padding: 18px 16px;
+  }
+
+  /* ----- every card row becomes one horizontal swipe row -----
+     Rows bleed to the screen edge so the next card peeks in,
+     which tells the user "swipe me". */
+  .hm-cats,
+  .hm-popular,
+  .hm-notes,
+  .hm-tests,
+  .hm-affairs,
+  .hm-resources,
+  .hm-why,
+  .hm-blogs {
+    display: flex;
+    grid-template-columns: none;
+    gap: 10px;
+    margin: 0 calc(var(--hm-pad) * -1);
+    padding: 2px var(--hm-pad) 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--hm-pad);
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .hm-cats::-webkit-scrollbar,
+  .hm-popular::-webkit-scrollbar,
+  .hm-notes::-webkit-scrollbar,
+  .hm-tests::-webkit-scrollbar,
+  .hm-affairs::-webkit-scrollbar,
+  .hm-resources::-webkit-scrollbar,
+  .hm-why::-webkit-scrollbar,
+  .hm-blogs::-webkit-scrollbar,
+  .hm-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* each child keeps a fixed width (set per row below) */
+  .hm-cats > *,
+  .hm-popular > *,
+  .hm-notes > *,
+  .hm-tests > *,
+  .hm-affairs > *,
+  .hm-resources > *,
+  .hm-why > *,
+  .hm-blogs > * {
+    flex: 0 0 var(--hm-item);
+    width: var(--hm-item);
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  /* card widths: small enough that the next card peeks in */
+  .hm-cats {
+    --hm-item: 98px;
+  }
+
+  .hm-popular {
+    --hm-item: 150px;
+  }
+
+  .hm-notes {
+    --hm-item: 164px;
+  }
+
+  .hm-tests {
+    --hm-item: 216px;
+  }
+
+  .hm-affairs {
+    --hm-item: 236px;
+  }
+
+  .hm-resources {
+    --hm-item: 236px;
+  }
+
+  .hm-why {
+    --hm-item: 228px;
+  }
+
+  .hm-blogs {
+    --hm-item: 286px;
+  }
+
+  /* slightly tighter cards */
+  .hm-cat {
+    padding: 12px 6px 10px;
+  }
+
+  .hm-exam {
+    padding: 14px 10px 12px;
+  }
+
+  .hm-exam .hm-logo {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hm-exam h3 {
+    font-size: 14px;
+  }
+
+  .hm-resource,
+  .hm-why-item {
+    padding: 12px;
+  }
+
+  /* mock test tabs: one swipeable line instead of wrapping rows */
+  .hm-tabs {
+    flex-wrap: nowrap;
+    margin: 0 calc(var(--hm-pad) * -1) 10px;
+    padding: 0 var(--hm-pad) 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hm-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 7px 14px;
   }
 }
 
 @container hm (max-width: 480px) {
-  .hm-tests,
-  .hm-affairs,
-  .hm-popular,
-  .hm-notes,
-  .hm-why {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hm-cats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hm-hero-cta .hm-btn,
   .hm-final-cta .hm-btn {
     flex: 1 1 100%;
   }
 
   .hm-head h2 {
-    font-size: 20px;
+    font-size: 18px;
+  }
+}
+
+/* very narrow phones: slightly smaller tagline and picture */
+@container hm (max-width: 380px) {
+  .hm-hero {
+    grid-template-columns: minmax(0, 1fr) 100px;
+  }
+
+  .hm .hm-hero h1 {
+    font-size: 21px;
+  }
+
+  .hm-hero-art img,
+  .hm-illus {
+    max-width: 100px;
+    max-height: 74px;
   }
 }
