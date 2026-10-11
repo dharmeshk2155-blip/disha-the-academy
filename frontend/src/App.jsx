@@ -62,6 +62,7 @@ import AdminTests from "./pages/admin/AdminTests";
 import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminBlog from "./pages/admin/AdminBlog";
+import AdminAutomation from "./pages/admin/AdminAutomation";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -505,6 +506,7 @@ function App() {
               PAGES
           ================================================== */}
 <Route path="about" element={<AdminAbout />} />
+<Route path="automation" element={<AdminAutomation />} />
 
           {/* ==================================================
               SETTINGS

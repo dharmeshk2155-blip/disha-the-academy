@@ -45,6 +45,9 @@ const app = express();
 const statsRoutes = require("./routes/stats");
 const currentAffairsRoutes = require("./routes/currentAffairs");
 const blogRoutes = require("./routes/blog");
+const adminAutomationRoutes = require("./routes/adminAutomation");
+const automationCronRoutes = require("./routes/automationCron");
+const { startScheduler } = require("./utils/automation/runner");
 const faqRoutes = require("./routes/faq");
 const adminUsersRoutes = require("./routes/adminUsers");
 const aboutRoutes = require("./routes/about");
@@ -111,6 +114,11 @@ app.use(
 
 // Word (.docx) -> notes import (admin only)
 app.use("/api/admin/notes-import", adminNotesImportRoutes);
+
+// Automated current affairs / blog drafts (admin review queue)
+app.use("/api/admin/automation", requireAdmin, adminAutomationRoutes);
+// Secret-protected trigger for an external scheduler
+app.use("/api/automation", automationCronRoutes);
 
 // Subscription plans, offers and coupons (admin only)
 app.use("/api/admin/billing", adminBillingRoutes);
@@ -3828,6 +3836,8 @@ app.use(
 
 const PORT = process.env.PORT || 5000;
 
+startScheduler();
+
 const server =
   app.listen(
     PORT,
@@ -3922,4 +3932,4 @@ process.on(
     );
 
   }
-);
+);  

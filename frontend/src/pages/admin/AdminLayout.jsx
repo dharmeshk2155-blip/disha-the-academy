@@ -15,6 +15,7 @@ import {
   CreditCard,
   Gift,
   Newspaper,
+  Bot,
   PenLine,
   CircleHelp,
   Users,
@@ -87,6 +88,11 @@ const SECTIONS = [
         path: "/admin/current-affairs",
         label: "Current Affairs",
         icon: Newspaper,
+      },
+      {
+        path: "/admin/automation",
+        label: "Automated Content",
+        icon: Bot,
       },
       {
         path: "/admin/blog",
