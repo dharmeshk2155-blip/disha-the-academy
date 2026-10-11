@@ -788,7 +788,7 @@ body {
 .notes-section {
   padding: 80px 8%;
   background: #f7f9fc;
-  text-align: center;
+  text-align: left;
 }
 
 .section-heading h2 {
@@ -1175,7 +1175,7 @@ body {
 /* Header */
 
 .notes-header {
-  text-align: center;
+  text-align: left;
   padding: 70px 20px 35px;
 }
 
