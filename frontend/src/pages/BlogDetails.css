@@ -279,7 +279,7 @@
   place-items: center;
   align-content: center;
   gap: 13px;
-  text-align: center;
+  text-align: left;
 }
 
 .blog-details-state h2 {
