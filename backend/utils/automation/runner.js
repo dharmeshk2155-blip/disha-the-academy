@@ -9,6 +9,7 @@ const { draftFromItem } = require("./drafter");
 const { normalizeAi, validateDraft } = require("./validator");
 const { settings, CATEGORIES } = require("./constants");
 const { publishDue } = require("./publisher");
+const { cleanupOldCurrentAffairs } = require("./cleanup");
 
 const DAY = 24 * 3600 * 1000;
 let running = false;
@@ -69,7 +70,7 @@ async function runCollection({ trigger = "manual" } = {}) {
     }
 
     const since = new Date(Date.now() - DAY);
-    let createdToday = await ContentDraft.countDocuments({ createdAt: { $gte: since }, canonicalUrl: { $ne: "" } });
+    let createdToday = await ContentDraft.countDocuments({ createdAt: { $gte: since }, canonicalUrl: { $ne: "" }, manual: { $ne: true }, status: { $nin: ["failed", "rejected"] } });
     const tokenRows = await AutomationJob.aggregate([
       { $match: { startedAt: { $gte: since } } },
       { $group: { _id: null, total: { $sum: "$inputTokens" } } },
@@ -179,7 +180,11 @@ async function runCollection({ trigger = "manual" } = {}) {
       }
     }
 
-    if (stop) job.errorLog.push(`Run stopped early: ${stop}.`);
+    if (stop) {
+      // hitting a limit is normal, not an error
+      if (stop === "AI key problem") job.errorLog.push("Run stopped early: the AI key was refused.");
+      else job.notes.push(`Run stopped at the ${stop}. Raise it in .env if you want more drafts.`);
+    }
     job.status = job.errorLog.length ? (job.draftsCreated ? "partial" : "failed") : "success";
     return { job };
   } catch (error) {
@@ -216,6 +221,11 @@ function startScheduler() {
 
   // scheduled publishing needs no AI, so it always runs
   setInterval(() => publishDue().catch((e) => console.error("publishDue:", e.message)), 60 * 1000).unref();
+
+  // old current affairs are removed whether or not the collector is on
+  const clean = () => cleanupOldCurrentAffairs().catch((e) => console.error("cleanup:", e.message));
+  setTimeout(clean, 2 * 60 * 1000).unref();
+  setInterval(clean, 6 * 3600 * 1000).unref();
 
   if (!cfg.enabled) {
     console.log("Automation: collector is OFF (set AUTOMATION_ENABLED=true to turn it on).");

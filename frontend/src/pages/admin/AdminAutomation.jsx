@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   AlertTriangle,
   CalendarClock,
   CheckCircle2,
+  Download,
   ExternalLink,
   Loader2,
   Play,
@@ -39,6 +40,16 @@ const STATUS_LABEL = {
   archived: "Archived",
 };
 
+const EMPTY_MANUAL = {
+  url: "",
+  sourceName: "PIB",
+  title: "",
+  publishedAt: "",
+  category: "National",
+  language: "en",
+  text: "",
+};
+
 const EMPTY_SOURCE = {
   name: "",
   url: "",
@@ -48,6 +59,118 @@ const EMPTY_SOURCE = {
   termsNote: "",
   active: true,
 };
+
+// ---------- PNG card (drawn in the browser, so Hindi fonts always work) ----------
+const CARD_FONT = '"Noto Sans Devanagari","Nirmala UI","Mangal","Segoe UI",Arial,sans-serif';
+
+function wrapLines(ctx, text, maxWidth) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width <= maxWidth || !line) {
+      line = test;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawCard(canvas, { title, category, dateText }) {
+  const W = 1200;
+  const H = 675;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#0a1a3f");
+  bg.addColorStop(1, "#1a3d94");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.beginPath();
+  ctx.arc(W - 120, 90, 260, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(W - 360, H + 40, 220, 0, Math.PI * 2);
+  ctx.fill();
+
+  // category pill
+  const label = String(category || "Current Affairs").toUpperCase();
+  ctx.font = `800 28px ${CARD_FONT}`;
+  const pillW = ctx.measureText(label).width + 56;
+  ctx.fillStyle = "#f5b301";
+  roundRect(ctx, 70, 64, pillW, 56, 28);
+  ctx.fill();
+  ctx.fillStyle = "#0a1a3f";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, 98, 93);
+
+  // headline: shrink until it fits in 4 lines
+  const maxW = W - 140;
+  let size = 68;
+  let lines = [];
+  while (size >= 38) {
+    ctx.font = `800 ${size}px ${CARD_FONT}`;
+    lines = wrapLines(ctx, title, maxW);
+    if (lines.length <= 4) break;
+    size -= 4;
+  }
+  if (lines.length > 4) {
+    lines = lines.slice(0, 4);
+    lines[3] = `${lines[3].replace(/\s+\S*$/, "")}...`;
+  }
+  const lineH = Math.round(size * 1.28);
+  ctx.fillStyle = "#ffffff";
+  ctx.textBaseline = "top";
+  lines.forEach((l, i) => ctx.fillText(l, 70, 170 + i * lineH));
+
+  // footer
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fillRect(70, H - 130, W - 140, 2);
+
+  ctx.fillStyle = "#f5b301";
+  ctx.beginPath();
+  ctx.arc(106, H - 66, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#0a1a3f";
+  ctx.font = `800 38px ${CARD_FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("D", 106, H - 65);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `800 32px ${CARD_FONT}`;
+  ctx.fillText("DISHA THE ACADEMY", 160, H - 80);
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.font = `600 24px ${CARD_FONT}`;
+  ctx.fillText(`Current Affairs  \u2022  ${dateText}`, 160, H - 44);
+}
+
+function todayText() {
+  return new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function cardKey(edit) {
+  return `${edit.title}|${edit.category}`;
+}
 
 function fmt(value) {
   if (!value) return "-";
@@ -84,9 +207,11 @@ export default function AdminAutomation() {
   const [page, setPage] = useState(1);
 
   const [open, setOpen] = useState(null); // opened draft detail
+  const [manualForm, setManualForm] = useState(null);
   const [sourceForm, setSourceForm] = useState(null);
   const [sourceEditing, setSourceEditing] = useState("");
   const [busy, setBusy] = useState(false);
+  const cardRef = useRef(null);
 
   const headers = useMemo(
     () => ({
@@ -176,7 +301,7 @@ export default function AdminAutomation() {
   async function openDraft(id) {
     try {
       const data = await api(`/drafts/${id}`);
-      setOpen({ ...data, edit: { ...data.draft, keyPointsText: data.draft.keyPoints.join("\n"), tagsText: data.draft.tags.join(", "), sourceText: data.draft.sourceUrls.join("\n") }, rejecting: false, reason: "", scheduleAt: "", problems: [] });
+      setOpen({ ...data, edit: { ...data.draft, keyPointsText: data.draft.keyPoints.join("\n"), tagsText: data.draft.tags.join(", "), sourceText: data.draft.sourceUrls.join("\n") }, rejecting: false, reason: "", scheduleAt: "", problems: [], withImage: true, imgUrl: data.draft.imageUrl || "", imgKey: data.draft.imageUrl ? cardKey(data.draft) : "" });
     } catch (e) {
       flash("error", e.message);
     }
@@ -211,7 +336,48 @@ export default function AdminAutomation() {
     }
   }
 
-  function editBody() {
+  // redraw the PNG card whenever headline / category change
+  const cardTitle = open?.edit.title;
+  const cardCategory = open?.edit.category;
+  const cardOn = Boolean(open?.withImage);
+  useEffect(() => {
+    if (!cardOn || !cardRef.current) return;
+    drawCard(cardRef.current, { title: cardTitle, category: cardCategory, dateText: todayText() });
+  }, [cardOn, cardTitle, cardCategory, open?.draft.id]);
+
+  function downloadCard() {
+    const link = document.createElement("a");
+    link.download = "current-affair-card.png";
+    link.href = cardRef.current.toDataURL("image/png");
+    link.click();
+  }
+
+  // uploads the card once per headline/category; returns the https link ("" = no image)
+  async function ensureImage() {
+    if (!open.withImage) return "";
+    const key = cardKey(open.edit);
+    if (open.imgUrl && open.imgKey === key) return open.imgUrl;
+
+    drawCard(cardRef.current, { title: open.edit.title, category: open.edit.category, dateText: todayText() });
+    const blob = await new Promise((resolve) => cardRef.current.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Could not create the image.");
+
+    const form = new FormData();
+    form.append("image", blob, "current-affair-card.png");
+    const response = await fetch(`${API_BASE}/api/current-affairs/upload-image`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: form,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.imageUrl) {
+      throw new Error(data.error || data.message || "Image upload failed. Check your Cloudinary settings, or switch off \"Add PNG image\".");
+    }
+    setOpen((o) => (o ? { ...o, imgUrl: data.imageUrl, imgKey: key } : o));
+    return data.imageUrl;
+  }
+
+  function editBody(imageUrl) {
     const e = open.edit;
     return {
       title: e.title,
@@ -223,13 +389,15 @@ export default function AdminAutomation() {
       keyPoints: e.keyPointsText,
       tags: e.tagsText,
       sourceUrls: e.sourceText,
+      ...(imageUrl !== undefined ? { imageUrl } : {}),
     };
   }
 
   async function saveEdits() {
     setBusy(true);
     try {
-      const data = await api(`/drafts/${open.draft.id}`, "PUT", editBody());
+      const img = await ensureImage();
+      const data = await api(`/drafts/${open.draft.id}`, "PUT", editBody(img));
       const d = data.draft;
       setOpen((o) => ({ ...o, draft: d, edit: { ...d, keyPointsText: d.keyPoints.join("\n"), tagsText: d.tags.join(", "), sourceText: d.sourceUrls.join("\n") }, problems: d.validationErrors }));
       flash("success", "Draft saved.");
@@ -244,14 +412,16 @@ export default function AdminAutomation() {
 
   const approve = () =>
     doAction(async () => {
-      await api(`/drafts/${open.draft.id}`, "PUT", editBody()); // always publish what is on screen
+      const img = await ensureImage();
+      await api(`/drafts/${open.draft.id}`, "PUT", editBody(img)); // always publish what is on screen
       await api(`/drafts/${open.draft.id}/approve`, "POST", { targetType: open.edit.targetType });
     }, "Published successfully.");
 
   const schedule = () =>
     doAction(async () => {
       if (!open.scheduleAt) throw new Error("Choose a date and time first.");
-      await api(`/drafts/${open.draft.id}`, "PUT", editBody());
+      const img = await ensureImage();
+      await api(`/drafts/${open.draft.id}`, "PUT", editBody(img));
       await api(`/drafts/${open.draft.id}/schedule`, "POST", {
         publishAt: new Date(open.scheduleAt).toISOString(),
         targetType: open.edit.targetType,
@@ -269,6 +439,25 @@ export default function AdminAutomation() {
 
   const archive = () =>
     doAction(() => api(`/drafts/${open.draft.id}/archive`, "POST"), "Draft archived.");
+
+  async function createManual(event) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const data = await api("/drafts/manual", "POST", manualForm);
+      setManualForm(null);
+      flash("success", "Draft created. Review it below.");
+      setView("drafts");
+      setTab(data.draft.status === "needs_attention" ? "attention" : "pending");
+      setPage(1);
+      refreshAll();
+    } catch (e) {
+      flash("error", e.message);
+      setManualForm((f) => f);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // ---------------- sources ----------------
   async function saveSource(event) {
@@ -336,6 +525,9 @@ export default function AdminAutomation() {
           <button type="button" className="aa-btn ghost" onClick={refreshAll}>
             <RefreshCw size={16} /> Refresh
           </button>
+          <button type="button" className="aa-btn ghost" onClick={() => setManualForm({ ...EMPTY_MANUAL })}>
+            <Plus size={16} /> Add from text
+          </button>
           <button type="button" className="aa-btn primary" onClick={runNow} disabled={busy || (cfg && !cfg.aiConfigured)}>
             <Play size={16} /> Check sources now
           </button>
@@ -347,6 +539,7 @@ export default function AdminAutomation() {
           <span className={cfg.aiConfigured ? "ok" : "bad"}>AI: {cfg.aiConfigured ? `ready (${cfg.model})` : "API key missing"}</span>
           <span className={cfg.enabled ? "ok" : "warn"}>Auto-check: {cfg.enabled ? `every ${cfg.intervalMinutes} min` : "off"}</span>
           <span className={cfg.cronConfigured ? "ok" : "warn"}>External cron: {cfg.cronConfigured ? "secret set" : "not set"}</span>
+          <span className={cfg.retentionDays ? "ok" : "warn"}>Auto-delete: {cfg.retentionDays ? `after ${cfg.retentionDays} days` : "off"}</span>
           <span>Limit: {cfg.maxDraftsPerDay} drafts/day</span>
           <span>AI today: {overview.usage24h.aiCalls} calls</span>
         </div>
@@ -508,6 +701,11 @@ export default function AdminAutomation() {
                 Trigger: {j.trigger} • Sources: {j.sourcesChecked} • Items: {j.itemsFound} • Duplicates: {j.duplicates} • Too old: {j.skippedOld} • Drafts: {j.draftsCreated} • Needs attention: {j.needsAttention}
               </p>
               <p className="aa-meta">AI calls: {j.aiCalls} • Tokens in/out: {j.inputTokens}/{j.outputTokens}</p>
+              {j.notes?.length > 0 && (
+                <ul className="aa-notes">
+                  {j.notes.map((n, i) => (<li key={i}>{n}</li>))}
+                </ul>
+              )}
               {j.errorLog?.length > 0 && (
                 <ul className="aa-errors">
                   {j.errorLog.slice(0, 6).map((e, i) => (<li key={i}>{e}</li>))}
@@ -593,6 +791,22 @@ export default function AdminAutomation() {
                 <label>Source links (one per line)<textarea rows={2} value={open.edit.sourceText} onChange={(e) => setOpen({ ...open, edit: { ...open.edit, sourceText: e.target.value } })} /></label>
               </fieldset>
 
+              {reviewable && (
+                <div className="aa-box aa-img">
+                  <label className="aa-check">
+                    <input type="checkbox" checked={open.withImage} onChange={(e) => setOpen({ ...open, withImage: e.target.checked })} />
+                    <b>Add PNG image to this post</b>
+                  </label>
+                  {open.withImage && (
+                    <>
+                      <canvas ref={cardRef} className="aa-canvas" aria-label="Preview of the PNG card" />
+                      <p className="aa-note">Made from the headline and category above. It is uploaded when you save, schedule or publish.</p>
+                      <button type="button" className="aa-btn ghost small" onClick={downloadCard}><Download size={14} /> Download PNG</button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {open.draft.mcqs.length > 0 && (
                 <div className="aa-box">
                   <b>AI-suggested MCQs ({open.draft.mcqs.length}) - for your reference</b>
@@ -657,6 +871,48 @@ export default function AdminAutomation() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ================= MANUAL FORM ================= */}
+      {manualForm && (
+        <div className="aa-modal" role="dialog" aria-modal="true">
+          <form className="aa-sheet small" onSubmit={createManual}>
+            <div className="aa-sheet-head">
+              <h3>Add from text</h3>
+              <button type="button" className="aa-x" aria-label="Close" onClick={() => setManualForm(null)}><X size={20} /></button>
+            </div>
+            <div className="aa-sheet-body">
+              <p className="aa-note">Use this for sites that do not allow automatic reading (for example PIB). Open the press release, copy its text, and paste it here. The AI will write an original draft from it, and you review it before anything is published.</p>
+              {message.type === "error" && message.text && <div className="aa-box bad">{message.text}</div>}
+              <div className="aa-form">
+                <label>Source link (the page you copied from)<input required type="url" value={manualForm.url} onChange={(e) => setManualForm({ ...manualForm, url: e.target.value })} placeholder="https://pib.gov.in/PressReleasePage.aspx?PRID=..." /></label>
+                <div className="aa-row">
+                  <label>Source name<input value={manualForm.sourceName} onChange={(e) => setManualForm({ ...manualForm, sourceName: e.target.value })} /></label>
+                  <label>Published date<input type="date" value={manualForm.publishedAt} onChange={(e) => setManualForm({ ...manualForm, publishedAt: e.target.value })} /></label>
+                  <label>Language of text
+                    <select value={manualForm.language} onChange={(e) => setManualForm({ ...manualForm, language: e.target.value })}>
+                      <option value="en">English</option>
+                      <option value="hi">Hindi</option>
+                    </select>
+                  </label>
+                </div>
+                <label>Headline (optional)<input value={manualForm.title} onChange={(e) => setManualForm({ ...manualForm, title: e.target.value })} placeholder="Copy the press release headline" /></label>
+                <label>Category
+                  <select value={manualForm.category} onChange={(e) => setManualForm({ ...manualForm, category: e.target.value })}>
+                    {categories.map((c) => (<option key={c}>{c}</option>))}
+                  </select>
+                </label>
+                <label>Press release text<textarea required rows={10} value={manualForm.text} onChange={(e) => setManualForm({ ...manualForm, text: e.target.value })} placeholder="Paste the full text here" /></label>
+              </div>
+            </div>
+            <div className="aa-sheet-foot">
+              <button type="button" className="aa-btn ghost" onClick={() => setManualForm(null)}>Cancel</button>
+              <button type="submit" className="aa-btn primary" disabled={busy}>
+                {busy ? <><Loader2 className="aa-spin" size={16} /> Writing draft...</> : "Create draft"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

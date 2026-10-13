@@ -53,7 +53,7 @@ function settings() {
     provider,
     model:
       process.env.AUTOMATION_AI_MODEL ||
-      (provider === "gemini" ? "gemini-2.5-flash" : "claude-sonnet-5-5"),
+      (provider === "gemini" ? "gemini-3.5-flash-lite" : "claude-sonnet-5-5"),
     aiConfigured: Boolean(
       provider === "gemini" ? process.env.GEMINI_API_KEY : process.env.ANTHROPIC_API_KEY
     ),

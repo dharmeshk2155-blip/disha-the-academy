@@ -6,6 +6,7 @@ const crypto = require("crypto");
 
 const { runCollection } = require("../utils/automation/runner");
 const { publishDue } = require("../utils/automation/publisher");
+const { cleanupOldCurrentAffairs } = require("../utils/automation/cleanup");
 
 const router = express.Router();
 
@@ -27,11 +28,12 @@ async function handle(req, res) {
   }
 
   const published = await publishDue().catch(() => 0);
+  const cleaned = await cleanupOldCurrentAffairs().catch(() => ({ deleted: 0 }));
 
   // run in the background so the scheduler gets a quick answer
   runCollection({ trigger: "cron" }).catch((e) => console.error("cron run:", e.message));
 
-  return res.status(202).json({ success: true, scheduledPublished: published, message: "Collection started." });
+  return res.status(202).json({ success: true, scheduledPublished: published, oldDeleted: cleaned.deleted, message: "Collection started." });
 }
 
 router.get("/cron", handle); // Vercel Cron calls GET

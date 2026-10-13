@@ -13,7 +13,10 @@ const { CATEGORIES, canMove, settings } = require("../utils/automation/constants
 const { assertSafeUrl, readFeed } = require("../utils/automation/rss");
 const { validateDraft } = require("../utils/automation/validator");
 const { publishDraft, PublishError } = require("../utils/automation/publisher");
-const { runCollection, regenerate } = require("../utils/automation/runner");
+const { retentionDays } = require("../utils/automation/cleanup");
+const { runCollection, regenerate, applyAi } = require("../utils/automation/runner");
+const { draftFromItem } = require("../utils/automation/drafter");
+const { canonicalUrl, normalizeTitle, sha } = require("../utils/automation/rss");
 
 const router = express.Router();
 
@@ -71,6 +74,7 @@ function fullDraft(d) {
   return {
     ...listDraft(d),
     slug: d.slug,
+    imageUrl: d.imageUrl || "",
     body: d.body,
     keyPoints: d.keyPoints,
     tags: d.tags,
@@ -112,6 +116,7 @@ router.get("/overview", async (req, res) => {
         maxItemAgeDays: cfg.maxItemAgeDays,
         model: cfg.model,
         provider: cfg.provider,
+        retentionDays: retentionDays(),
         aiConfigured: cfg.aiConfigured,
         cronConfigured: cfg.cronConfigured,
       },
@@ -245,6 +250,72 @@ router.get("/drafts", async (req, res) => {
   }
 });
 
+// Admin pastes the source text himself (for sites that block automatic reading,
+// e.g. PIB). The AI works on exactly the pasted text, nothing is fetched.
+router.post("/drafts/manual", async (req, res) => {
+  const b = req.body || {};
+  const link = text(b.url, 1000);
+  const sourceText = text(b.text, 12000);
+  const title = text(b.title, 300);
+
+  try {
+    assertSafeUrl(link);
+  } catch {
+    return fail(res, 400, "Please enter the full source link (starting with https://).");
+  }
+  if (sourceText.length < 80) return fail(res, 400, "Please paste the press release text (at least a few sentences).");
+  if (!settings().aiConfigured) return fail(res, 400, "AI is not configured on the server (API key is missing).");
+
+  const url = canonicalUrl(link);
+  if (await ContentDraft.exists({ canonicalUrl: url })) {
+    return fail(res, 409, "A draft for this link already exists.");
+  }
+
+  const category = CATEGORIES.includes(b.category) ? b.category : "National";
+  const language = b.language === "hi" ? "hi" : "en";
+  const published = b.publishedAt ? new Date(String(b.publishedAt)) : null;
+  const publishedAt = published && !Number.isNaN(published.getTime()) ? published : new Date();
+  const sourceName = text(b.sourceName, 150) || "Manual";
+  const headline = title || sourceText.slice(0, 120);
+
+  let draft;
+  try {
+    draft = await ContentDraft.create({
+      title: headline.slice(0, 500),
+      sourceName,
+      sourceUrls: [link],
+      canonicalUrl: url,
+      sourcePublishedAt: publishedAt,
+      sourceTitle: headline,
+      sourceSnippet: sourceText,
+      fetchedAt: new Date(),
+      contentHash: sha(normalizeTitle(headline)),
+      language,
+      category,
+      manual: true,
+      status: "processing",
+    });
+  } catch (error) {
+    if (error?.code === 11000) return fail(res, 409, "A draft for this link already exists.");
+    throw error;
+  }
+
+  try {
+    const source = { name: sourceName, reliability: "official", language, category };
+    const item = { title: headline, link, publishedAt, snippet: sourceText };
+    const ai = await draftFromItem(item, source);
+    applyAi(draft, ai, source, item);
+    await draft.save();
+    await audit(req, draft._id, "manual_create", link);
+    return ok(res, { draft: listDraft(draft) }, 201);
+  } catch (error) {
+    draft.status = "failed";
+    draft.lastError = String(error.message).slice(0, 300);
+    await draft.save();
+    return fail(res, 502, `The AI could not write the draft: ${error.message}. It is saved under "Failed" - open it and use Regenerate.`);
+  }
+});
+
 router.get("/drafts/:id", async (req, res) => {
   if (!validId(req.params.id)) return fail(res, 400, "Invalid draft id.");
   const draft = await ContentDraft.findById(req.params.id).lean();
@@ -277,6 +348,11 @@ router.put("/drafts/:id", async (req, res) => {
       .slice(0, 10);
   }
   if (b.category !== undefined) draft.category = text(b.category, 100);
+  if (b.imageUrl !== undefined) {
+    const img = text(b.imageUrl, 1000);
+    if (img && !/^https:\/\//i.test(img)) return fail(res, 400, "The image link must start with https://");
+    draft.imageUrl = img;
+  }
   if (b.language !== undefined) draft.language = b.language === "hi" ? "hi" : "en";
   if (b.targetType !== undefined) draft.targetType = b.targetType === "blog" ? "blog" : "currentAffair";
   if (b.tags !== undefined) {

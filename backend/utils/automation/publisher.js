@@ -65,6 +65,7 @@ async function publishDraft(draftId, { adminId = "", targetType } = {}) {
           title: draft.title,
           category: draft.category,
           summary: draft.summary,
+          imageUrl: draft.imageUrl || "",
           content,
           publishedDate: now,
           status: "Published",
@@ -76,6 +77,7 @@ async function publishDraft(draftId, { adminId = "", targetType } = {}) {
           summary: draft.summary,
           publishedDate: now,
           category: draft.category,
+          imageUrl: draft.imageUrl || "",
           content,
           keyPoints: (draft.keyPoints || []).join("\n"),
         });

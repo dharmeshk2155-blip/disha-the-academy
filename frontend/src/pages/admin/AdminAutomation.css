@@ -157,3 +157,9 @@
   .aa-sheet { max-height: 92vh; border-radius: 16px; overflow: hidden; }
   .aa-when { flex: 0 0 auto; }
 }
+
+/* PNG card preview */
+.aa-img .aa-canvas { display: block; width: 100%; height: auto; margin: 10px 0 6px; aspect-ratio: 16 / 9; border-radius: 10px; background: #0a1a3f; }
+
+
+.aa-notes { margin: 8px 0 0; padding-left: 18px; color: #5a667d; font-size: 13px; line-height: 1.5; }

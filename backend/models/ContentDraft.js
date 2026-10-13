@@ -48,6 +48,8 @@ const contentDraftSchema = new mongoose.Schema(
     sourceUrls: { type: [String], default: [] },
     canonicalUrl: { type: String, default: "" },
     sourcePublishedAt: { type: Date, default: null },
+    imageUrl: { type: String, default: "", trim: true, maxlength: 1000 },
+    manual: { type: Boolean, default: false },
     sourceTitle: { type: String, default: "" },
     sourceSnippet: { type: String, default: "" },
     fetchedAt: { type: Date, default: null },

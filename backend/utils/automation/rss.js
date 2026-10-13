@@ -120,20 +120,14 @@ async function fetchWithRetry(url, { timeoutMs = 15000, retries = 2 } = {}) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-     const isPib = ["pib.gov.in", "www.pib.gov.in"].includes(
-  new URL(url).hostname.toLowerCase()
-);
-
-const response = await fetch(url, {
-  signal: controller.signal,
-  redirect: "follow",
-  ...(!isPib && {
-    headers: {
-      "User-Agent": "DishaTheAcademyBot/1.0 (+feed reader; contact site admin)",
-      Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
-    },
-  }),
-});
+      const response = await fetch(url, {
+        signal: controller.signal,
+        redirect: "follow",
+        headers: {
+          "User-Agent": "DishaTheAcademyBot/1.0 (+feed reader; contact site admin)",
+          Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+        },
+      });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 

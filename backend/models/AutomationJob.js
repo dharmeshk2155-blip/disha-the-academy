@@ -16,6 +16,7 @@ const automationJobSchema = new mongoose.Schema(
     inputTokens: { type: Number, default: 0 },
     outputTokens: { type: Number, default: 0 },
     errorLog: { type: [String], default: [] },
+    notes: { type: [String], default: [] },
   },
   { timestamps: true, versionKey: false }
 );
