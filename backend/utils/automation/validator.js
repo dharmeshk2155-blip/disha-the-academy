@@ -38,6 +38,7 @@ function normalizeAi(raw, fallback = {}) {
     sourceUrls: list(r.source_urls || r.sourceUrls),
     factCheckNotes: list(r.fact_check_notes || r.factCheckNotes),
     needsHumanVerification: Boolean(r.needs_human_verification ?? r.needsHumanVerification),
+    imageQuery: String(r.image_query || r.imageQuery || "").replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80),
     mcqs,
   };
 }

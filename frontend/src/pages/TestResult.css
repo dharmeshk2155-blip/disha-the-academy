@@ -1077,3 +1077,10 @@
     padding: 14px 12px;
   }
 }
+
+/* question + option text: left aligned, keep author's line breaks */
+.tr-q-text,
+.tr-opt-text {
+  text-align: left;
+  white-space: pre-line;
+}

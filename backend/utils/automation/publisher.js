@@ -56,7 +56,8 @@ async function publishDraft(draftId, { adminId = "", targetType } = {}) {
     await draft.save();
 
     const now = new Date();
-    const content = `${draft.body}\n\n${sourceLine(draft)}`;
+    const credit = draft.imageCredit ? `\nImage: ${draft.imageCredit}${draft.imageCreditUrl ? ` (${draft.imageCreditUrl})` : ""}` : "";
+    const content = `${draft.body}\n\n${sourceLine(draft)}${credit}`;
 
     try {
       if (type === "blog") {

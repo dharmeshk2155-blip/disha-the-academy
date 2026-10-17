@@ -301,7 +301,7 @@ export default function AdminAutomation() {
   async function openDraft(id) {
     try {
       const data = await api(`/drafts/${id}`);
-      setOpen({ ...data, edit: { ...data.draft, keyPointsText: data.draft.keyPoints.join("\n"), tagsText: data.draft.tags.join(", "), sourceText: data.draft.sourceUrls.join("\n") }, rejecting: false, reason: "", scheduleAt: "", problems: [], withImage: true, imgUrl: data.draft.imageUrl || "", imgKey: data.draft.imageUrl ? cardKey(data.draft) : "" });
+      setOpen({ ...data, edit: { ...data.draft, keyPointsText: data.draft.keyPoints.join("\n"), tagsText: data.draft.tags.join(", "), sourceText: data.draft.sourceUrls.join("\n") }, rejecting: false, reason: "", scheduleAt: "", problems: [], imgMode: data.draft.imageUrl ? "photo" : "card", imgUrl: data.draft.imageUrl || "", imgCredit: data.draft.imageCredit || "", imgKey: "", pk: { q: data.draft.imageQuery || String(data.draft.title || "").slice(0, 60), loading: false, results: [], error: "" } });
     } catch (e) {
       flash("error", e.message);
     }
@@ -339,7 +339,7 @@ export default function AdminAutomation() {
   // redraw the PNG card whenever headline / category change
   const cardTitle = open?.edit.title;
   const cardCategory = open?.edit.category;
-  const cardOn = Boolean(open?.withImage);
+  const cardOn = open?.imgMode === "card";
   useEffect(() => {
     if (!cardOn || !cardRef.current) return;
     drawCard(cardRef.current, { title: cardTitle, category: cardCategory, dateText: todayText() });
@@ -354,7 +354,8 @@ export default function AdminAutomation() {
 
   // uploads the card once per headline/category; returns the https link ("" = no image)
   async function ensureImage() {
-    if (!open.withImage) return "";
+    if (open.imgMode === "none") return "";
+    if (open.imgMode === "photo") return open.imgUrl || "";
     const key = cardKey(open.edit);
     if (open.imgUrl && open.imgKey === key) return open.imgUrl;
 
@@ -371,10 +372,32 @@ export default function AdminAutomation() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.imageUrl) {
-      throw new Error(data.error || data.message || "Image upload failed. Check your Cloudinary settings, or switch off \"Add PNG image\".");
+      throw new Error(data.error || data.message || "Image upload failed. Check your Cloudinary settings, or choose \"No image\".");
     }
     setOpen((o) => (o ? { ...o, imgUrl: data.imageUrl, imgKey: key } : o));
     return data.imageUrl;
+  }
+
+  async function findPhotos() {
+    setOpen((o) => ({ ...o, pk: { ...o.pk, loading: true, error: "" } }));
+    try {
+      const data = await api(`/image-search?q=${encodeURIComponent(open.pk.q)}`);
+      setOpen((o) => ({ ...o, pk: { ...o.pk, loading: false, results: data.photos, error: data.photos.length ? "" : "No photos found. Try other words." } }));
+    } catch (e) {
+      setOpen((o) => ({ ...o, pk: { ...o.pk, loading: false, results: [], error: e.message } }));
+    }
+  }
+
+  async function choosePhoto(photo) {
+    setBusy(true);
+    try {
+      const data = await api(`/drafts/${open.draft.id}/image`, "POST", { src: photo.src, photographer: photo.photographer, pageUrl: photo.pageUrl });
+      setOpen((o) => ({ ...o, imgUrl: data.imageUrl, imgCredit: data.credit, imgMode: "photo", pk: { ...o.pk, results: [], error: "" } }));
+    } catch (e) {
+      setOpen((o) => ({ ...o, pk: { ...o.pk, error: e.message } }));
+    } finally {
+      setBusy(false);
+    }
   }
 
   function editBody(imageUrl) {
@@ -793,17 +816,60 @@ export default function AdminAutomation() {
 
               {reviewable && (
                 <div className="aa-box aa-img">
-                  <label className="aa-check">
-                    <input type="checkbox" checked={open.withImage} onChange={(e) => setOpen({ ...open, withImage: e.target.checked })} />
-                    <b>Add PNG image to this post</b>
-                  </label>
-                  {open.withImage && (
+                  <b>Image for this post</b>
+                  <div className="aa-modes" role="radiogroup" aria-label="Image type">
+                    {[["photo", "Real photo"], ["card", "Title card (PNG)"], ["none", "No image"]].map(([k, l]) => (
+                      <button key={k} type="button" role="radio" aria-checked={open.imgMode === k} className={open.imgMode === k ? "on" : ""} onClick={() => setOpen({ ...open, imgMode: k })}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+
+                  {open.imgMode === "photo" && (
+                    <>
+                      {open.imgUrl ? (
+                        <>
+                          <img src={open.imgUrl} alt="Selected" className="aa-photo" />
+                          {open.imgCredit && <p className="aa-note">{open.imgCredit}. The credit is added to the article automatically.</p>}
+                        </>
+                      ) : (
+                        <p className="aa-note">No photo yet. Search below and tap a photo to use it.</p>
+                      )}
+                      {cfg && !cfg.photosConfigured ? (
+                        <p className="aa-note">Photo search is not set up. Add PEXELS_API_KEY to the backend .env file.</p>
+                      ) : (
+                        <>
+                          <div className="aa-pk-row">
+                            <input value={open.pk.q} onChange={(e) => setOpen({ ...open, pk: { ...open.pk, q: e.target.value } })} placeholder="Search words, e.g. parliament india" />
+                            <button type="button" className="aa-btn ghost small" onClick={findPhotos} disabled={open.pk.loading || busy}>
+                              {open.pk.loading ? <Loader2 className="aa-spin" size={14} /> : <Search size={14} />} Search photos
+                            </button>
+                          </div>
+                          {open.pk.error && <p className="aa-note aa-bad">{open.pk.error}</p>}
+                          {open.pk.results.length > 0 && (
+                            <div className="aa-pk-grid">
+                              {open.pk.results.map((p) => (
+                                <button key={p.id} type="button" className="aa-pk-item" onClick={() => choosePhoto(p)} disabled={busy} title={`Photo by ${p.photographer}`}>
+                                  <img src={p.thumb} alt={p.alt || "Stock photo"} loading="lazy" />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <p className="aa-note">Photos provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>. They are general stock photos, not pictures of the actual event.</p>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {open.imgMode === "card" && (
                     <>
                       <canvas ref={cardRef} className="aa-canvas" aria-label="Preview of the PNG card" />
                       <p className="aa-note">Made from the headline and category above. It is uploaded when you save, schedule or publish.</p>
                       <button type="button" className="aa-btn ghost small" onClick={downloadCard}><Download size={14} /> Download PNG</button>
                     </>
                   )}
+
+                  {open.imgMode === "none" && <p className="aa-note">The post will be published without an image.</p>}
                 </div>
               )}
 

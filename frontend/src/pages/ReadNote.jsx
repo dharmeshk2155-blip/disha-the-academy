@@ -14,6 +14,7 @@ import {
 import DOMPurify from "dompurify";
 
 import "./ReadNote.css";
+import useAutoFullscreen from "../hooks/useAutoFullscreen";
 
 const API_BASE = import.meta.env.DEV
   ? "http://127.0.0.1:5000"
@@ -21,6 +22,8 @@ const API_BASE = import.meta.env.DEV
     "https://disha-the-academy.onrender.com";
 
 export default function ReadNote() {
+  useAutoFullscreen();
+
   const { id } = useParams();
 
   const navigate =

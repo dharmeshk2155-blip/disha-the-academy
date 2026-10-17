@@ -70,6 +70,7 @@ import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminAbout from "./pages/admin/AdminAbout";
 import AdminSettings from "./pages/admin/AdminSettings";
 import "./App.css";
+import "./article-text.css";
 
 /*
   Popular Exams used to have its own copy of the pages. Both Home rows now

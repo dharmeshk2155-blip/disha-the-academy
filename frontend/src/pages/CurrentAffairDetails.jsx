@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import useAutoFullscreen from "../hooks/useAutoFullscreen";
 import { Link, useParams } from "react-router-dom";
 import {
   FaWhatsapp,
@@ -122,6 +123,8 @@ function getExamTags(article) {
 
 
 export default function CurrentAffairDetails() {
+  useAutoFullscreen();
+
   const { id } = useParams();
 
   const [article, setArticle] =

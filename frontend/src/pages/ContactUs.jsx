@@ -467,8 +467,8 @@ export default function ContactUs() {
 
               <div>
                 <strong>Call Us</strong>
-                <a href="tel:+918627053974">
-                  +91 8627053974
+                <a href="tel:+918627043974">
+                  +91 8627043974
                 </a>
                 <span>Mon - Sat, 10:00 AM - 6:00 PM</span>
               </div>
@@ -635,7 +635,7 @@ export default function ContactUs() {
                 <SocialArrow />
               </a>
 
-              <a href="https://www.instagram.com/dishatheacadamy?stkn=OWt0bmdpZWRxeTlo" className="contact-fit-social-item">
+              <a href="https://www.instagram.com/dishatheacademy?stkn=OWt0bmdpZWRxeTlo" className="contact-fit-social-item">
                 <div className="contact-fit-social-logo instagram">
                   ◎
                 </div>

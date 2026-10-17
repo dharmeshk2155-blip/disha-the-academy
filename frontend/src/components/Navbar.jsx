@@ -15,7 +15,7 @@ import {
   X, 
   Menu, 
   Search, 
-  Languages, 
+
   Crown, 
 } from "lucide-react"; 
  
@@ -29,7 +29,6 @@ function Navbar() {
   const navigate = useNavigate(); 
  
   const [searchQuery, setSearchQuery] = useState(""); 
-  const [showLangMenu, setShowLangMenu] = useState(false); 
   const [menuOpen, setMenuOpen] = useState(false); 
  
   const user = JSON.parse(localStorage.getItem("dishaUser")); 
@@ -189,26 +188,6 @@ function Navbar() {
         </form> 
  
         <div className="topbar-actions"> 
- 
-          {/* LANGUAGE (icon only for now, functionality coming later) */} 
-          <div className="topbar-lang-wrapper"> 
-            <button 
-              className="topbar-icon-btn" 
-              onClick={() => setShowLangMenu((prev) => !prev)} 
-              aria-label="Language" 
-            > 
-              <Languages size={20} strokeWidth={1.8} /> 
-            </button> 
- 
-            {showLangMenu && ( 
-              <div className="topbar-lang-dropdown"> 
-                <div className="topbar-lang-item active">English</div> 
-                <div className="topbar-lang-item disabled"> 
-                  हिंदी <span className="topbar-soon-tag">soon</span> 
-                </div> 
-              </div> 
-            )} 
-          </div> 
  
           {/* NOTIFICATIONS */}
           {user && <NotificationBell />}

@@ -1,0 +1,112 @@
+/* ======================================================
+   Reading text for Current Affairs, Blog and Notes:
+   bigger, comfortable to read, and LEFT aligned
+   (the site default is centered, which is wrong for paragraphs).
+   Loaded last on purpose; selectors are strong enough to win.
+====================================================== */
+
+/* ---------- Current Affairs ---------- */
+html body .ca-detail-page .ca-article-content,
+html body .ca-detail-page .ca-article-content p,
+html body .ca-detail-page .ca-article-content li {
+  text-align: left;
+}
+
+html body .ca-detail-page .ca-article-content p {
+  margin: 0 0 18px;
+  color: #223454;
+  font-size: 18px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+html body .ca-detail-page .ca-point p {
+  color: #2c4568;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+html body .ca-detail-page .ca-point {
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+/* ---------- Blog ---------- */
+html body .blog-details-article,
+html body .blog-details-intro,
+html body .blog-details-body,
+html body .blog-details-body p {
+  text-align: left;
+}
+
+html body .blog-details-body p {
+  margin: 0 0 22px;
+  color: #34445e;
+  font-size: 18px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+html body .blog-details-intro {
+  font-size: 17.5px;
+  line-height: 1.8;
+}
+
+/* ---------- Notes (typed notes and Word-imported notes) ---------- */
+html body .read-note-content,
+html body .read-note-content p,
+html body .read-note-content li,
+html body .read-note-content blockquote,
+html body .nb,
+html body .nb p,
+html body .nb li {
+  text-align: left;
+}
+
+html body .read-note-content p,
+html body .read-note-content li,
+html body .nb p,
+html body .nb li {
+  color: #223454;
+  font-size: 17.5px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+/* images and captions keep their own centering */
+html body .read-note-content figure,
+html body .read-note-content figcaption,
+html body .nb figure,
+html body .nb figcaption {
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  html body .ca-detail-page .ca-article-content p {
+    font-size: 16.5px;
+    line-height: 1.8;
+  }
+
+  html body .ca-detail-page .ca-point p {
+    font-size: 14.5px;
+  }
+
+  html body .blog-details-body p {
+    font-size: 16.5px;
+    line-height: 1.85;
+  }
+
+  html body .blog-details-intro {
+    font-size: 16px;
+  }
+
+  html body .read-note-content p,
+  html body .read-note-content li,
+  html body .nb p,
+  html body .nb li {
+    font-size: 16.5px;
+    line-height: 1.8;
+  }
+}

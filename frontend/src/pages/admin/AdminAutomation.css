@@ -163,3 +163,17 @@
 
 
 .aa-notes { margin: 8px 0 0; padding-left: 18px; color: #5a667d; font-size: 13px; line-height: 1.5; }
+
+/* photo picker */
+.aa-modes { display: flex; gap: 4px; margin: 8px 0; padding: 4px; background: #eef2f9; border-radius: 10px; }
+.aa-modes button { flex: 1; min-height: 40px; padding: 0 6px; color: #4a5d82; font-size: 13px; font-weight: 700; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
+.aa-modes button.on { color: #172033; background: #fff; box-shadow: 0 1px 4px rgba(11, 31, 77, 0.16); }
+.aa-photo { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; margin: 6px 0; border-radius: 10px; background: #e9eef8; }
+.aa-pk-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.aa-pk-row input { flex: 1 1 180px; min-width: 0; min-height: 44px; padding: 8px 12px; font: inherit; font-size: 16px; color: #172033; background: #fff; border: 1px solid #cfd8ea; border-radius: 10px; }
+.aa-pk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.aa-pk-item { padding: 0; overflow: hidden; background: #e9eef8; border: 2px solid transparent; border-radius: 10px; cursor: pointer; }
+.aa-pk-item:hover, .aa-pk-item:focus-visible { border-color: #1d4ed8; }
+.aa-pk-item img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+.aa-bad { color: #912018; }
+@media (min-width: 700px) { .aa-pk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

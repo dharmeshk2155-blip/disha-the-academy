@@ -10,6 +10,7 @@ const { normalizeAi, validateDraft } = require("./validator");
 const { settings, CATEGORIES } = require("./constants");
 const { publishDue } = require("./publisher");
 const { cleanupOldCurrentAffairs } = require("./cleanup");
+const { attachStockImage } = require("./stockImage");
 
 const DAY = 24 * 3600 * 1000;
 let running = false;
@@ -33,6 +34,7 @@ function applyAi(draft, ai, source, item) {
   draft.keyPoints = fields.keyPoints;
   draft.category = CATEGORIES.includes(fields.category) ? fields.category : source.category;
   draft.tags = fields.tags;
+  draft.imageQuery = fields.imageQuery;
   draft.mcqs = fields.mcqs;
   draft.sourceUrls = [...urls];
   draft.factCheckNotes = fields.factCheckNotes;
@@ -167,6 +169,7 @@ async function runCollection({ trigger = "manual" } = {}) {
           applyAi(draft, ai, source, item);
           if (draft.status === "needs_attention") job.needsAttention += 1;
           await draft.save();
+          await attachStockImage(draft); // real photo, if Pexels is set up
           job.draftsCreated += 1;
           createdThisRun += 1;
           createdToday += 1;

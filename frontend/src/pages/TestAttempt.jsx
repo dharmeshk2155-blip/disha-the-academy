@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 
 import "./TestAttempt.css";
+import useAutoFullscreen from "../hooks/useAutoFullscreen";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
@@ -214,6 +215,13 @@ export default function TestAttempt({ freeMode = false }) {
 
   const [paused, setPaused] =
     useState(false);
+
+  // mobile: question palette bottom-sheet
+  const [paletteOpen, setPaletteOpen] =
+    useState(false);
+
+  // full screen as soon as the test starts
+  useAutoFullscreen(testStarted && !result);
 
   const [
     isFullscreen,
@@ -1268,8 +1276,40 @@ export default function TestAttempt({ freeMode = false }) {
               ? "▶ Resume"
               : "Ⅱ Pause"}
           </button>
+
+          <button
+            className="ta-header-palette-btn"
+            onClick={() =>
+              setPaletteOpen(true)
+            }
+          >
+            ▦ {currentIndex + 1}/
+            {test.questions.length}
+          </button>
+
+          <button
+            className="ta-header-submit-btn"
+            onClick={() =>
+              setShowConfirm(true)
+            }
+          >
+            ✔ Submit
+          </button>
         </div>
       </header>
+
+      <div className="ta-progress-line">
+        <span
+          style={{
+            width: `${Math.round(
+              ((counts.answered +
+                counts.markedAnswered) /
+                test.questions.length) *
+                100
+            )}%`,
+          }}
+        />
+      </div>
 
       {/* ================= SECTION BAR ================= */}
 
@@ -1486,7 +1526,36 @@ export default function TestAttempt({ freeMode = false }) {
 
         {/* RIGHT SIDEBAR */}
 
-        <aside className="ta-right-sidebar">
+        {paletteOpen && (
+          <div
+            className="ta-palette-backdrop"
+            onClick={() =>
+              setPaletteOpen(false)
+            }
+          />
+        )}
+
+        <aside
+          className={`ta-right-sidebar ${
+            paletteOpen ? "open" : ""
+          }`}
+        >
+          <div className="ta-sheet-head">
+            <strong>
+              Question Palette
+            </strong>
+
+            <button
+              type="button"
+              onClick={() =>
+                setPaletteOpen(false)
+              }
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+
           <div className="ta-student-card">
             {currentUser?.picture ? (
               <img
@@ -1597,11 +1666,14 @@ export default function TestAttempt({ freeMode = false }) {
                         ? "current"
                         : ""
                     }`}
-                    onClick={() =>
+                    onClick={() => {
                       goToQuestion(
                         index
-                      )
-                    }
+                      );
+                      setPaletteOpen(
+                        false
+                      );
+                    }}
                   >
                     {index + 1}
                   </button>

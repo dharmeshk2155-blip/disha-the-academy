@@ -14,6 +14,7 @@ const { assertSafeUrl, readFeed } = require("../utils/automation/rss");
 const { validateDraft } = require("../utils/automation/validator");
 const { publishDraft, PublishError } = require("../utils/automation/publisher");
 const { retentionDays } = require("../utils/automation/cleanup");
+const { searchPhotos, storePhoto, attachStockImage, configured: photosConfigured } = require("../utils/automation/stockImage");
 const { runCollection, regenerate, applyAi } = require("../utils/automation/runner");
 const { draftFromItem } = require("../utils/automation/drafter");
 const { canonicalUrl, normalizeTitle, sha } = require("../utils/automation/rss");
@@ -75,6 +76,8 @@ function fullDraft(d) {
     ...listDraft(d),
     slug: d.slug,
     imageUrl: d.imageUrl || "",
+    imageQuery: d.imageQuery || "",
+    imageCredit: d.imageCredit || "",
     body: d.body,
     keyPoints: d.keyPoints,
     tags: d.tags,
@@ -117,6 +120,7 @@ router.get("/overview", async (req, res) => {
         model: cfg.model,
         provider: cfg.provider,
         retentionDays: retentionDays(),
+        photosConfigured: photosConfigured(),
         aiConfigured: cfg.aiConfigured,
         cronConfigured: cfg.cronConfigured,
       },
@@ -306,6 +310,7 @@ router.post("/drafts/manual", async (req, res) => {
     const ai = await draftFromItem(item, source);
     applyAi(draft, ai, source, item);
     await draft.save();
+    await attachStockImage(draft);
     await audit(req, draft._id, "manual_create", link);
     return ok(res, { draft: listDraft(draft) }, 201);
   } catch (error) {
@@ -313,6 +318,39 @@ router.post("/drafts/manual", async (req, res) => {
     draft.lastError = String(error.message).slice(0, 300);
     await draft.save();
     return fail(res, 502, `The AI could not write the draft: ${error.message}. It is saved under "Failed" - open it and use Regenerate.`);
+  }
+});
+
+// ---- real photos (Pexels) ----
+router.get("/image-search", async (req, res) => {
+  try {
+    const photos = await searchPhotos(req.query.q, 12);
+    return ok(res, { photos });
+  } catch (error) {
+    return fail(res, 400, error.message);
+  }
+});
+
+router.post("/drafts/:id/image", async (req, res) => {
+  if (!validId(req.params.id)) return fail(res, 400, "Invalid draft id.");
+  const draft = await ContentDraft.findById(req.params.id);
+  if (!draft) return fail(res, 404, "Draft not found.");
+  if (!EDITABLE.includes(draft.status)) return fail(res, 409, "This draft can no longer be edited.");
+
+  try {
+    const stored = await storePhoto({
+      src: req.body?.src,
+      photographer: req.body?.photographer,
+      pageUrl: req.body?.pageUrl,
+    });
+    draft.imageUrl = stored.imageUrl;
+    draft.imageCredit = stored.credit;
+    draft.imageCreditUrl = stored.creditUrl;
+    await draft.save();
+    await audit(req, draft._id, "photo_added", stored.credit);
+    return ok(res, { imageUrl: stored.imageUrl, credit: stored.credit });
+  } catch (error) {
+    return fail(res, 400, error.message);
   }
 });
 
@@ -351,6 +389,10 @@ router.put("/drafts/:id", async (req, res) => {
   if (b.imageUrl !== undefined) {
     const img = text(b.imageUrl, 1000);
     if (img && !/^https:\/\//i.test(img)) return fail(res, 400, "The image link must start with https://");
+    if (img !== draft.imageUrl) {
+      draft.imageCredit = "";
+      draft.imageCreditUrl = "";
+    }
     draft.imageUrl = img;
   }
   if (b.language !== undefined) draft.language = b.language === "hi" ? "hi" : "en";

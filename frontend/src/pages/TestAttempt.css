@@ -2188,3 +2188,197 @@
     font-size: 14px;
   }
 }
+
+
+/* ---------- Submit button next to Pause (phones / tablets) ---------- */
+.ta-header-submit-btn {
+  display: none;
+}
+
+@media (max-width: 1050px) {
+  .ta-header-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 36px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #34d27b, #16a34a);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);
+  }
+
+  .ta-header-submit-btn:active {
+    transform: translateY(1px);
+  }
+}
+
+/* =====================================================
+   MOBILE EXAM UI — Testbook-style
+   sticky header, progress line, palette bottom-sheet
+   (desktop is untouched)
+   ===================================================== */
+.ta-header-palette-btn,
+.ta-sheet-head,
+.ta-progress-line {
+  display: none;
+}
+
+@media (max-width: 1050px) {
+  /* sticky dark header so the timer + Submit are always visible */
+  .ta-exam-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .ta-header-actions {
+    gap: 6px;
+  }
+
+  .ta-header-palette-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* full screen is not useful on phones */
+  .ta-fullscreen-btn {
+    display: none;
+  }
+
+  /* thin progress line (answered / total) */
+  .ta-progress-line {
+    display: block;
+    height: 4px;
+    background: #d9e4ef;
+  }
+
+  .ta-progress-line span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #34d27b, #16a34a);
+    transition: width 0.3s ease;
+  }
+
+  /* options: clear card, strong selected state */
+  .ta-option {
+    background: #fff;
+    border: 1.5px solid #dbe5f0;
+    border-radius: 10px;
+  }
+
+  .ta-option.selected {
+    border-color: #1d6fdc;
+    background: #eaf3ff;
+    box-shadow: 0 0 0 2px rgba(29, 111, 220, 0.12);
+  }
+
+  /* bottom action bar */
+  .ta-bottom-actions {
+    z-index: 30;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ---------- palette = bottom sheet ---------- */
+  .ta-palette-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 890;
+    background: rgba(5, 29, 58, 0.55);
+  }
+
+  .ta-exam-layout .ta-right-sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 85vh;
+    padding: 0 10px 10px;
+    overflow-y: auto;
+    background: #f3f7fb;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 30px rgba(5, 29, 58, 0.3);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition: transform 0.28s ease, visibility 0.28s;
+  }
+
+  .ta-exam-layout .ta-right-sidebar.open {
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .ta-sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 -10px;
+    padding: 14px 16px 10px;
+    background: #f3f7fb;
+    font-size: 16px;
+    color: #082d5b;
+  }
+
+  .ta-sheet-head button {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #e1eaf3;
+    color: #082d5b;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  /* student name card is not needed inside the sheet */
+  .ta-exam-layout .ta-student-card {
+    display: none;
+  }
+
+  .ta-exam-layout .ta-sidebar-bottom {
+    margin-bottom: 0;
+  }
+}
+
+
+/* =====================================================
+   Question text: left aligned, keep the line breaks the
+   author typed (statements stay on separate lines)
+   ===================================================== */
+.ta-q-text,
+.ta-review-q,
+.ta-option span,
+.ta-review-option {
+  text-align: left;
+  white-space: pre-line;
+}
+
+.ta-question-content {
+  text-align: left;
+}

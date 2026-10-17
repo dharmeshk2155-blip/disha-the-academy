@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useAutoFullscreen from "../hooks/useAutoFullscreen";
 import { Link, useParams } from "react-router-dom";
 import "./BlogDetails.css";
 
@@ -22,6 +23,8 @@ function getReadingTime(content = "") {
 }
 
 function BlogDetails() {
+  useAutoFullscreen();
+
   const { id } = useParams();
 
   const [blog, setBlog] = useState(null);
