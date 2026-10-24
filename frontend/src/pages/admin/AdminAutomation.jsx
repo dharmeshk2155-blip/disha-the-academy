@@ -23,7 +23,6 @@ const TABS = [
   { key: "attention", label: "Needs Attention", count: "needs_attention" },
   { key: "scheduled", label: "Approved / Scheduled", count: ["approved", "scheduled"] },
   { key: "published", label: "Published", count: "published" },
-  { key: "rejected", label: "Rejected", count: "rejected" },
   { key: "failed", label: "Failed", count: "failed" },
 ];
 
@@ -170,6 +169,17 @@ function todayText() {
 
 function cardKey(edit) {
   return `${edit.title}|${edit.category}`;
+}
+
+// "Auto-deletes in 5h 20m" for drafts that are still waiting for review
+function expiryText(d, hours) {
+  if (!hours || d.manual || !["pending_review", "needs_attention"].includes(d.status)) return "";
+  const left = new Date(d.createdAt).getTime() + hours * 3600 * 1000 - Date.now();
+  if (!Number.isFinite(left)) return "";
+  if (left <= 0) return "Will be deleted in the next check";
+  const h = Math.floor(left / 3600000);
+  const m = Math.floor((left % 3600000) / 60000);
+  return `Auto-deletes in ${h}h ${m}m if not reviewed`;
 }
 
 function fmt(value) {
@@ -452,7 +462,7 @@ export default function AdminAutomation() {
     }, "Scheduled.");
 
   const reject = () =>
-    doAction(() => api(`/drafts/${open.draft.id}/reject`, "POST", { reason: open.reason }), "Draft rejected.");
+    doAction(() => api(`/drafts/${open.draft.id}/reject`, "POST", { reason: open.reason }), "Draft deleted permanently. A new one is being fetched in its place.");
 
   const regenerate = () =>
     doAction(() => api(`/drafts/${open.draft.id}/regenerate`, "POST"), "Draft regenerated. Open it again to review.");
@@ -563,6 +573,7 @@ export default function AdminAutomation() {
           <span className={cfg.enabled ? "ok" : "warn"}>Auto-check: {cfg.enabled ? `every ${cfg.intervalMinutes} min` : "off"}</span>
           <span className={cfg.cronConfigured ? "ok" : "warn"}>External cron: {cfg.cronConfigured ? "secret set" : "not set"}</span>
           <span className={cfg.retentionDays ? "ok" : "warn"}>Auto-delete: {cfg.retentionDays ? `after ${cfg.retentionDays} days` : "off"}</span>
+          <span className="ok">Not reviewed in {cfg.reviewHours}h: auto-deleted</span>
           <span>Limit: {cfg.maxDraftsPerDay} drafts/day</span>
           <span>AI today: {overview.usage24h.aiCalls} calls</span>
         </div>
@@ -640,6 +651,7 @@ export default function AdminAutomation() {
                     {d.category} • {d.language === "hi" ? "Hindi" : "English"} • {d.sourceName || "Unknown source"} • Source date: {fmt(d.sourcePublishedAt)}
                   </p>
                   <p className="aa-meta">AI draft generated: {fmt(d.generatedAt || d.createdAt)}{d.publishAt ? ` • Scheduled: ${fmt(d.publishAt)}` : ""}</p>
+                  {expiryText(d, cfg?.reviewHours) && <p className="aa-expiry">{expiryText(d, cfg?.reviewHours)}</p>}
                   {d.summary && <p className="aa-sum">{d.summary}</p>}
                   <div className="aa-tags">
                     <span className={`aa-st ${d.status}`}>{STATUS_LABEL[d.status]}</span>
@@ -836,7 +848,7 @@ export default function AdminAutomation() {
                         <p className="aa-note">No photo yet. Search below and tap a photo to use it.</p>
                       )}
                       {cfg && !cfg.photosConfigured ? (
-                        <p className="aa-note">Photo search is not set up. Add PEXELS_API_KEY to the backend .env file.</p>
+                        <p className="aa-note">Photo search is not set up. Add PIXABAY_API_KEY to the backend .env file.</p>
                       ) : (
                         <>
                           <div className="aa-pk-row">
@@ -855,7 +867,7 @@ export default function AdminAutomation() {
                               ))}
                             </div>
                           )}
-                          <p className="aa-note">Photos provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>. They are general stock photos, not pictures of the actual event.</p>
+                          <p className="aa-note">Photos provided by <a href={cfg?.photoProvider?.url || "https://pixabay.com"} target="_blank" rel="noopener noreferrer">{cfg?.photoProvider?.name || "Pixabay"}</a>. They are general stock photos, not pictures of the actual event.</p>
                         </>
                       )}
                     </>
@@ -897,8 +909,8 @@ export default function AdminAutomation() {
               )}
 
               {open.rejecting && (
-                <label className="aa-form-single">Reason for rejecting
-                  <textarea rows={2} value={open.reason} onChange={(e) => setOpen({ ...open, reason: e.target.value })} placeholder="e.g. Not relevant for exams / facts unverified" />
+                <label className="aa-form-single">Delete permanently? (reason is optional)
+                  <textarea rows={2} value={open.reason} onChange={(e) => setOpen({ ...open, reason: e.target.value })} placeholder="Optional: e.g. Not relevant for exams" />
                 </label>
               )}
             </div>
@@ -913,7 +925,7 @@ export default function AdminAutomation() {
                   <button type="button" className="aa-btn ghost" onClick={schedule} disabled={busy || !open.scheduleAt}>Schedule</button>
                   <button type="button" className="aa-btn ghost" onClick={saveEdits} disabled={busy}>Save draft</button>
                   <button type="button" className="aa-btn ghost" onClick={regenerate} disabled={busy}>Regenerate</button>
-                  <button type="button" className="aa-btn danger" onClick={() => setOpen({ ...open, rejecting: true })} disabled={busy}>Reject</button>
+                  <button type="button" className="aa-btn danger" onClick={() => setOpen({ ...open, rejecting: true })} disabled={busy}>Reject &amp; delete</button>
                   <button type="button" className="aa-btn primary" onClick={approve} disabled={busy}>
                     {busy ? <Loader2 className="aa-spin" size={16} /> : <CheckCircle2 size={16} />} Approve &amp; Publish
                   </button>
@@ -922,7 +934,7 @@ export default function AdminAutomation() {
               {open.rejecting && (
                 <>
                   <button type="button" className="aa-btn ghost" onClick={() => setOpen({ ...open, rejecting: false })}>Back</button>
-                  <button type="button" className="aa-btn danger" onClick={reject} disabled={busy || !open.reason.trim()}>Confirm reject</button>
+                  <button type="button" className="aa-btn danger" onClick={reject} disabled={busy}>Delete permanently</button>
                 </>
               )}
               {["failed", "rejected"].includes(open.draft.status) && (

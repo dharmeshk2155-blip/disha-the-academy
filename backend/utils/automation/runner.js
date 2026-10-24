@@ -11,9 +11,12 @@ const { settings, CATEGORIES } = require("./constants");
 const { publishDue } = require("./publisher");
 const { cleanupOldCurrentAffairs } = require("./cleanup");
 const { attachStockImage } = require("./stockImage");
+const { expireStaleDrafts } = require("./discard");
+const SeenStory = require("../../models/SeenStory");
 
 const DAY = 24 * 3600 * 1000;
 let running = false;
+let rerun = false; // a replacement was asked for while a run was busy
 
 function short(error) {
   return String(error?.message || error).slice(0, 300);
@@ -57,7 +60,10 @@ function applyAi(draft, ai, source, item) {
 async function runCollection({ trigger = "manual" } = {}) {
   const cfg = settings();
 
-  if (running) return { skipped: true, reason: "A run is already in progress." };
+  if (running) {
+    if (trigger === "replacement") rerun = true;
+    return { skipped: true, reason: "A run is already in progress." };
+  }
   const recent = await AutomationJob.findOne({ status: "running", startedAt: { $gt: new Date(Date.now() - 20 * 60 * 1000) } });
   if (recent) return { skipped: true, reason: "A run is already in progress." };
 
@@ -70,6 +76,9 @@ async function runCollection({ trigger = "manual" } = {}) {
       job.status = "failed";
       return { job };
     }
+
+    // drafts nobody reviewed in 24 h are removed first, so a fresh batch can come in
+    await expireStaleDrafts().catch((e) => console.error("expire:", e.message));
 
     const since = new Date(Date.now() - DAY);
     let createdToday = await ContentDraft.countDocuments({ createdAt: { $gte: since }, canonicalUrl: { $ne: "" }, manual: { $ne: true }, status: { $nin: ["failed", "rejected"] } });
@@ -88,36 +97,43 @@ async function runCollection({ trigger = "manual" } = {}) {
     let createdThisRun = 0;
     let stop = "";
 
+    // 1) read every feed first
+    const queues = [];
     for (const source of sources) {
-      if (stop) break;
       job.sourcesChecked += 1;
-
-      let items;
       try {
-        items = await readFeed(source.url);
+        const items = await readFeed(source.url);
         source.lastCheckedAt = new Date();
         source.lastError = "";
         source.consecutiveFailures = 0;
         await source.save();
+        items.sort((a, b) => (b.publishedAt?.getTime() || 0) - (a.publishedAt?.getTime() || 0));
+        job.itemsFound += items.length;
+        queues.push({ source, items, stats: { found: items.length, created: 0, old: 0, seen: 0, failed: 0 } });
       } catch (error) {
         source.lastCheckedAt = new Date();
         source.lastError = short(error);
         source.consecutiveFailures += 1;
         await source.save();
         job.errorLog.push(`Source "${source.name}": ${short(error)}`);
-        continue;
       }
+    }
 
-      items.sort((a, b) => (b.publishedAt?.getTime() || 0) - (a.publishedAt?.getTime() || 0));
-      job.itemsFound += items.length;
+    // 2) take one story from each source in turn, so that no single source
+    //    can use up the whole limit (it used to be: first source first, until full)
+    outer: while (queues.some((q) => q.items.length)) {
+      for (const q of queues) {
+        if (!q.items.length) continue;
+        const { source, stats } = q;
+        const item = q.items.shift();
 
-      for (const item of items) {
-        if (createdThisRun >= cfg.maxDraftsPerRun) { stop = "per-run limit"; break; }
-        if (createdToday >= cfg.maxDraftsPerDay) { stop = "daily limit"; break; }
-        if (tokensToday >= cfg.maxInputTokensPerDay) { stop = "daily AI usage ceiling"; break; }
+        if (createdThisRun >= cfg.maxDraftsPerRun) { stop = "per-run limit"; break outer; }
+        if (createdToday >= cfg.maxDraftsPerDay) { stop = "daily limit"; break outer; }
+        if (tokensToday >= cfg.maxInputTokensPerDay) { stop = "daily AI usage ceiling"; break outer; }
 
         if (item.publishedAt && Date.now() - item.publishedAt.getTime() > cfg.maxItemAgeDays * DAY) {
           job.skippedOld += 1;
+          stats.old += 1;
           continue;
         }
 
@@ -129,8 +145,9 @@ async function runCollection({ trigger = "manual" } = {}) {
           (d) => d.contentHash === hash || similarity(d.title, item.title) >= 0.8
         );
 
-        if (similar || (await ContentDraft.exists({ canonicalUrl: url }))) {
+        if (similar || (await ContentDraft.exists({ canonicalUrl: url })) || (await SeenStory.exists({ $or: [{ canonicalUrl: url }, { contentHash: hash }] }))) {
           job.duplicates += 1;
+          stats.seen += 1;
           continue;
         }
 
@@ -154,7 +171,7 @@ async function runCollection({ trigger = "manual" } = {}) {
             jobId: job._id,
           });
         } catch (error) {
-          if (error?.code === 11000) { job.duplicates += 1; continue; }
+          if (error?.code === 11000) { job.duplicates += 1; stats.seen += 1; continue; }
           throw error;
         }
 
@@ -169,18 +186,32 @@ async function runCollection({ trigger = "manual" } = {}) {
           applyAi(draft, ai, source, item);
           if (draft.status === "needs_attention") job.needsAttention += 1;
           await draft.save();
-          await attachStockImage(draft); // real photo, if Pexels is set up
+          await attachStockImage(draft); // real photo, if Pixabay/Pexels is set up
           job.draftsCreated += 1;
           createdThisRun += 1;
           createdToday += 1;
+          stats.created += 1;
         } catch (error) {
           draft.status = "failed";
           draft.lastError = short(error);
           await draft.save();
+          stats.failed += 1;
           job.errorLog.push(`"${item.title.slice(0, 60)}": ${short(error)}`);
-          if (error.fatal) { stop = "AI key problem"; break; }
+          if (error.fatal) { stop = "AI key problem"; break outer; }
         }
       }
+    }
+
+    // one line per source, so it is clear why a source gave nothing
+    for (const q of queues) {
+      const s = q.stats;
+      job.notes.push(
+        `${q.source.name}: ${s.found} stories found, ${s.created} new draft(s)` +
+          (s.old ? `, ${s.old} too old` : "") +
+          (s.seen ? `, ${s.seen} already seen/rejected` : "") +
+          (s.failed ? `, ${s.failed} failed` : "") +
+          (q.items.length ? `, ${q.items.length} not reached (limit)` : "") + "."
+      );
     }
 
     if (stop) {
@@ -198,6 +229,10 @@ async function runCollection({ trigger = "manual" } = {}) {
     job.finishedAt = new Date();
     await job.save().catch(() => {});
     running = false;
+    if (rerun) {
+      rerun = false;
+      setTimeout(() => runCollection({ trigger: "replacement" }).catch(() => {}), 3000).unref();
+    }
   }
 }
 
@@ -229,6 +264,11 @@ function startScheduler() {
   const clean = () => cleanupOldCurrentAffairs().catch((e) => console.error("cleanup:", e.message));
   setTimeout(clean, 2 * 60 * 1000).unref();
   setInterval(clean, 6 * 3600 * 1000).unref();
+
+  // review queue: drafts not reviewed within 24 h are deleted
+  const expire = () => expireStaleDrafts().catch((e) => console.error("expire:", e.message));
+  setTimeout(expire, 90 * 1000).unref();
+  setInterval(expire, 60 * 60 * 1000).unref();
 
   if (!cfg.enabled) {
     console.log("Automation: collector is OFF (set AUTOMATION_ENABLED=true to turn it on).");

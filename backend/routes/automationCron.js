@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const { runCollection } = require("../utils/automation/runner");
 const { publishDue } = require("../utils/automation/publisher");
 const { cleanupOldCurrentAffairs } = require("../utils/automation/cleanup");
+const { expireStaleDrafts } = require("../utils/automation/discard");
 
 const router = express.Router();
 
@@ -29,6 +30,8 @@ async function handle(req, res) {
 
   const published = await publishDue().catch(() => 0);
   const cleaned = await cleanupOldCurrentAffairs().catch(() => ({ deleted: 0 }));
+
+  await expireStaleDrafts().catch(() => 0);
 
   // run in the background so the scheduler gets a quick answer
   runCollection({ trigger: "cron" }).catch((e) => console.error("cron run:", e.message));

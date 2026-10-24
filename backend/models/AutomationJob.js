@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const automationJobSchema = new mongoose.Schema(
   {
-    trigger: { type: String, enum: ["schedule", "cron", "manual"], default: "manual" },
+    trigger: { type: String, enum: ["schedule", "cron", "manual", "replacement"], default: "manual" },
     status: { type: String, enum: ["running", "success", "partial", "failed"], default: "running", index: true },
     startedAt: { type: Date, default: Date.now },
     finishedAt: { type: Date, default: null },

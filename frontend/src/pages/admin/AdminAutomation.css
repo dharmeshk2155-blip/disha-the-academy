@@ -177,3 +177,10 @@
 .aa-pk-item img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
 .aa-bad { color: #912018; }
 @media (min-width: 700px) { .aa-pk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.aa-expiry {
+  margin: 2px 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b45309;
+}

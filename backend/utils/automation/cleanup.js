@@ -69,4 +69,4 @@ async function cleanupOldCurrentAffairs() {
   return { skipped: false, deleted, images, days };
 }
 
-module.exports = { cleanupOldCurrentAffairs, retentionDays, publicIdFromUrl };
+module.exports = { cleanupOldCurrentAffairs, retentionDays, publicIdFromUrl, removeImages };

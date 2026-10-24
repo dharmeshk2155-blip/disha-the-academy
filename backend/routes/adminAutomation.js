@@ -14,7 +14,8 @@ const { assertSafeUrl, readFeed } = require("../utils/automation/rss");
 const { validateDraft } = require("../utils/automation/validator");
 const { publishDraft, PublishError } = require("../utils/automation/publisher");
 const { retentionDays } = require("../utils/automation/cleanup");
-const { searchPhotos, storePhoto, attachStockImage, configured: photosConfigured } = require("../utils/automation/stockImage");
+const { discardDrafts, reviewHours } = require("../utils/automation/discard");
+const { searchPhotos, storePhoto, attachStockImage, configured: photosConfigured, providerInfo: photoProviderInfo } = require("../utils/automation/stockImage");
 const { runCollection, regenerate, applyAi } = require("../utils/automation/runner");
 const { draftFromItem } = require("../utils/automation/drafter");
 const { canonicalUrl, normalizeTitle, sha } = require("../utils/automation/rss");
@@ -55,6 +56,7 @@ function listDraft(d) {
     category: d.category,
     language: d.language,
     status: d.status,
+    manual: Boolean(d.manual),
     targetType: d.targetType,
     sourceName: d.sourceName,
     sourceUrls: d.sourceUrls,
@@ -120,7 +122,9 @@ router.get("/overview", async (req, res) => {
         model: cfg.model,
         provider: cfg.provider,
         retentionDays: retentionDays(),
+        reviewHours: reviewHours(),
         photosConfigured: photosConfigured(),
+        photoProvider: photoProviderInfo(),
         aiConfigured: cfg.aiConfigured,
         cronConfigured: cfg.cronConfigured,
       },
@@ -468,23 +472,28 @@ router.post("/drafts/:id/schedule", async (req, res) => {
   return ok(res, { draft: fullDraft(draft) });
 });
 
+// Reject = permanent delete. The story is remembered for 14 days so it is not
+// suggested again, and a replacement draft is requested at once.
 router.post("/drafts/:id/reject", async (req, res) => {
   if (!validId(req.params.id)) return fail(res, 400, "Invalid draft id.");
   const reason = text(req.body?.reason, 300);
-  if (!reason) return fail(res, 400, "Please give a short rejection reason.");
 
-  const draft = await ContentDraft.findById(req.params.id);
+  const draft = await ContentDraft.findById(req.params.id).lean();
   if (!draft) return fail(res, 404, "Draft not found.");
   if (!canMove(draft.status, "rejected")) return fail(res, 409, `A draft in "${draft.status}" status cannot be rejected.`);
 
-  draft.status = "rejected";
-  draft.rejectionReason = reason;
-  draft.publishAt = null;
-  draft.reviewerId = req.admin?.id || "";
-  draft.reviewedAt = new Date();
-  await draft.save();
-  await audit(req, draft._id, "reject", reason);
-  return ok(res, { draft: fullDraft(draft) });
+  await audit(req, draft._id, "reject_delete", `${String(draft.title).slice(0, 200)}${reason ? ` - ${reason}` : ""}`);
+  await discardDrafts([draft], "rejected");
+
+  // ask for a new draft in its place (runs in the background)
+  const cfg = settings();
+  let replacement = false;
+  if (!draft.manual && cfg.enabled && cfg.aiConfigured) {
+    replacement = true;
+    runCollection({ trigger: "replacement" }).catch((e) => console.error("replacement run:", e.message));
+  }
+
+  return ok(res, { deleted: true, replacement });
 });
 
 // bring a rejected / failed draft back to review
