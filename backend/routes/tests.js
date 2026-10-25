@@ -24,6 +24,16 @@ const requireAuth =
 const requireTestAccess =
   require("../middleware/requireTestAccess");
 
+const LiveTest = require("../models/LiveTest");
+
+const {
+  GRACE_MS,
+  releaseAtOf,
+  formatIST,
+  resultLockFor,
+  releasedOnly,
+} = require("../utils/live");
+
 const router =
   express.Router();
 
@@ -73,6 +83,16 @@ router.get(
       // ==============================
       // LOAD TESTS
       // ==============================
+
+      // tests reserved for a live that has not finished are not listed
+      const reserved = await LiveTest.distinct("testId", {
+        status: "scheduled",
+        endsAt: { $gt: new Date() },
+      });
+
+      if (reserved.length) {
+        filter.testId = { $nin: reserved };
+      }
 
       const testDocuments =
         await Test.find(filter)
@@ -325,6 +345,17 @@ router.get(
           .json({ error: "This result belongs to another account." });
       }
 
+      if (
+        result.liveReleaseAt &&
+        new Date(result.liveReleaseAt).getTime() > Date.now()
+      ) {
+        return res.status(423).json({
+          error: `Thank you for giving the live test! Your result and rank will open on ${formatIST(result.liveReleaseAt)}.`,
+          locked: true,
+          releaseAt: result.liveReleaseAt,
+        });
+      }
+
       const testId = result.testId;
 
       const [test, questions, firstAttempts, myAttempts] =
@@ -496,6 +527,16 @@ router.get(
         .trim()
         .toLowerCase();
 
+      const lockedUntil = await resultLockFor(testId);
+
+      if (lockedUntil) {
+        return res.status(423).json({
+          error: `The live test leaderboard opens on ${formatIST(lockedUntil)}.`,
+          locked: true,
+          releaseAt: lockedUntil,
+        });
+      }
+
       const rows = await loadFirstAttempts(testId);
 
       const TOP = 10;
@@ -586,6 +627,7 @@ router.get(
       const resultDocuments =
         await Result.find({
           userId,
+          ...releasedOnly(),
         })
           .sort({
             submittedAt: -1,
@@ -811,6 +853,55 @@ router.get(
           : "en";
 
       // ==============================
+      // LIVE TEST: window, one attempt, fixed end
+      // ==============================
+
+      const live = req.liveTest || null;
+      let liveInfo = null;
+      let allowedSeconds = Number(test.duration) || 0;
+
+      if (live) {
+        const nowMs = Date.now();
+        const endsMs = new Date(live.endsAt).getTime();
+
+        if (nowMs >= endsMs) {
+          return res.status(410).json({
+            error: "This live test has ended.",
+            code: "LIVE_ENDED",
+          });
+        }
+
+        const already = await Result.findOne({
+          testId,
+          userId: String(req.user.id),
+          liveId: String(live._id),
+        })
+          .select("resultId")
+          .lean();
+
+        if (already) {
+          return res.status(409).json({
+            error: `You have already submitted this live test. Your result opens on ${formatIST(releaseAtOf(live))}.`,
+            code: "LIVE_DONE",
+            resultId: already.resultId,
+          });
+        }
+
+        // everybody's test ends at the same moment
+        allowedSeconds = Math.min(
+          allowedSeconds,
+          Math.max(1, Math.floor((endsMs - nowMs) / 1000))
+        );
+
+        liveInfo = {
+          id: String(live._id),
+          startsAt: live.startsAt,
+          endsAt: live.endsAt,
+          releaseAt: releaseAtOf(live),
+        };
+      }
+
+      // ==============================
       // LOAD QUESTIONS
       // ==============================
 
@@ -910,9 +1001,9 @@ router.get(
           test.subject,
 
         duration:
-          Number(
-            test.duration
-          ) || 0,
+          allowedSeconds,
+
+        live: liveInfo,
 
         marksPerCorrect:
           Number(
@@ -935,9 +1026,11 @@ router.get(
           test.isFree === true,
 
         testType:
-          test.isFree === true
-            ? "Free Test"
-            : "Mock Test",
+          liveInfo
+            ? "Live Test"
+            : test.isFree === true
+              ? "Free Test"
+              : "Mock Test",
 
         language:
           lang,
@@ -1016,6 +1109,30 @@ router.post(
         req.query.lang === "hi"
           ? "hi"
           : "en";
+
+      // ==============================
+      // LIVE TEST: only one attempt counts
+      // ==============================
+
+      const liveAttempt = req.liveTest || null;
+
+      if (liveAttempt) {
+        const already = await Result.findOne({
+          testId,
+          userId: String(userId),
+          liveId: String(liveAttempt._id),
+        })
+          .select("resultId")
+          .lean();
+
+        if (already) {
+          return res.status(409).json({
+            error: "You have already submitted this live test.",
+            code: "LIVE_DONE",
+            resultId: already.resultId,
+          });
+        }
+      }
 
       // ==============================
       // LOAD QUESTIONS + CORRECT ANSWERS
@@ -1285,11 +1402,30 @@ router.post(
 
           questionTimes,
           submittedAt,
+
+          liveId: liveAttempt
+            ? String(liveAttempt._id)
+            : null,
+
+          liveReleaseAt: liveAttempt
+            ? releaseAtOf(liveAttempt)
+            : null,
         });
 
       // ==============================
       // RESPONSE
       // ==============================
+
+      // a live attempt shows NO score or answers until the result opens
+      if (liveAttempt) {
+        return res.json({
+          resultId: savedResult.resultId,
+          testId: savedResult.testId,
+          testTitle: savedResult.testTitle,
+          live: true,
+          releaseAt: savedResult.liveReleaseAt,
+        });
+      }
 
       return res.json({
         resultId:

@@ -17,6 +17,7 @@ import {
   Search, 
 
   Crown, 
+  Radio,
 } from "lucide-react"; 
  
 import "../pages/ExtraPages.css"; 
@@ -92,6 +93,11 @@ function Navbar() {
           <NavLink to="/free-tests" onClick={closeMenu} className={({ isActive }) => isActive ? "active" : ""}>
             <ClipboardList size={21} strokeWidth={1.8} />
             <span>Free Tests</span>
+          </NavLink>
+
+          <NavLink to="/live" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}>
+            <Radio size={21} strokeWidth={1.8} />
+            <span>Live Tests</span>
           </NavLink> 
  
           <NavLink to="/take-mock-test" onClick={closeMenu} className={({ isActive }) => (isActive ? "active" : "")}> 

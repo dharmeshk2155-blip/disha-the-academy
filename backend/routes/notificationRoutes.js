@@ -8,6 +8,9 @@ const Question = require("../models/Question");
 const CurrentAffair = require("../models/CurrentAffair");
 const Blog = require("../models/Blog");
 const Note = require("../models/Note");
+const LiveTest = require("../models/LiveTest");
+const LiveRegistration = require("../models/LiveRegistration");
+const Result = require("../models/Result");
 const {
   WINDOW_DAYS,
   buildNotifications,
@@ -51,7 +54,9 @@ router.get("/", requireAuth, async (req, res) => {
 
     const recent = { createdAt: { $gte: since } };
 
-    const [user, testDocs, affairs, blogs, notes] = await Promise.all([
+    const nowMs = Date.now();
+
+    const [user, testDocs, affairs, blogs, notes, liveDocs, myRegs, liveResults] = await Promise.all([
       User.findById(req.user.id)
         .select("createdAt notificationsSeenAt")
         .lean(),
@@ -79,7 +84,43 @@ router.get("/", requireAuth, async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(100)
         .lean(),
+
+      // live tests that have not finished yet
+      LiveTest.find({ status: "scheduled", endsAt: { $gt: new Date(nowMs) } })
+        .sort({ startsAt: 1 })
+        .limit(10)
+        .lean(),
+
+      LiveRegistration.find({ userId: req.user.id }).select("liveId").lean(),
+
+      // my live results that have just opened
+      Result.find({
+        userId: String(req.user.id),
+        liveId: { $ne: null },
+        liveReleaseAt: { $lte: new Date(nowMs), $gte: since },
+      })
+        .select("resultId testTitle liveReleaseAt")
+        .sort({ liveReleaseAt: -1 })
+        .limit(5)
+        .lean(),
     ]);
+
+    let lives = [];
+
+    if (liveDocs.length) {
+      const liveTests = await Test.find({ testId: { $in: liveDocs.map((l) => l.testId) } })
+        .select("testId title")
+        .lean();
+      const titleOf = new Map(liveTests.map((t) => [t.testId, t.title]));
+
+      lives = liveDocs.map((l) => ({
+        id: String(l._id),
+        title: titleOf.get(l.testId) || "Live Test",
+        startsAt: l.startsAt,
+        endsAt: l.endsAt,
+        createdAt: l.createdAt,
+      }));
+    }
 
     // A test is created first and its questions are added afterwards,
     // so only announce tests that already have questions.
@@ -105,6 +146,10 @@ router.get("/", requireAuth, async (req, res) => {
       affairs,
       blogs,
       notes,
+      lives,
+      registeredLiveIds: new Set(myRegs.map((r) => String(r.liveId))),
+      liveResults,
+      now: nowMs,
       seenAt,
     });
 

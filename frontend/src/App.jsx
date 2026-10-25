@@ -63,6 +63,8 @@ import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminCurrentAffairs from "./pages/admin/AdminCurrentAffairs";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminAutomation from "./pages/admin/AdminAutomation";
+import AdminLive from "./pages/admin/AdminLive";
+import LiveTests from "./pages/LiveTests";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -350,6 +352,9 @@ function App() {
             }
           />
 
+          {/* Live tests: register in advance, or just join when it is live */}
+          <Route path="/live" element={<LiveTests />} />
+
           {/* Quick access: all / recently added tests + search + filters */}
           <Route
             path="/mock-tests"
@@ -508,6 +513,7 @@ function App() {
           ================================================== */}
 <Route path="about" element={<AdminAbout />} />
 <Route path="automation" element={<AdminAutomation />} />
+<Route path="live" element={<AdminLive />} />
 
           {/* ==================================================
               SETTINGS

@@ -21,15 +21,79 @@ function plural(count, word) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
 
+// "25 Oct, 8:00 pm" in Indian time
+function istText(value) {
+  return new Date(value).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 function buildNotifications({
   tests = [],
   affairs = [],
   blogs = [],
   notes = [],
+  lives = [], // [{ id, title, startsAt, endsAt, createdAt }]
+  registeredLiveIds = new Set(),
+  liveResults = [], // [{ resultId, testTitle, liveReleaseAt }]
+  now = Date.now(),
   seenAt = null,
   limit = MAX_ITEMS,
 }) {
   const items = [];
+
+  for (const live of lives) {
+    const starts = toTime(live.startsAt);
+    const ends = toTime(live.endsAt);
+    const mine = registeredLiveIds.has(String(live.id));
+
+    if (now >= ends) continue;
+
+    if (now >= starts) {
+      items.push({
+        id: `live-now:${live.id}`,
+        type: "live",
+        title: "Live test is on now!",
+        body: `${live.title} - join before ${istText(live.endsAt)}`,
+        link: "/live",
+        createdAt: live.startsAt,
+      });
+    } else if (mine && starts - now <= 60 * 60 * 1000) {
+      items.push({
+        id: `live-soon:${live.id}`,
+        type: "live",
+        title: "Your live test starts soon",
+        body: `${live.title} - starts at ${istText(live.startsAt)}`,
+        link: "/live",
+        createdAt: new Date(starts - 60 * 60 * 1000),
+      });
+    } else {
+      items.push({
+        id: `live:${live.id}`,
+        type: "live",
+        title: "New live test scheduled",
+        body: `${live.title} - ${istText(live.startsAt)}`,
+        link: "/live",
+        createdAt: live.createdAt,
+      });
+    }
+  }
+
+  for (const row of liveResults) {
+    items.push({
+      id: `live-result:${row.resultId}`,
+      type: "live",
+      title: "Live test result is out",
+      body: row.testTitle,
+      link: `/test-result/${row.resultId}`,
+      createdAt: row.liveReleaseAt,
+    });
+  }
 
   for (const test of tests) {
     // Free tests have their own attempt page (see FreeExamTests.jsx)

@@ -16,6 +16,7 @@ import {
   Gift,
   Newspaper,
   Bot,
+  Radio,
   PenLine,
   CircleHelp,
   Users,
@@ -93,6 +94,11 @@ const SECTIONS = [
         path: "/admin/automation",
         label: "Automated Content",
         icon: Bot,
+      },
+      {
+        path: "/admin/live",
+        label: "Live Tests",
+        icon: Radio,
       },
       {
         path: "/admin/blog",

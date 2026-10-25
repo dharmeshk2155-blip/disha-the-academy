@@ -83,6 +83,19 @@ const resultSchema = new mongoose.Schema(
       default: Date.now,
       index: true,
     },
+
+    // set only for attempts made inside a live test window
+    liveId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
+    // the result / rank of a live attempt stays hidden until this moment
+    liveReleaseAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

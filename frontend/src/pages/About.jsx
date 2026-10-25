@@ -21,7 +21,7 @@ const DEFAULT_ABOUT = {
 const TEAM = [
   {
     name: "Dharmesh Kumar",
-    role: "Founder & Developer",
+    role: "Founder",
     bio: "Building Disha The Academy to provide quality study material, mock tests and helpful resources for every competitive exam aspirant.",
   },
 ];

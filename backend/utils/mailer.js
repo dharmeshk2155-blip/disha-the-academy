@@ -75,4 +75,46 @@ async function sendOtpEmail(toEmail, otp, name, purpose = "reset") {
   }
 }
 
-module.exports = { sendOtpEmail };
+// "Your live test starts soon" reminder
+async function sendLiveReminderEmail(toEmail, name, { title, startsAtText, minutesLeft, link, durationMinutes }) {
+  const greetingName = name ? escapeHtml(name) : "there";
+  const when =
+    minutesLeft >= 50 ? "in about 1 hour" : `in about ${Math.max(1, Math.round(minutesLeft))} minutes`;
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: "Disha The Academy", email: process.env.EMAIL_FROM },
+      to: [{ email: toEmail }],
+      subject: `Live test starts ${when}: ${title}`,
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #eee; border-radius: 8px;">
+          <h2 style="color: #1a1a1a;">Your live test starts ${when}</h2>
+          <p>Hi ${greetingName},</p>
+          <p>You registered for the live test <strong>${escapeHtml(title)}</strong>.</p>
+          <p><strong>Starts:</strong> ${escapeHtml(startsAtText)}<br>
+             <strong>Duration:</strong> ${Number(durationMinutes) || 0} minutes</p>
+          <p style="margin: 22px 0;">
+            <a href="${escapeHtml(link)}" style="background:#0b5ed7;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:bold;">Open Live Tests</a>
+          </p>
+          <p>The test ends at a fixed time for everyone, so please join on time.</p>
+          <p style="color: #888; font-size: 12px; margin-top: 24px;">Disha The Academy</p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    const error = new Error(`Brevo API error (${response.status}): ${errorBody}`);
+    error.status = response.status;
+    throw error;
+  }
+}
+
+module.exports = { sendOtpEmail, sendLiveReminderEmail };

@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import {
+  Link,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -68,10 +69,17 @@ async function readTestResponse(res) {
   }
 
   if (!res.ok) {
-    throw new Error(
+    const err = new Error(
       data?.error ||
         "Test not found"
     );
+
+    // LIVE_NOT_STARTED / LIVE_ENDED / LIVE_DONE
+    if (data?.code) {
+      err.code = data.code;
+    }
+
+    throw err;
   }
 
   return data;
@@ -160,6 +168,7 @@ export default function TestAttempt({ freeMode = false }) {
     useState(true);
   const [error, setError] = useState(null);
   const [needsSubscription, setNeedsSubscription] = useState(false);
+  const [liveProblem, setLiveProblem] = useState(false);
 
   const [
     testStarted,
@@ -283,6 +292,10 @@ export default function TestAttempt({ freeMode = false }) {
           "NO_ACTIVE_SUBSCRIPTION"
         ) {
           setNeedsSubscription(true);
+        }
+
+        if (String(err.code || "").startsWith("LIVE_")) {
+          setLiveProblem(true);
         }
 
         setError(err.message);
@@ -432,6 +445,15 @@ export default function TestAttempt({ freeMode = false }) {
         setShowConfirm(false);
         setPaused(false);
 
+        // live test: the result opens later, so go to the live page
+        if (data.live) {
+          navigate("/live", {
+            replace: true,
+            state: { submittedUntil: data.releaseAt },
+          });
+          return;
+        }
+
         // result page: overview, leaderboard and solutions
         navigate(
           `/test-result/${data.resultId}`,
@@ -518,6 +540,12 @@ export default function TestAttempt({ freeMode = false }) {
         "NO_ACTIVE_SUBSCRIPTION"
       ) {
         navigate("/pricing");
+        return;
+      }
+
+      if (String(err.code || "").startsWith("LIVE_")) {
+        alert(err.message);
+        navigate("/live", { replace: true });
         return;
       }
 
@@ -723,6 +751,14 @@ export default function TestAttempt({ freeMode = false }) {
     return (
       <div className="ta-status ta-error">
         Error: {error}
+
+        {liveProblem && (
+          <div style={{ marginTop: 14 }}>
+            <Link to="/live" style={{ fontWeight: 800 }}>
+              Go to Live Tests
+            </Link>
+          </div>
+        )}
       </div>
     );
   }
@@ -1264,6 +1300,7 @@ export default function TestAttempt({ freeMode = false }) {
               : "Switch Full Screen"}
           </button>
 
+{!test.live && (
           <button
             className="ta-pause-btn"
             onClick={() =>
@@ -1276,6 +1313,7 @@ export default function TestAttempt({ freeMode = false }) {
               ? "▶ Resume"
               : "Ⅱ Pause"}
           </button>
+)}
 
           <button
             className="ta-header-palette-btn"

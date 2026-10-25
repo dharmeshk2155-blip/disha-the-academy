@@ -168,6 +168,11 @@ export default function TestResult() {
           <Link to="/my-results" className="tr-btn">
             Go to My Results
           </Link>
+          {/live test/i.test(error) && (
+            <Link to="/live" className="tr-btn" style={{ marginLeft: 8 }}>
+              Live Tests
+            </Link>
+          )}
         </div>
       </div>
     );

@@ -3,6 +3,12 @@ const Test = require("../models/Test");
 const requireSubscription =
   require("./requireSubscription");
 
+const {
+  runningLiveFor,
+  upcomingLiveFor,
+  formatIST,
+} = require("../utils/live");
+
 async function requireTestAccess(
   req,
   res,
@@ -49,6 +55,29 @@ async function requireTestAccess(
       routes can reuse it.
     */
     req.testDocument = test;
+
+    // ================================
+    // LIVE TEST
+    // free for every logged-in student while the live window is open,
+    // and closed for everybody until it starts
+    // ================================
+
+    const liveNow = await runningLiveFor(test.testId);
+
+    if (liveNow) {
+      req.liveTest = liveNow;
+      return next();
+    }
+
+    const liveSoon = await upcomingLiveFor(test.testId);
+
+    if (liveSoon) {
+      return res.status(403).json({
+        error: `This is a live test. It starts on ${formatIST(liveSoon.startsAt)}.`,
+        code: "LIVE_NOT_STARTED",
+        startsAt: liveSoon.startsAt,
+      });
+    }
 
     // ================================
     // FREE TEST

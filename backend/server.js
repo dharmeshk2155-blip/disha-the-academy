@@ -56,7 +56,10 @@ const adminNotesRoutes = require("./routes/adminNotes");
 const adminAuthRoutes = require("./routes/adminAuth");
 const subscriptionRoutes = require("./routes/subscription");
 const requireAdmin = require("./middleware/requireAdmin");
-
+const liveRoutes = require("./routes/live");
+const adminLiveRoutes = require("./routes/adminLive");
+const notificationRoutes = require("./routes/notificationRoutes");
+const { startLiveReminders } = require("./utils/liveReminders");
 
 // ======================================================
 // BASIC SETUP
@@ -103,7 +106,10 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/admin/notes",adminNotesRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use( "/api/admin/free-tests", adminFreeTestsRoutes);
-
+app.use("/api/admin/live", requireAdmin, adminLiveRoutes);
+app.use("/api/live", liveRoutes);
+// the notification bell (new tests, live tests, current affairs ...)
+app.use("/api/notifications", notificationRoutes);
 // Exams & categories (admin can add new exams from the admin panel)
 app.use("/api/exam-taxonomy", examTaxonomyPublicRoutes);
 app.use(
@@ -3837,6 +3843,8 @@ app.use(
 const PORT = process.env.PORT || 5000;
 
 startScheduler();
+// reminder e-mails for students registered for a live test
+startLiveReminders();
 
 const server =
   app.listen(
@@ -3932,4 +3940,4 @@ process.on(
     );
 
   }
-);  
+);
