@@ -125,8 +125,8 @@ export function ArticleBlocks({ blocks }) {
   });
 }
 
-export default function ArticleBody({ text, parsed, className = "" }) {
-  const { blocks } = useMemo(() => parsed || parseArticle(text), [text, parsed]);
+export default function ArticleBody({ text, title, parsed, className = "" }) {
+  const { blocks } = useMemo(() => parsed || parseArticle(text, { title }), [text, title, parsed]);
   return (
     <div className={`ab ${className}`}>
       <ArticleBlocks blocks={blocks} />

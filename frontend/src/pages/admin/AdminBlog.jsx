@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import ArticleBody from "../../components/ArticleBody";
+import { htmlToArticle } from "../../utils/htmlToArticle";
 import "./AdminBlog.css";
 
 const API_BASE =
@@ -195,6 +196,36 @@ export default function AdminBlog() {
     } finally {
       setSaving(false);
     }
+  }
+
+  // Paste from Word / Google Docs / a web page / ChatGPT: keep the headings,
+  // tables, lists and bold as article formatting, so one paste is enough.
+  function handlePaste(event) {
+    const html = event.clipboardData?.getData("text/html");
+    if (!html) return; // plain text: the normal paste, the page formats it by itself
+
+    const converted = htmlToArticle(html);
+    if (!converted) return;
+
+    event.preventDefault();
+
+    const box = event.target;
+    const start = box.selectionStart;
+    const end = box.selectionEnd;
+
+    setForm((f) => ({
+      ...f,
+      content: f.content.slice(0, start) + converted + f.content.slice(end),
+    }));
+
+    requestAnimationFrame(() => {
+      const el = contentRef.current;
+      if (el) {
+        const pos = start + converted.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
+    });
   }
 
   // write the formatting symbols around the selected text
@@ -531,19 +562,21 @@ export default function AdminBlog() {
                   name="content"
                   value={form.content}
                   onChange={handleChange}
+                  onPaste={handlePaste}
                   rows="16"
                   placeholder={"Write the complete article here.\n\n## Heading\nA normal paragraph.\n- bullet point\n\nYou can also paste a table copied from Word or Excel."}
                   required
                 />
               ) : (
                 <div className="admin-blog-live">
-                  {form.content.trim() ? <ArticleBody text={form.content} /> : <p className="admin-blog-live-empty">Nothing to preview yet.</p>}
+                  {form.content.trim() ? <ArticleBody text={form.content} title={form.title} /> : <p className="admin-blog-live-empty">Nothing to preview yet.</p>}
                 </div>
               )}
 
               <p className="admin-blog-help">
-                Use the buttons above to make headings, lists, quotes and tables. A table copied from Word or Excel
-                is turned into a proper table automatically. Check "Preview" to see how readers will see it.
+                Just paste your article (from Word, Google Docs, a website or ChatGPT). Headings, tables, lists and
+                bold are detected automatically. Check "Preview" to see how readers will see it. The buttons above
+                are only for fine-tuning.
               </p>
             </div>
 

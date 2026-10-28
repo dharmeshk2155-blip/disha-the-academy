@@ -35,7 +35,7 @@ function BlogDetails() {
   const [activeId, setActiveId] = useState("");
 
   // headings, tables, lists ... found in the article text
-  const parsed = useMemo(() => parseArticle(blog?.content || ""), [blog]);
+  const parsed = useMemo(() => parseArticle(blog?.content || "", { title: blog?.title }), [blog]);
 
   // highlight the heading that is being read
   useEffect(() => {

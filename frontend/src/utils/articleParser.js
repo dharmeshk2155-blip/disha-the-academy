@@ -14,10 +14,12 @@
 //   ---               = divider
 //   **bold**  *italic*  `code`  [text](https://link)  and plain https:// links
 
-const LIST_RE = /^(\s*)([-*•–]|\d{1,3}[.)])\s+(.+)$/;
+const LIST_RE = /^(\s*)([-*•–●○▪■◦✔✅✓➤►→★]|\d{1,3}[.)])\s+(.+)$/;
 const HEADING_RE = /^(#{1,4})\s+(.+?)\s*#*\s*$/;
 const HR_RE = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const SEP_CELL_RE = /^\s*:?-+:?\s*$/;
+const END_PUNCT = /[.!?,;\u0964\u2026"\u201d\u2019)]$/; // . ! ? , ; ... " ) and the Hindi full stop
+const NUMBERED_HEADING_RE = /^\d{1,2}[.)]\s+(.{2,80})$/;
 const IMAGE_RE = /^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)\s*$/;
 
 function splitPipeRow(line) {
@@ -104,15 +106,48 @@ function slugify(text) {
 
 // ---------- blocks ----------
 
-export function parseArticle(raw) {
+function normalizeTitle(text) {
+  return plainText(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
+
+// options.title: the blog title - a pasted first line that repeats it is dropped
+export function parseArticle(raw, options = {}) {
   const lines = String(raw || "").replace(/\r\n?/g, "\n").split("\n");
   const blocks = [];
   const used = new Map();
   let i = 0;
 
+  const nextNonEmptyIndex = (from) => {
+    for (let k = from; k < lines.length; k += 1) if (lines[k].trim()) return k;
+    return -1;
+  };
   const nextNonEmpty = (from) => {
-    for (let k = from; k < lines.length; k += 1) if (lines[k].trim()) return lines[k];
-    return "";
+    const k = nextNonEmptyIndex(from);
+    return k === -1 ? "" : lines[k];
+  };
+
+  // does this line read like body text (not like another heading)?
+  const bodyLike = (line) => {
+    const nt = line.trim();
+    return (
+      nt.length > 60 ||
+      END_PUNCT.test(nt) ||
+      LIST_RE.test(line) ||
+      nt.startsWith(">") ||
+      nt.includes("|") ||
+      isTabRow(line)
+    );
+  };
+
+  // a short line on its own, with no full stop, followed by text = a heading
+  const looksLikeHeading = (i) => {
+    const t = lines[i].trim();
+    if (t.length < 3 || t.length > 90 || END_PUNCT.test(t) || t.split(/\s+/).length > 14) return false;
+    if (i > 0 && lines[i - 1].trim()) return false; // must stand alone
+    const k = nextNonEmptyIndex(i + 1);
+    if (k === -1) return false;
+    const caps = t === t.toUpperCase() && /[A-Z]/.test(t);
+    return caps || bodyLike(lines[k]);
   };
 
   const pushHeading = (level, rawText) => {
@@ -215,6 +250,18 @@ export function parseArticle(raw) {
       continue;
     }
 
+    // "1. Introduction" standing alone above a paragraph = a section heading
+    const numbered = t.match(NUMBERED_HEADING_RE);
+    if (numbered && !END_PUNCT.test(t) && (i === 0 || !lines[i - 1].trim())) {
+      const k = nextNonEmptyIndex(i + 1);
+      const next = k === -1 ? "" : lines[k];
+      if (k !== -1 && !/^\s*\d{1,3}[.)]\s/.test(next) && bodyLike(next) && !LIST_RE.test(next)) {
+        pushHeading(2, t);
+        i += 1;
+        continue;
+      }
+    }
+
     // list
     if (LIST_RE.test(line)) {
       const items = [];
@@ -239,9 +286,33 @@ export function parseArticle(raw) {
       continue;
     }
 
-    // paragraph (one line = one paragraph, same as before)
-    blocks.push({ type: "p", c: parseInline(t) });
+    // a short stand-alone line (no full stop) above text is a heading
+    if (looksLikeHeading(i)) {
+      pushHeading(2, t);
+      i += 1;
+      continue;
+    }
+
+    // paragraph: one line = one paragraph, but a sentence that was cut in the
+    // middle (next line starts with a small letter) is joined back together
+    let text = t;
+    while (i + 1 < lines.length) {
+      const nt = lines[i + 1].trim();
+      if (!nt || /[.!?:\u0964"\u201d\u2019)\]]$/.test(text) || !/^[a-z]/.test(nt)) break;
+      text += ` ${nt}`;
+      i += 1;
+    }
+    blocks.push({ type: "p", c: parseInline(text) });
     i += 1;
+  }
+
+  // the page already shows the title: drop a pasted first line that repeats it
+  if (options.title && blocks.length) {
+    const first = blocks[0];
+    const firstText = first.type === "heading" ? first.text : first.type === "p" ? first.c.map((n) => n.v || "").join("") : "";
+    const a = normalizeTitle(firstText);
+    const b = normalizeTitle(options.title);
+    if (a && b && (a === b || (a.length > 12 && (a.includes(b) || b.includes(a))))) blocks.shift();
   }
 
   const toc = blocks.filter((b) => b.type === "heading" && b.level <= 3).map((b) => ({ id: b.id, text: b.text, level: b.level }));
