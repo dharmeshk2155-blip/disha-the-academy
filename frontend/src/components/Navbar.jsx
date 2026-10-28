@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom"; 
-import { useState } from "react"; 
+import { useEffect, useState } from "react"; 
 import { 
   House, 
   BookOpen, 
@@ -20,7 +20,8 @@ import {
   Radio,
 } from "lucide-react"; 
  
-import "../pages/ExtraPages.css"; 
+import "../pages/ExtraPages.css";
+import "./FullscreenNav.css"; 
 import NotificationBell from "./NotificationBell";
  
 import logoIcon from "../assets/logo-icon.png"; 
@@ -35,7 +36,30 @@ function Navbar() {
   const user = JSON.parse(localStorage.getItem("dishaUser")); 
   const initial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?"; 
  
-  const closeMenu = () => setMenuOpen(false); 
+  const closeMenu = () => setMenuOpen(false);
+
+  // Full screen: the side menu hides and the three-line button in the top
+  // bar opens it (same as on a phone). Works on every page, no matter who
+  // started the full screen (a page, the F11 key, the browser menu).
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const sync = () => {
+      const on = Boolean(document.fullscreenElement) || (window.innerHeight >= screen.height - 2 && window.innerWidth >= screen.width - 2);
+      root.classList.toggle("is-fs", on);
+      if (on) setMenuOpen(false);
+    };
+
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    window.addEventListener("resize", sync);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      window.removeEventListener("resize", sync);
+      root.classList.remove("is-fs");
+    };
+  }, []); 
  
   const handleLogout = () => { 
     localStorage.removeItem("dishaUser"); 

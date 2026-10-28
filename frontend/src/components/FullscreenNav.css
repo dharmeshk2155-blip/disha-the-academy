@@ -1,0 +1,45 @@
+/* Full screen on a laptop / desktop:
+   the left side menu is hidden, the page uses the whole width, and the
+   three-line button (top left, in the top bar) opens the menu on top of the
+   page. On phones this is already how the site works, so nothing changes there. */
+
+@media (min-width: 769px) {
+  html.is-fs body {
+    margin-left: 0;
+  }
+
+  html.is-fs .topbar-right {
+    left: 0;
+    padding-left: 66px; /* room for the three-line button */
+  }
+
+  html.is-fs .navbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 8px;
+    left: 12px;
+    width: 40px;
+    height: 40px;
+  }
+
+  html.is-fs .navbar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 230;
+  }
+
+  html.is-fs .navbar {
+    width: 240px;
+    padding-top: 70px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 240;
+  }
+
+  html.is-fs .navbar.open {
+    transform: translateX(0);
+  }
+}
