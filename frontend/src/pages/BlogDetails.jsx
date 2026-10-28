@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useAutoFullscreen from "../hooks/useAutoFullscreen";
 import { Link, useParams } from "react-router-dom";
+import ArticleBody, { ArticleToc } from "../components/ArticleBody";
+import { parseArticle } from "../utils/articleParser";
 import "./BlogDetails.css";
 
 const API_BASE =
@@ -30,6 +32,32 @@ function BlogDetails() {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeId, setActiveId] = useState("");
+
+  // headings, tables, lists ... found in the article text
+  const parsed = useMemo(() => parseArticle(blog?.content || ""), [blog]);
+
+  // highlight the heading that is being read
+  useEffect(() => {
+    if (!parsed.toc.length || typeof IntersectionObserver === "undefined") return undefined;
+
+    const seen = new Map();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => seen.set(e.target.id, e.isIntersecting));
+        const first = parsed.toc.find((t) => seen.get(t.id));
+        if (first) setActiveId(first.id);
+      },
+      { rootMargin: "-90px 0px -65% 0px" }
+    );
+
+    parsed.toc.forEach((t) => {
+      const el = document.getElementById(t.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [parsed]);
 
   useEffect(() => {
     async function loadBlog() {
@@ -90,11 +118,6 @@ function BlogDetails() {
       </main>
     );
   }
-
-  const paragraphs = String(blog.content || "")
-    .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
 
   return (
     <main className="blog-details-page">
@@ -158,12 +181,15 @@ function BlogDetails() {
               {blog.summary}
             </div>
 
+            {parsed.toc.length >= 3 && (
+              <details className="ab-toc-mobile">
+                <summary>In this article</summary>
+                <ArticleToc items={parsed.toc} activeId={activeId} />
+              </details>
+            )}
+
             <div className="blog-details-body">
-              {paragraphs.map((paragraph, index) => (
-                <p key={`${index}-${paragraph.slice(0, 20)}`}>
-                  {paragraph}
-                </p>
-              ))}
+              <ArticleBody parsed={parsed} />
             </div>
 
             <div className="blog-details-end">
@@ -184,6 +210,12 @@ function BlogDetails() {
           </article>
 
           <aside className="blog-details-sidebar">
+            {parsed.toc.length >= 3 && (
+              <div className="ab-toc-side">
+                <ArticleToc items={parsed.toc} activeId={activeId} />
+              </div>
+            )}
+
             <div className="blog-details-side-card">
               <span className="blog-details-side-label">
                 ARTICLE DETAILS

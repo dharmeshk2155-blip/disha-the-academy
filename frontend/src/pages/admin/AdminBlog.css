@@ -425,3 +425,25 @@
     grid-template-columns: 95px minmax(0, 1fr);
   }
 }
+
+/* ---------- formatting toolbar + preview for the article text ---------- */
+.admin-blog-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.admin-blog-tabs button {
+  padding: 7px 16px; color: #4a5d82; font-size: 12px; font-weight: 800;
+  background: #eef2f9; border: 0; border-radius: 8px; cursor: pointer;
+}
+.admin-blog-tabs button.on { color: #fff; background: #17356b; }
+
+.admin-blog-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.admin-blog-tools button {
+  min-width: 40px; padding: 7px 10px; color: #1f2f55; font-size: 12px; font-weight: 800;
+  background: #fff; border: 1px solid #cfd8ea; border-radius: 8px; cursor: pointer;
+}
+.admin-blog-tools button:hover { background: #fff7e3; border-color: #d7a73a; }
+
+.admin-blog-live {
+  min-height: 260px; max-height: 560px; padding: 18px; overflow-y: auto;
+  background: #fff; border: 1px solid #dce3ec; border-radius: 9px;
+}
+.admin-blog-live-empty { margin: 0; color: #8a96ad; font-size: 13px; }
+.admin-blog-help { margin: 8px 0 0; color: #6b7894; font-size: 12px; line-height: 1.55; }
